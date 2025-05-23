@@ -6,10 +6,11 @@ using Raylib_cs;
 namespace MyApp;
 public class GameRenderer
 {
-    private const int ScreenWidth = 1400;
-    private const int ScreenHeight = 900;
+    private const int ScreenWidth = 1920;
+    private const int ScreenHeight = 1080;
     private static Color[,,] bookColors;
     private static Vector2 playerPosition;
+    private static Font descriptionFont;
 
     public static void InitializeBookColors()
     {
@@ -36,6 +37,9 @@ public class GameRenderer
                 }
             }
         }
+
+        // Load the description font
+        descriptionFont = Raylib.LoadFont("resources/fonts/romulus.png");
     }
 
     public static void DrawPlayer()
@@ -110,7 +114,7 @@ public class GameRenderer
             new Color(20, 80, 160, 255)); // Seam line
     }
 
-    public static void DrawGameplayScreen()
+    public static void DrawGameplayScreen(Game game)
     {
         int floorHeight = ScreenHeight / 2;
         
@@ -196,6 +200,14 @@ public class GameRenderer
             ScreenWidth, 
             50, 
             Color.Gray);
+
+        // Draw cards in player's hand
+        var cardsInHand = game.Map.Player.Cards.Where(c => c.CardLocation == CardLocation.Hand).ToList();
+        for (int i = 0; i < cardsInHand.Count; i++)
+        {
+            var card = cardsInHand[i];
+            DrawCard(i, cardsInHand.Count, card.Name, card.Description, card.CardCost);
+        }
     }
 
     private static void DrawLightEffect(int x, int y, int radius, Color color)
@@ -205,5 +217,99 @@ public class GameRenderer
         {
             Raylib.DrawCircle(x, y, r, new Color(color.R, color.G, color.B, (byte)(color.A * r / radius)));
         }
+    }
+
+    private static Vector2 CalculateCardPosition(int cardIndex, int totalCards)
+    {
+        const int cardWidth = 140;
+        const int cardHeight = 209;
+        const int cardSpacing = 22;
+        const int bottomMargin = 55;
+
+        // Calculate total width of all cards including spacing
+        float totalWidth = (cardWidth * totalCards) + (cardSpacing * (totalCards - 1));
+        
+        // Calculate starting X position to center all cards
+        float startX = (ScreenWidth - totalWidth) / 2;
+        
+        // Calculate Y position (bottom of screen minus card height and margin)
+        float y = ScreenHeight - cardHeight - bottomMargin;
+        
+        // Calculate X position for this specific card
+        float x = startX + (cardIndex * (cardWidth + cardSpacing));
+        
+        return new Vector2(x, y);
+    }
+
+    public static void DrawCard(int cardIndex, int totalCards, string cardName, string description, int cost)
+    {
+        Vector2 position = CalculateCardPosition(cardIndex, totalCards);
+        const int cardWidth = 140;
+        const int cardHeight = 209;
+        const int borderThickness = 4;
+        const int padding = 10;
+        const int costCircleRadius = 14;
+
+        // Draw card background
+        Raylib.DrawRectangle((int)position.X, (int)position.Y, cardWidth, cardHeight, Color.White);
+        
+        // Draw card border
+        Raylib.DrawRectangleLinesEx(
+            new Rectangle((int)position.X, (int)position.Y, cardWidth, cardHeight),
+            borderThickness,
+            Color.Gold
+        );
+
+        // Draw cost circle
+        Raylib.DrawCircle(
+            (int)position.X + costCircleRadius + padding,
+            (int)position.Y + costCircleRadius + padding,
+            costCircleRadius,
+            Color.Red
+        );
+        
+        // Draw cost number
+        Raylib.DrawText(
+            cost.ToString(),
+            (int)position.X + costCircleRadius + padding - 6,
+            (int)position.Y + costCircleRadius + padding - 9,
+            19,
+            Color.White
+        );
+
+        // Draw card name
+        Raylib.DrawText(
+            cardName,
+            (int)position.X + (costCircleRadius * 2) + padding * 2,
+            (int)position.Y + padding,
+            14,
+            Color.Black
+        );
+
+        // Draw description
+        string[] words = description.Split(' ');
+        string currentLine = "";
+        int lineY = (int)position.Y + 46;
+        int maxWidth = cardWidth - (padding * 2);
+
+        foreach (string word in words)
+        {
+            string testLine = currentLine + word + " ";
+            int textWidth = (int)Raylib.MeasureTextEx(descriptionFont, testLine, 20, 1).X;
+            
+            if (textWidth > maxWidth)
+            {
+                Raylib.DrawTextEx(descriptionFont, currentLine, new Vector2((int)position.X + padding, lineY), 20, 1, Color.Black);
+                currentLine = word + " ";
+                lineY += 18;
+            }
+            else
+            {
+                currentLine = testLine;
+            }
+        }
+        
+        // Draw the last line
+        Raylib.DrawTextEx(descriptionFont, currentLine, new Vector2((int)position.X + padding, lineY), 20, 1, Color.Black);
     }
 }

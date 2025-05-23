@@ -5,5 +5,6 @@ namespace MyApp
         Logos,
         Momentos,
         Literas,
+        None,
     }
 }

@@ -12,10 +12,10 @@ public class Card : Item
     private bool _isPower;
     public Card(string name, string description, int price, List<Action> actions, CardLocation cardLocation, int cardCost, AffinityType cardAffinity, bool isPower) : base(name, description, price, actions)
     {
-        _cardLocation = CardLocation.DrawPile;
+        _cardLocation = cardLocation;
         _cardCost = cardCost;
         _cardAffinity = cardAffinity;
-        isPower = false;
+        _isPower = isPower;
     }
 
     public CardLocation CardLocation

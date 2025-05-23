@@ -6,8 +6,8 @@ namespace MyApp;
 
 internal class Program
 {
-    private const int ScreenWidth = 1400;
-    private const int ScreenHeight = 900;
+    private const int ScreenWidth = 1920;
+    private const int ScreenHeight = 1080;
     private const string GameTitle = "12 Hours Before Final";
     
     private enum GameScreen
@@ -15,6 +15,9 @@ internal class Program
         TitleScreen,
         Gameplay
     }
+    
+    private static Game game;
+    private static Player player;
     
     static void Main(string[] args)
     {
@@ -42,6 +45,20 @@ internal class Program
                     if (startButtonHover && Raylib.IsMouseButtonPressed(MouseButton.Left))
                     {
                         currentScreen = GameScreen.Gameplay;
+                        var starterDeck = new List<Card>
+                        {
+                            new Card("Strike", "Deal 6 damage.", 1, new List<Action>(), CardLocation.Hand, 0, AffinityType.None, false),
+                            new Card("Strike", "Deal 6 damage.", 1, new List<Action>(), CardLocation.Hand, 0, AffinityType.None, false),
+                            new Card("Strike", "Deal 6 damage.", 1, new List<Action>(), CardLocation.Hand, 0, AffinityType.None, false),
+                            new Card("Strike", "Deal 6 damage.", 1, new List<Action>(), CardLocation.DrawPile, 0, AffinityType.None, false),
+                            new Card("Defend", "Gain 5 block.", 1, new List<Action>(), CardLocation.DrawPile, 0, AffinityType.None, false),
+                            new Card("Defend", "Gain 5 block.", 1, new List<Action>(), CardLocation.DrawPile, 0, AffinityType.None, false),
+                            new Card("Defend", "Gain 5 block.", 1, new List<Action>(), CardLocation.DrawPile, 0, AffinityType.None, false),
+                            new Card("Defend", "Gain 5 block.", 1, new List<Action>(), CardLocation.DrawPile, 0, AffinityType.None, false),
+                            new Card("Bash", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action>(), CardLocation.Hand, 0, AffinityType.None, false)
+                        };
+                        player = new Player("Player", 100, 100, 100, new List<Effect>(), 0, new List<Charm>(), starterDeck, 0.0);
+                        game = new Game(DateTime.Now.Millisecond, player); // Initialize the game with a random seed and player
                     }
                     break;
                 
@@ -79,7 +96,7 @@ internal class Program
                     break;
                 
                 case GameScreen.Gameplay:
-                    GameRenderer.DrawGameplayScreen();
+                    GameRenderer.DrawGameplayScreen(game);
                     break;
             }
             

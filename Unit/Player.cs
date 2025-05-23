@@ -20,6 +20,13 @@ public class Player: Unit
         _cards = cards;
         _shopDiscount = shopDiscount;
     }
+
+    public List<Card> Cards
+    {
+        get { return _cards; }
+        set { _cards = value; }
+    }
+    
     public void AddCharm(Charm charm){
         _charms.Add(charm);
     }
