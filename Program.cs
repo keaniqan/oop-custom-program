@@ -50,15 +50,17 @@ internal class Program
                             new Card("Strike", "Deal 6 damage.", 1, new List<Action>(), CardLocation.Hand, 0, AffinityType.None, false),
                             new Card("Strike", "Deal 6 damage.", 1, new List<Action>(), CardLocation.Hand, 0, AffinityType.None, false),
                             new Card("Strike", "Deal 6 damage.", 1, new List<Action>(), CardLocation.Hand, 0, AffinityType.None, false),
-                            new Card("Strike", "Deal 6 damage.", 1, new List<Action>(), CardLocation.DrawPile, 0, AffinityType.None, false),
-                            new Card("Defend", "Gain 5 block.", 1, new List<Action>(), CardLocation.DrawPile, 0, AffinityType.None, false),
-                            new Card("Defend", "Gain 5 block.", 1, new List<Action>(), CardLocation.DrawPile, 0, AffinityType.None, false),
-                            new Card("Defend", "Gain 5 block.", 1, new List<Action>(), CardLocation.DrawPile, 0, AffinityType.None, false),
-                            new Card("Defend", "Gain 5 block.", 1, new List<Action>(), CardLocation.DrawPile, 0, AffinityType.None, false),
-                            new Card("Bash", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action>(), CardLocation.Hand, 0, AffinityType.None, false)
+                            new Card("Strike", "Deal 6 damage.", 1, new List<Action>(), CardLocation.Hand, 0, AffinityType.None, false),
+                            new Card("Defend", "Gain 5 block.", 1, new List<Action>(), CardLocation.Hand, 0, AffinityType.None, false),
+                            new Card("Defend", "Gain 5 block.", 1, new List<Action>(), CardLocation.Hand, 0, AffinityType.None, false),
+                            new Card("Defend", "Gain 5 block.", 1, new List<Action>(), CardLocation.Hand, 0, AffinityType.None, false),
+                            new Card("Defend", "Gain 5 block.", 1, new List<Action>(), CardLocation.Hand, 0, AffinityType.None, false),
+                            new Card("Bash", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action>(), CardLocation.Hand, 0, AffinityType.None, false),
+                            new Card("Bash", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action>(), CardLocation.Hand, 0, AffinityType.None, false),
                         };
                         player = new Player("Player", 100, 100, 100, new List<Effect>(), 0, new List<Charm>(), starterDeck, 0.0);
                         game = new Game(DateTime.Now.Millisecond, player); // Initialize the game with a random seed and player
+                        GameRenderer.InitializeGame(game); // Initialize the game reference in GameRenderer
                     }
                     break;
                 

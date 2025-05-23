@@ -47,6 +47,7 @@ public class Player: Unit
     }
     public void PlayCard(Card card){
         card.DealCard(card);
+        card.DiscardCard(card);
     }
     public void DiscardHand(){
         foreach (var card in _cards){

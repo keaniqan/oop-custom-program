@@ -11,6 +11,10 @@ public class GameRenderer
     private static Color[,,] bookColors;
     private static Vector2 playerPosition;
     private static Font descriptionFont;
+    private static Texture2D cardTexture;
+    private static int draggedCardIndex = -1; // -1 means no card is being dragged
+    private static Vector2 dragOffset; // Offset from mouse position to card position
+    private static Game game; // Reference to the game instance
 
     public static void InitializeBookColors()
     {
@@ -40,6 +44,14 @@ public class GameRenderer
 
         // Load the description font
         descriptionFont = Raylib.LoadFont("resources/fonts/romulus.png");
+        
+        // Load the card texture
+        cardTexture = Raylib.LoadTexture("resources/cards/cards.png");
+    }
+
+    public static void InitializeGame(Game gameInstance)
+    {
+        game = gameInstance;
     }
 
     public static void DrawPlayer()
@@ -189,14 +201,14 @@ public class GameRenderer
         // Draw gameplay interface
         Raylib.DrawRectangle(
             0, 
-            ScreenHeight - floorHeight + 120, 
+            ScreenHeight - floorHeight + 200, 
             ScreenWidth, 
             500, 
             Color.Gray);
 
         Raylib.DrawRectangle(
             0, 
-            ScreenHeight - floorHeight - 450, 
+            ScreenHeight - floorHeight - 515, 
             ScreenWidth, 
             50, 
             Color.Gray);
@@ -225,64 +237,142 @@ public class GameRenderer
         const int cardHeight = 209;
         const int cardSpacing = 22;
         const int bottomMargin = 55;
+        const int stackOffset = 30; // How much each card overlaps
+        const int verticalOffset = 0; // Move cards down by 50 pixels
+        const int horizontalOffset = 100; // Move cards right by 50 pixels
+
+        // Safety check for single card
+        if (totalCards <= 1)
+        {
+            return new Vector2(
+                (ScreenWidth - cardWidth) / 2 + horizontalOffset,
+                ScreenHeight - cardHeight - bottomMargin + verticalOffset
+            );
+        }
 
         // Calculate total width of all cards including spacing
         float totalWidth = (cardWidth * totalCards) + (cardSpacing * (totalCards - 1));
         
         // Calculate starting X position to center all cards
-        float startX = (ScreenWidth - totalWidth) / 2;
+        float startX = (ScreenWidth - totalWidth) / 2 + horizontalOffset;
         
-        // Calculate Y position (bottom of screen minus card height and margin)
-        float y = ScreenHeight - cardHeight - bottomMargin;
+        // Calculate base Y position (bottom of screen minus card height and margin)
+        float baseY = ScreenHeight - cardHeight - bottomMargin + verticalOffset;
         
-        // Calculate X position for this specific card
-        float x = startX + (cardIndex * (cardWidth + cardSpacing));
+        // Calculate X position for this specific card with stack offset
+        float x = startX + (cardIndex * (cardWidth + cardSpacing - stackOffset));
         
+        // Calculate center elevation effect (cards in center are higher)
+        float progress = (float)cardIndex / (totalCards - 1);
+        float centerProgress = Math.Abs(progress - 0.5f) * 2; // 0 at center, 1 at edges
+        float elevationOffset = (1 - centerProgress); // Higher in center
+        
+        // Add extra lowering for outer cards
+        float outerOffset = centerProgress; // More lowering at edges
+        
+        float y = baseY - elevationOffset + outerOffset;
+
         return new Vector2(x, y);
     }
 
     public static void DrawCard(int cardIndex, int totalCards, string cardName, string description, int cost)
     {
+        // Safety check for invalid card index
+        if (cardIndex < 0 || cardIndex >= totalCards)
+        {
+            return;
+        }
+
         Vector2 position = CalculateCardPosition(cardIndex, totalCards);
         const int cardWidth = 140;
         const int cardHeight = 209;
-        const int borderThickness = 4;
+        const int shadowWidth = 18; // Width of the shadow overlay
+        const int gradientSteps = 6; // Number of steps in the gradient
+        const int hoverElevation = 20; // How much the card elevates on hover
         const int padding = 10;
-        const int costCircleRadius = 14;
+        const int costBoxSize = 28;
 
-        // Draw card background
-        Raylib.DrawRectangle((int)position.X, (int)position.Y, cardWidth, cardHeight, Color.White);
-        
-        // Draw card border
-        Raylib.DrawRectangleLinesEx(
-            new Rectangle((int)position.X, (int)position.Y, cardWidth, cardHeight),
-            borderThickness,
-            Color.Gold
+        // Check if mouse is hovering over this card
+        Vector2 mousePos = Raylib.GetMousePosition();
+        bool isHovering = mousePos.X >= position.X && 
+                         mousePos.X <= position.X + cardWidth &&
+                         mousePos.Y >= position.Y && 
+                         mousePos.Y <= position.Y + cardHeight;
+
+        // Handle drag start
+        if (isHovering && Raylib.IsMouseButtonPressed(MouseButton.Left))
+        {
+            draggedCardIndex = cardIndex;
+            dragOffset = new Vector2(position.X - mousePos.X, position.Y - mousePos.Y);
+        }
+
+        // Update position if this card is being dragged
+        if (draggedCardIndex == cardIndex)
+        {
+            position = new Vector2(mousePos.X + dragOffset.X, mousePos.Y + dragOffset.Y);
+            
+            // Stop dragging if mouse button is released
+            if (Raylib.IsMouseButtonReleased(MouseButton.Left))
+            {
+                // Check if card was released in upper half of screen
+                if (mousePos.Y < ScreenHeight / 2)
+                {
+                    // Play the card
+                    var cardsInHand = game.Map.Player.Cards.Where(c => c.CardLocation == CardLocation.Hand).ToList();
+                    if (cardIndex < cardsInHand.Count)
+                    {
+                        game.Map.Player.PlayCard(cardsInHand[cardIndex]);
+                    }
+                }
+                draggedCardIndex = -1;
+            }
+        }
+        // Apply hover effect if not being dragged
+        else if (isHovering)
+        {
+            position.Y -= hoverElevation;
+        }
+
+        // Draw the card texture
+        Raylib.DrawTexturePro(
+            cardTexture,
+            new Rectangle(0, 0, cardTexture.Width, cardTexture.Height),
+            new Rectangle(position.X, position.Y, cardWidth, cardHeight),
+            new Vector2(0, 0),
+            0,
+            Color.White
         );
 
-        // Draw cost circle
-        Raylib.DrawCircle(
-            (int)position.X + costCircleRadius + padding,
-            (int)position.Y + costCircleRadius + padding,
-            costCircleRadius,
+        // Draw cost box
+        Raylib.DrawRectangle(
+            (int)position.X + padding,
+            (int)position.Y + padding,
+            costBoxSize,
+            costBoxSize,
             Color.Red
         );
-        
+
         // Draw cost number
-        Raylib.DrawText(
+        Raylib.DrawTextPro(
+            descriptionFont,
             cost.ToString(),
-            (int)position.X + costCircleRadius + padding - 6,
-            (int)position.Y + costCircleRadius + padding - 9,
+            new Vector2(position.X + padding + costBoxSize/2 - 6, position.Y + padding + costBoxSize/2 - 9),
+            new Vector2(0, 0),
+            0,
             19,
+            1,
             Color.White
         );
 
         // Draw card name
-        Raylib.DrawText(
+        Raylib.DrawTextPro(
+            descriptionFont,
             cardName,
-            (int)position.X + (costCircleRadius * 2) + padding * 2,
-            (int)position.Y + padding,
-            14,
+            new Vector2(position.X + costBoxSize + padding * 2, position.Y + padding),
+            new Vector2(0, 0),
+            0,
+            20,
+            1,
             Color.Black
         );
 
@@ -299,7 +389,16 @@ public class GameRenderer
             
             if (textWidth > maxWidth)
             {
-                Raylib.DrawTextEx(descriptionFont, currentLine, new Vector2((int)position.X + padding, lineY), 20, 1, Color.Black);
+                Raylib.DrawTextPro(
+                    descriptionFont,
+                    currentLine,
+                    new Vector2(position.X + padding, lineY),
+                    new Vector2(0, 0),
+                    0,
+                    20,
+                    1,
+                    Color.Black
+                );
                 currentLine = word + " ";
                 lineY += 18;
             }
@@ -310,6 +409,32 @@ public class GameRenderer
         }
         
         // Draw the last line
-        Raylib.DrawTextEx(descriptionFont, currentLine, new Vector2((int)position.X + padding, lineY), 20, 1, Color.Black);
+        Raylib.DrawTextPro(
+            descriptionFont,
+            currentLine,
+            new Vector2(position.X + padding, lineY),
+            new Vector2(0, 0),
+            0,
+            20,
+            1,
+            Color.Black
+        );
+        
+        // Draw gradient shadow overlay (skip for rightmost card, hovered card, or dragged card)
+        if (cardIndex < totalCards - 1 && !isHovering && draggedCardIndex != cardIndex)
+        {
+            int stepWidth = shadowWidth / gradientSteps;
+            for (int i = 0; i < gradientSteps; i++)
+            {
+                byte alpha = (byte)(100 - (i * (100 / gradientSteps))); // Decrease opacity for each step
+                Raylib.DrawRectangle(
+                    (int)position.X + cardWidth - shadowWidth + (i * stepWidth),
+                    (int)position.Y,
+                    stepWidth,
+                    cardHeight,
+                    new Color((byte)0, (byte)0, (byte)0, alpha)
+                );
+            }
+        }
     }
 }

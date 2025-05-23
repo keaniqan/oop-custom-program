@@ -6,5 +6,6 @@ public struct Action
     public int _value;
     public EffectType _effectType;
     public bool _isTargetPlayer;
-
+    
 }
+
