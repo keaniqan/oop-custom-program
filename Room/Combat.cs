@@ -1,5 +1,6 @@
 using Raylib_cs;
 using System;
+using System.Collections.Generic;
 #nullable disable  
 namespace MyApp;
 
@@ -22,9 +23,21 @@ public class Combat: Room
         _random = new Random();
         _turnCount = 0;
         _game = GameRenderer.game;
+
+        // Ensure all cards are in draw pile first
+        if (_game?.Map?.Player != null)
+        {
+            foreach (var card in _game.Map.Player.Cards)
+            {
+                card.CardLocation = CardLocation.DrawPile;
+            }
+            // Shuffle the deck
+            _game.Map.Player.ShuffleDeck();
+            // Draw initial hand
+            _game.Map.Player.DrawCards(5);
+        }
+
         SetEnemyIntent();
-        // Draw 5 cards at the start of combat
-        _game?.Map?.Player?.DrawCards(5);
     }
 
     public Enemy Enemy
@@ -148,16 +161,10 @@ public class Combat: Room
     public void StartEnemyTurn()
     {
         _turnPhase = TurnPhase.EnemyStart;
-        SetEnemyIntent();
-    }
-
-    public void EndEnemyTurn()
-    {
-        if (_game?.Map?.Player == null) return; // Safety check
-
-        _turnPhase = TurnPhase.EnemyEnd;
         
-        // Execute enemy intent
+        // Execute current intent first
+        if (_game?.Map?.Player == null) return; // Safety check
+        
         if (_enemy.Intent._attack)
         {
             _game.Map.Player.TakeDamage(_enemy.Intent._attackValue);
@@ -174,14 +181,55 @@ public class Combat: Room
         {
             _game.Map.Player.AddEffect(new Effect(_enemy.Intent._debuffType, "Debuff", _enemy.Intent._debuffValue, false));
         }
+    }
 
-        // Reset block at end of turn
+    public void EndEnemyTurn()
+    {
+        if (_game?.Map?.Player == null) return; // Safety check
+
+        _turnPhase = TurnPhase.EnemyEnd;
+        
+        // Reset both player and enemy block at end of turn
         _game.Map.Player.Block = 0;
+        _enemy.Block = 0;
+        
+        // Set intent for next turn
+        SetEnemyIntent();
         
         // Set turn phase back to player's turn
         _turnPhase = TurnPhase.PlayerStart;
         // Draw 5 cards at the start of player's turn
         _game.Map.Player.DrawCards(5);
+    }
+
+    public void EnemyTakeDamage(int damage)
+    {
+        // First reduce damage by block
+        if (_enemy.Block > 0)
+        {
+            if (_enemy.Block >= damage)
+            {
+                _enemy.Block -= damage;
+                damage = 0;
+            }
+            else
+            {
+                damage -= _enemy.Block;
+                _enemy.Block = 0;
+            }
+        }
+
+        // Then apply remaining damage to health
+        if (damage > 0)
+        {
+            _enemy.Health = Math.Max(0, _enemy.Health - damage);
+            
+            // Check if enemy is defeated
+            if (_enemy.Health <= 0)
+            {
+                EndCombat();
+            }
+        }
     }
 
     public override void Reward()
@@ -204,8 +252,8 @@ public class Combat: Room
                 nextNode.IsAvailable = true;
             }
             
-            // Show map screen for next node selection
-
+            // Change current screen to map selection
+            Program.currentScreen = Program.GameScreen.MapSelection;
         }
     }
 }

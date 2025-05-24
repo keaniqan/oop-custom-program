@@ -238,7 +238,6 @@ public class GameRenderer
             Color.Gray);
 
         // Draw HP bars
-        DrawHPBar(game.Map.Player, new Vector2(100, 100), true);
         if (game.Map.Rooms.Count > 0 && game.Map.Rooms[0] is Combat combatRoom)
         {
             DrawEnemy(combatRoom);
@@ -246,6 +245,9 @@ public class GameRenderer
             DrawEnergyCounter(game.Map.Player.MaxEnergy, combatRoom.CurrentEnergy);
             DrawEndTurnButton(combatRoom);
         }
+        
+        // Draw player HP bar above the player
+        DrawHPBar(game.Map.Player, new Vector2(playerPosition.X - 100, playerPosition.Y - 300), true);
 
         // Draw cards in player's hand
         var cardsInHand = game.Map.Player.Cards.Where(c => c.CardLocation == CardLocation.Hand).ToList();
@@ -652,6 +654,28 @@ public class GameRenderer
             Color.White
         );
 
+        // Draw block counter if block > 0
+        if (unit.Block > 0)
+        {
+            // Draw block icon (shield shape)
+            Raylib.DrawCircle(
+                (int)position.X + barWidth + 100,
+                (int)position.Y + barHeight/2,
+                10,
+                Color.Blue
+            );
+            
+            // Draw block value
+            string blockText = unit.Block.ToString();
+            Raylib.DrawText(
+                blockText,
+                (int)position.X + barWidth + 120,
+                (int)position.Y,
+                20,
+                Color.White
+            );
+        }
+
         // Draw name
         string nameText = isPlayer ? "Player" : unit.Name;
         Raylib.DrawText(
@@ -788,7 +812,6 @@ public class GameRenderer
         nodesPerLayer[totalLayers-1] = 1; // End with 1 node (boss)
 
         mapGraph = new MapGraph();
-        //int nodeRadius = 30;
         int verticalSpacing = 70;
         int horizontalSpacing = 120;
         int startY = 120;
@@ -804,7 +827,7 @@ public class GameRenderer
             for (int n = 0; n < nodes; n++)
             {
                 int x = centerX - totalWidth / 2 + n * horizontalSpacing;
-                string roomType = (layer == 0) ? "Start" : (layer == totalLayers-1) ? "Boss" : (n % 3 == 0 ? "Elite" : (n % 2 == 0 ? "Combat" : "Event"));
+                string roomType = (layer == 0) ? "Start" : (layer == totalLayers-1) ? "Boss" : "Combat";
                 layerNodes.Add(new MapNode { Layer = layer, Index = n, RoomType = roomType, X = x, Y = y });
             }
             mapGraph.Layers.Add(layerNodes);
@@ -858,23 +881,37 @@ public class GameRenderer
     {
         if (mapGraph == null) GenerateMapGraph();
         DrawMapOverlay();
-        // Only allow selection of available nodes in the first layer (start)
-        var layer = mapGraph.Layers[0];
+        
+        // Check all layers for available nodes
         Vector2 mouse = Raylib.GetMousePosition();
         int nodeRadius = 30;
-        for (int i = 0; i < layer.Count; i++)
+        
+        // Check each layer
+        for (int layer = 0; layer < mapGraph.Layers.Count; layer++)
         {
-            var node = layer[i];
-            if (node.IsAvailable)
+            var currentLayer = mapGraph.Layers[layer];
+            for (int i = 0; i < currentLayer.Count; i++)
             {
-                float dx = mouse.X - node.X;
-                float dy = mouse.Y - node.Y;
-                if (dx * dx + dy * dy <= nodeRadius * nodeRadius)
+                var node = currentLayer[i];
+                if (node.IsAvailable)
                 {
-                    if (Raylib.IsMouseButtonPressed(MouseButton.Left))
+                    float dx = mouse.X - node.X;
+                    float dy = mouse.Y - node.Y;
+                    if (dx * dx + dy * dy <= nodeRadius * nodeRadius)
                     {
-                        node.IsCurrent = true;
-                        return i;
+                        if (Raylib.IsMouseButtonPressed(MouseButton.Left))
+                        {
+                            // Update current node
+                            var oldCurrentNode = mapGraph.Layers[playerLayer][playerIndex];
+                            oldCurrentNode.IsCurrent = false;
+                            
+                            // Set new current node
+                            node.IsCurrent = true;
+                            playerLayer = layer;
+                            playerIndex = i;
+                            
+                            return i;
+                        }
                     }
                 }
             }
@@ -915,9 +952,14 @@ public class GameRenderer
         Raylib.DrawText(closeText, ScreenWidth/2 - textWidth/2, ScreenHeight - 60, 24, Color.White);
     }
 
-    public static void DrawEndCombatScreen()
+    public static void DrawRewardScreen()
     {
         Raylib.DrawRectangle(0, 0, ScreenWidth, ScreenHeight, new Color(0, 0, 0, 180));
-        Raylib.DrawText("Combat Ended", ScreenWidth/2 - 100, ScreenHeight/2 - 50, 40, Color.White);
+        Raylib.DrawText("Reward", ScreenWidth/2 - 100, ScreenHeight/2 - 50, 40, Color.White);
+        Raylib.DrawText("Click anywhere to continue", ScreenWidth/2 - 200, ScreenHeight/2 + 50, 20, Color.White);
+        if (Raylib.IsMouseButtonPressed(MouseButton.Left))
+        {
+            Program.currentScreen = Program.GameScreen.MapSelection;
+        }
     }
 }

@@ -19,7 +19,13 @@ public class Unit
         _health = health;
         _maxHealth = maxHealth;
         _block = block;
-        _effects = effects;
+        _effects = new List<Effect>();
+        
+        // Initialize all possible effects with 0 stacks
+        foreach (EffectType effectType in Enum.GetValues(typeof(EffectType)))
+        {
+            _effects.Add(new Effect(effectType, effectType.ToString(), 0, true));
+        }
     }
 
     public string Name

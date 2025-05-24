@@ -93,13 +93,26 @@ public class Player: Unit
     public void ShuffleDeck(){
         Random random = new Random();
         
-        // Fisher-Yates shuffle algorithm on the entire card list
-        for (int i = _cards.Count - 1; i > 0; i--)
+        // Get only cards in draw pile
+        var drawPile = _cards.Where(c => c.CardLocation == CardLocation.DrawPile).ToList();
+        
+        // Fisher-Yates shuffle algorithm on the draw pile
+        for (int i = drawPile.Count - 1; i > 0; i--)
         {
             int j = random.Next(i + 1);
-            Card temp = _cards[i];
-            _cards[i] = _cards[j];
-            _cards[j] = temp;
+            Card temp = drawPile[i];
+            drawPile[i] = drawPile[j];
+            drawPile[j] = temp;
+        }
+        
+        // Update the original list with shuffled draw pile
+        int drawPileIndex = 0;
+        for (int i = 0; i < _cards.Count; i++)
+        {
+            if (_cards[i].CardLocation == CardLocation.DrawPile)
+            {
+                _cards[i] = drawPile[drawPileIndex++];
+            }
         }
     }
     public void EmptyDiscardPiletoDrawPile(){

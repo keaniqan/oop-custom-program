@@ -55,6 +55,7 @@ public class Card : Item
                     if (combatRoom.Enemy.Health <= 0)
                     {
                         combatRoom.EndCombat();
+                        Program.currentScreen = Program.GameScreen.ShowReward;
                     }
                 }
             }

@@ -14,11 +14,14 @@ internal class Program
     {
         TitleScreen,
         MapSelection,
+        ShowReward,
         Gameplay
     }
     
     private static Game game;
     private static Player player;
+    public static GameScreen currentScreen = GameScreen.TitleScreen;
+    private static List<Enemy> enemies = new List<Enemy>();
     
     static void Main(string[] args)
     {
@@ -28,7 +31,13 @@ internal class Program
         // Initialize the book colors once
         GameRenderer.InitializeBookColors();
         
-        GameScreen currentScreen = GameScreen.TitleScreen;
+        // Initialize all enemies
+        enemies.Add(new Enemy("Math Textbook", 60, 60, 0, new List<Effect>(), EnemyType.Basic));
+        enemies.Add(new Enemy("Physics Formula Book", 70, 70, 0, new List<Effect>(), EnemyType.Basic));
+        enemies.Add(new Enemy("Chemistry Lab Manual", 80, 80, 0, new List<Effect>(), EnemyType.Elite));
+        enemies.Add(new Enemy("Biology Study Guide", 90, 90, 0, new List<Effect>(), EnemyType.Elite));
+        enemies.Add(new Enemy("History Textbook", 100, 100, 0, new List<Effect>(), EnemyType.Elite));
+        enemies.Add(new Enemy("Final Exam", 150, 150, 0, new List<Effect>(), EnemyType.Boss));
         
         // Button state
         Rectangle startButtonRec = new Rectangle(ScreenWidth / 2 - 100, ScreenHeight / 2 + 20, 200, 50);
@@ -84,9 +93,32 @@ internal class Program
                     int selectedNode = GameRenderer.DrawMapSelectionScreen();
                     if (selectedNode >= 0)
                     {
+                        // Get the selected node's room type
+                        var selectedRoomType = GameRenderer.mapGraph.Layers[GameRenderer.playerLayer][selectedNode].RoomType;
+                        
+                        // Get the appropriate enemy
+                        Enemy enemy;
+                        if (selectedRoomType == "Boss")
+                        {
+                            enemy = enemies[5]; // Final Exam
+                        }
+                        else
+                        {
+                            // Randomly select an enemy from the first 5 enemies (excluding boss)
+                            Random random = new Random();
+                            int randomIndex = random.Next(0, 5); // 0 to 4
+                            enemy = enemies[randomIndex];
+                        }
+                        
+                        // Reset enemy HP to full
+                        enemy.Health = enemy.MaxHealth;
+                        
+                        // Create a combat room with the enemy
+                        var combatRoom = new Combat(false, true, true, enemy, enemy.EnemyType, TurnPhase.PlayerStart, 3);
+                        game.Map.Rooms = new List<Room> { combatRoom }; // Add the combat room to the game
+                        
                         // Node selected, start gameplay
                         currentScreen = GameScreen.Gameplay;
-                        // TODO: Set up combat for the selected node if needed
                     }
                     break;
                 case GameScreen.Gameplay:
@@ -127,6 +159,9 @@ internal class Program
                     break;
                 case GameScreen.Gameplay:
                     GameRenderer.DrawGameplayScreen(game);
+                    break;
+                case GameScreen.ShowReward:
+                    GameRenderer.DrawRewardScreen();
                     break;
             }
             
