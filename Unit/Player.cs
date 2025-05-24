@@ -8,13 +8,15 @@ namespace MyApp;
 
 public class Player: Unit
 {
+    private int _maxEnergy;
     private int _gold;
     private List<Charm> _charms;
     private List<Card> _cards;
     private double _shopDiscount;
 
-    public Player(string name, int health, int maxHealth, int block, List<Effect> effects, int gold, List<Charm> charms, List<Card> cards, double shopDiscount) : base(name, health, maxHealth, block, effects)
+    public Player(string name, int health, int maxHealth, int block, int maxEnergy, List<Effect> effects, int gold, List<Charm> charms, List<Card> cards, double shopDiscount) : base(name, health, maxHealth, block, effects)
     {
+        _maxEnergy = maxEnergy;
         _gold = gold;
         _charms = charms;
         _cards = cards;

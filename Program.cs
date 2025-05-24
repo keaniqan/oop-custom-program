@@ -32,7 +32,12 @@ internal class Program
         // Button state
         Rectangle startButtonRec = new Rectangle(ScreenWidth / 2 - 100, ScreenHeight / 2 + 20, 200, 50);
         bool startButtonHover = false;
-        
+
+        Action strikeAction = new(ActionType.Attack, 6, null, false);
+        Action defendAction = new(ActionType.Block, 5, null, false);
+        Action bashAttack = new(ActionType.Attack, 8, null, false);
+        Action bashEffect = new(ActionType.Effect, 0, EffectType.Vulnerable, false);
+
         while (!Raylib.WindowShouldClose())
         {
             // Update
@@ -47,19 +52,28 @@ internal class Program
                         currentScreen = GameScreen.Gameplay;
                         var starterDeck = new List<Card>
                         {
-                            new Card("Strike", "Deal 6 damage.", 1, new List<Action>(), CardLocation.Hand, 0, AffinityType.None, false),
-                            new Card("Strike", "Deal 6 damage.", 1, new List<Action>(), CardLocation.Hand, 0, AffinityType.None, false),
-                            new Card("Strike", "Deal 6 damage.", 1, new List<Action>(), CardLocation.Hand, 0, AffinityType.None, false),
-                            new Card("Strike", "Deal 6 damage.", 1, new List<Action>(), CardLocation.Hand, 0, AffinityType.None, false),
-                            new Card("Defend", "Gain 5 block.", 1, new List<Action>(), CardLocation.Hand, 0, AffinityType.None, false),
-                            new Card("Defend", "Gain 5 block.", 1, new List<Action>(), CardLocation.Hand, 0, AffinityType.None, false),
-                            new Card("Defend", "Gain 5 block.", 1, new List<Action>(), CardLocation.Hand, 0, AffinityType.None, false),
-                            new Card("Defend", "Gain 5 block.", 1, new List<Action>(), CardLocation.Hand, 0, AffinityType.None, false),
-                            new Card("Bash", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action>(), CardLocation.Hand, 0, AffinityType.None, false),
-                            new Card("Bash", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action>(), CardLocation.Hand, 0, AffinityType.None, false),
+                            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.Hand, 0, AffinityType.None, false),
+                            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.Hand, 0, AffinityType.None, false),
+                            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.Hand, 0, AffinityType.None, false),
+                            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.Hand, 0, AffinityType.None, false),
+                            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.Hand, 0, AffinityType.None, false),
+                            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.Hand, 0, AffinityType.None, false),
+                            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.Hand, 0, AffinityType.None, false),
+                            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.Hand, 0, AffinityType.None, false),
+                            new Card("Bash", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action> {bashAttack, bashEffect}, CardLocation.Hand, 0, AffinityType.None, false),
+                            new Card("Bash", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action> {bashAttack, bashEffect}, CardLocation.Hand, 0, AffinityType.None, false),
                         };
-                        player = new Player("Player", 100, 100, 100, new List<Effect>(), 0, new List<Charm>(), starterDeck, 0.0);
+                        player = new Player("Player", 100, 100, 0, 3, new List<Effect>(), 0, new List<Charm>(), starterDeck, 0.0);
+                        
+                        // Create a basic enemy
+                        var enemy = new Enemy("Slime", 50, 50, 0, new List<Effect>(), EnemyType.Basic);
+                        
+                        // Create a combat room with the enemy
+                        var combatRoom = new Combat(false, true, true, enemy, EnemyType.Basic, TurnPhase.PlayerStart, 3);
+                        var rooms = new List<Room> { combatRoom };
+                        
                         game = new Game(DateTime.Now.Millisecond, player); // Initialize the game with a random seed and player
+                        game.Map.Rooms = rooms; // Add the combat room to the game
                         GameRenderer.InitializeGame(game); // Initialize the game reference in GameRenderer
                     }
                     break;

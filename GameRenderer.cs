@@ -14,7 +14,7 @@ public class GameRenderer
     private static Texture2D cardTexture;
     private static int draggedCardIndex = -1; // -1 means no card is being dragged
     private static Vector2 dragOffset; // Offset from mouse position to card position
-    private static Game game; // Reference to the game instance
+    public static Game game; // Reference to the game instance
 
     public static void InitializeBookColors()
     {
@@ -194,7 +194,7 @@ public class GameRenderer
             // Draw lamp light effect (circles of light)
             DrawLightEffect(x, 70, 300, new Color(255, 255, 200, 40));
         }
-        
+
         // Draw player character in foreground
         DrawPlayer();
 
@@ -212,6 +212,14 @@ public class GameRenderer
             ScreenWidth, 
             50, 
             Color.Gray);
+
+        // Draw HP bars
+        DrawHPBar(game.Map.Player, new Vector2(100, 100), true);
+        if (game.Map.Rooms.Count > 0 && game.Map.Rooms[0] is Combat combatRoom)
+        {
+            DrawEnemy(combatRoom);
+            DrawHPBar(combatRoom.Enemy, new Vector2(ScreenWidth - 300, 100), false);
+        }
 
         // Draw cards in player's hand
         var cardsInHand = game.Map.Player.Cards.Where(c => c.CardLocation == CardLocation.Hand).ToList();
@@ -436,5 +444,93 @@ public class GameRenderer
                 );
             }
         }
+    }
+
+    private static void DrawEnemy(Combat combatRoom)
+    {
+        const int enemySize = 100;
+        Vector2 enemyPos = new Vector2(ScreenWidth - 200, ScreenHeight / 2 - 100);
+
+        // Draw enemy body (simple circle for now)
+        Raylib.DrawCircle(
+            (int)enemyPos.X,
+            (int)enemyPos.Y,
+            enemySize,
+            Color.Green
+        );
+
+        // Draw enemy eyes
+        Raylib.DrawCircle(
+            (int)enemyPos.X - 20,
+            (int)enemyPos.Y - 20,
+            10,
+            Color.White
+        );
+        Raylib.DrawCircle(
+            (int)enemyPos.X + 20,
+            (int)enemyPos.Y - 20,
+            10,
+            Color.White
+        );
+
+        // Draw enemy pupils
+        Raylib.DrawCircle(
+            (int)enemyPos.X - 20,
+            (int)enemyPos.Y - 20,
+            5,
+            Color.Black
+        );
+        Raylib.DrawCircle(
+            (int)enemyPos.X + 20,
+            (int)enemyPos.Y - 20,
+            5,
+            Color.Black
+        );
+    }
+
+    private static void DrawHPBar(Unit unit, Vector2 position, bool isPlayer)
+    {
+        const int barWidth = 200;
+        const int barHeight = 20;
+        const int padding = 5;
+
+        // Draw background
+        Raylib.DrawRectangle(
+            (int)position.X,
+            (int)position.Y,
+            barWidth,
+            barHeight,
+            Color.DarkGray
+        );
+
+        // Draw health bar
+        float healthPercentage = (float)unit.Health / unit.MaxHealth;
+        Raylib.DrawRectangle(
+            (int)position.X + padding,
+            (int)position.Y + padding,
+            (int)((barWidth - padding * 2) * healthPercentage),
+            barHeight - padding * 2,
+            Color.Red
+        );
+
+        // Draw health text
+        string healthText = $"{unit.Health}/{unit.MaxHealth}";
+        Raylib.DrawText(
+            healthText,
+            (int)position.X + barWidth + 10,
+            (int)position.Y,
+            20,
+            Color.White
+        );
+
+        // Draw name
+        string nameText = isPlayer ? "Player" : unit.Name;
+        Raylib.DrawText(
+            nameText,
+            (int)position.X,
+            (int)position.Y - 25,
+            20,
+            Color.White
+        );
     }
 }

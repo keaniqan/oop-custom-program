@@ -44,7 +44,23 @@ public class Card : Item
     {
         foreach (var action in card.Actions)
         {
-            
+            if (action.ActionType == ActionType.Attack)
+            {
+                // Deal damage to enemy
+                if (GameRenderer.game?.Map?.Rooms?.Count > 0 && 
+                    GameRenderer.game.Map.Rooms[0] is Combat combatRoom)
+                {
+                    combatRoom.Enemy.Health -= action.Value;
+                }
+            }
+            else if (action.ActionType == ActionType.Block)
+            {
+                // Add block to player
+                if (GameRenderer.game?.Map?.Player != null)
+                {
+                    GameRenderer.game.Map.Player.Block += action.Value;
+                }
+            }
         }
     }
     public void DrawCard(Card card)

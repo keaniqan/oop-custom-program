@@ -37,6 +37,16 @@ public class Unit
         get { return _maxHealth; }
         set { _maxHealth = value; }
     }
+    public int Block
+    {
+        get { return _block; }
+        set { _block = value; }
+    }
+    public List<Effect> Effects
+    {
+        get { return _effects; }
+        set { _effects = value; }
+    }
     public void AddBlock(int block)
     {
         _block += block;
