@@ -11,7 +11,7 @@ public class Unit
     private int _health;
     private int _maxHealth;
     private int _block;
-    private List<Effect> _effects;
+    protected List<Effect> _effects;
 
     public Unit(string name, int health, int maxHealth, int block, List<Effect> effects)
     {
@@ -73,10 +73,25 @@ public class Unit
     }
     public void TakeDamage(int damage)
     {
-        damage -= _block;
+        // First reduce damage by block
+        if (_block > 0)
+        {
+            if (_block >= damage)
+            {
+                _block -= damage;
+                damage = 0;
+            }
+            else
+            {
+                damage -= _block;
+                _block = 0;
+            }
+        }
+
+        // Then apply remaining damage to health
         if (damage > 0)
         {
-            _health -= damage;
+            _health = Math.Max(0, _health - damage);
         }
     }
 }

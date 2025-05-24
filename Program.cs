@@ -68,13 +68,13 @@ internal class Program
                         // Create a basic enemy
                         var enemy = new Enemy("Slime", 50, 50, 0, new List<Effect>(), EnemyType.Basic);
                         
+                        // Initialize game first
+                        game = new Game(DateTime.Now.Millisecond, player);
+                        GameRenderer.InitializeGame(game); // Set the game reference in GameRenderer
+                        
                         // Create a combat room with the enemy
                         var combatRoom = new Combat(false, true, true, enemy, EnemyType.Basic, TurnPhase.PlayerStart, 3);
-                        var rooms = new List<Room> { combatRoom };
-                        
-                        game = new Game(DateTime.Now.Millisecond, player); // Initialize the game with a random seed and player
-                        game.Map.Rooms = rooms; // Add the combat room to the game
-                        GameRenderer.InitializeGame(game); // Initialize the game reference in GameRenderer
+                        game.Map.Rooms = new List<Room> { combatRoom }; // Add the combat room to the game
                     }
                     break;
                 

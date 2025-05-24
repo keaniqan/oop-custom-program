@@ -541,6 +541,50 @@ public class GameRenderer
                 new Color(shade, shade, shade, (byte)255)
             );
         }
+
+        // Draw enemy intent
+        if (combatRoom.TurnPhase == TurnPhase.PlayerStart || combatRoom.TurnPhase == TurnPhase.EnemyStart || combatRoom.TurnPhase == TurnPhase.EnemyEnd)
+        {
+            string intentText = "";
+            if (combatRoom.Enemy.Intent._attack)
+                intentText = $"Attack {combatRoom.Enemy.Intent._attackValue}";
+            else if (combatRoom.Enemy.Intent._block)
+                intentText = $"Block {combatRoom.Enemy.Intent._blockValue}";
+            else if (combatRoom.Enemy.Intent._applyBuff)
+                intentText = $"Buff {combatRoom.Enemy.Intent._buffType} {combatRoom.Enemy.Intent._buffValue}";
+            else if (combatRoom.Enemy.Intent._debuff)
+                intentText = $"Debuff {combatRoom.Enemy.Intent._debuffType} {combatRoom.Enemy.Intent._debuffValue}";
+
+            // Draw turn count
+            string turnText = $"Turn {combatRoom.TurnCount}";
+            int turnTextWidth = Raylib.MeasureText(turnText, 16);
+            Raylib.DrawText(
+                turnText,
+                (int)ScreenWidth/2 - turnTextWidth/2 + 350,
+                (int)ScreenHeight/2 - 500,
+                30,
+                Color.White
+            );
+
+            // Draw intent background
+            int textWidth = Raylib.MeasureText(intentText, 20);
+            Raylib.DrawRectangle(
+                (int)bookPos.X - textWidth/2 - 10,
+                (int)bookPos.Y + bookHeight/2 - 340,
+                textWidth + 20,
+                30,
+                new Color(0, 0, 0, 150)
+            );
+
+            // Draw intent text
+            Raylib.DrawText(
+                intentText,
+                (int)bookPos.X - textWidth/2,
+                (int)bookPos.Y + bookHeight/2 - 330,
+                20,
+                Color.White
+            );
+        }
     }
 
     private static void DrawHPBar(Unit unit, Vector2 position, bool isPlayer)
@@ -644,6 +688,8 @@ public class GameRenderer
 
     private static void DrawEndTurnButton(Combat combatRoom)
     {
+        if (game?.Map?.Player == null || combatRoom == null) return; // Safety check
+
         const int buttonWidth = 150;
         const int buttonHeight = 50;
         const int buttonX = ScreenWidth - buttonWidth - 200;
@@ -686,8 +732,17 @@ public class GameRenderer
         // Handle button click
         if (isHovering && Raylib.IsMouseButtonPressed(MouseButton.Left))
         {
-            game.Map.Player.EndTurn();
-            combatRoom.CurrentEnergy = game.Map.Player.MaxEnergy; // Reset energy for next turn
+            try
+            {
+                game.Map.Player.EndTurn();
+                combatRoom.StartEnemyTurn();
+                combatRoom.EndEnemyTurn();
+                combatRoom.CurrentEnergy = game.Map.Player.MaxEnergy;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error during turn transition: {e.Message}");
+            }
         }
     }
 }

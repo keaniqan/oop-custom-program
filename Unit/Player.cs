@@ -105,6 +105,11 @@ public class Player: Unit
         get { return _maxEnergy; }
         set { _maxEnergy = value; }
     }
+
+    public void AddEffect(Effect effect)
+    {
+        _effects.Add(effect);
+    }
 }
 
 
