@@ -12,6 +12,7 @@ public class GameRenderer
     private static Vector2 playerPosition;
     private static Font descriptionFont;
     private static Texture2D cardTexture;
+    private static Texture2D enemyTexture;
     private static int draggedCardIndex = -1; // -1 means no card is being dragged
     private static Vector2 dragOffset; // Offset from mouse position to card position
     public static Game game; // Reference to the game instance
@@ -47,6 +48,9 @@ public class GameRenderer
         
         // Load the card texture
         cardTexture = Raylib.LoadTexture("resources/cards/cards.png");
+
+        // Load the enemy texture
+        enemyTexture = Raylib.LoadTexture("resources/enemy/BukuAddmath.png");
     }
 
     public static void InitializeGame(Game gameInstance)
@@ -218,7 +222,9 @@ public class GameRenderer
         if (game.Map.Rooms.Count > 0 && game.Map.Rooms[0] is Combat combatRoom)
         {
             DrawEnemy(combatRoom);
-            DrawHPBar(combatRoom.Enemy, new Vector2(ScreenWidth - 300, 100), false);
+            DrawHPBar(combatRoom.Enemy, new Vector2(ScreenWidth - 700, ScreenHeight / 2 + 100), false);
+            DrawEnergyCounter(game.Map.Player.MaxEnergy, combatRoom.CurrentEnergy);
+            DrawEndTurnButton(combatRoom);
         }
 
         // Draw cards in player's hand
@@ -361,10 +367,15 @@ public class GameRenderer
         );
 
         // Draw cost number
+        string costText = cost.ToString();
+        Vector2 costTextSize = Raylib.MeasureTextEx(descriptionFont, costText, 19, 1);
         Raylib.DrawTextPro(
             descriptionFont,
-            cost.ToString(),
-            new Vector2(position.X + padding + costBoxSize/2 - 6, position.Y + padding + costBoxSize/2 - 9),
+            costText,
+            new Vector2(
+                position.X + padding + (costBoxSize - costTextSize.X) / 2,
+                position.Y + padding + (costBoxSize - costTextSize.Y) / 2
+            ),
             new Vector2(0, 0),
             0,
             19,
@@ -448,44 +459,88 @@ public class GameRenderer
 
     private static void DrawEnemy(Combat combatRoom)
     {
-        const int enemySize = 100;
-        Vector2 enemyPos = new Vector2(ScreenWidth - 200, ScreenHeight / 2 - 100);
+        const int bookWidth = 220;
+        const int bookHeight = 300;
+        const int bookThickness = 40;
+        Vector2 bookPos = new Vector2(ScreenWidth - 600, ScreenHeight / 2 - 100);
 
-        // Draw enemy body (simple circle for now)
-        Raylib.DrawCircle(
-            (int)enemyPos.X,
-            (int)enemyPos.Y,
-            enemySize,
-            Color.Green
+        // Draw book shadow
+        Raylib.DrawRectangle(
+            (int)bookPos.X - bookWidth/2 - bookThickness + 10,
+            (int)bookPos.Y - bookHeight/2 + 10,
+            bookWidth + bookThickness,
+            bookHeight,
+            new Color((byte)0, (byte)0, (byte)0, (byte)50)
         );
 
-        // Draw enemy eyes
-        Raylib.DrawCircle(
-            (int)enemyPos.X - 20,
-            (int)enemyPos.Y - 20,
-            10,
+        // Draw book spine (back) with gradient
+        for (int i = 0; i < bookThickness; i++)
+        {
+            byte shade = (byte)(100 + (i * 55 / bookThickness));
+            Raylib.DrawRectangle(
+                (int)bookPos.X - bookWidth/2 - bookThickness + i,
+                (int)bookPos.Y - bookHeight/2,
+                1,
+                bookHeight,
+                new Color(shade, shade, shade, (byte)255)
+            );
+        }
+
+        // Draw book cover (front) with slight tilt
+        Raylib.DrawTexturePro(
+            enemyTexture,
+            new Rectangle(0, 0, enemyTexture.Width, enemyTexture.Height),
+            new Rectangle(bookPos.X - bookWidth/2, bookPos.Y - bookHeight/2, bookWidth, bookHeight),
+            new Vector2(0, 0),
+            0,
             Color.White
         );
-        Raylib.DrawCircle(
-            (int)enemyPos.X + 20,
-            (int)enemyPos.Y - 20,
-            10,
-            Color.White
+
+        // Draw book edges with 3D effect
+        // Top edge
+        Raylib.DrawRectangle(
+            (int)bookPos.X - bookWidth/2,
+            (int)bookPos.Y - bookHeight/2,
+            bookWidth,
+            2,
+            new Color(200, 200, 200, 255)
+        );
+        // Bottom edge
+        Raylib.DrawRectangle(
+            (int)bookPos.X - bookWidth/2,
+            (int)bookPos.Y + bookHeight/2 - 2,
+            bookWidth,
+            2,
+            new Color(50, 50, 50, 255)
+        );
+        // Right edge
+        Raylib.DrawRectangle(
+            (int)bookPos.X + bookWidth/2 - 2,
+            (int)bookPos.Y - bookHeight/2,
+            2,
+            bookHeight,
+            new Color(50, 50, 50, 255)
         );
 
-        // Draw enemy pupils
-        Raylib.DrawCircle(
-            (int)enemyPos.X - 20,
-            (int)enemyPos.Y - 20,
-            5,
+        // Draw book spine edge
+        Raylib.DrawRectangleLinesEx(
+            new Rectangle(bookPos.X - bookWidth/2 - bookThickness, bookPos.Y - bookHeight/2, bookThickness, bookHeight),
+            2,
             Color.Black
         );
-        Raylib.DrawCircle(
-            (int)enemyPos.X + 20,
-            (int)enemyPos.Y - 20,
-            5,
-            Color.Black
-        );
+
+        // Draw book pages edge with gradient
+        for (int i = 0; i < 4; i++)
+        {
+            byte shade = (byte)(200 - (i * 40));
+            Raylib.DrawRectangle(
+                (int)bookPos.X - bookWidth/2 + i,
+                (int)bookPos.Y - bookHeight/2,
+                1,
+                bookHeight,
+                new Color(shade, shade, shade, (byte)255)
+            );
+        }
     }
 
     private static void DrawHPBar(Unit unit, Vector2 position, bool isPlayer)
@@ -532,5 +587,107 @@ public class GameRenderer
             20,
             Color.White
         );
+    }
+
+    private static void DrawEnergyCounter(int maxEnergy, int currentEnergy)
+    {
+        const int orbSize = 120;
+        const int startX = 200;
+        const int startY = ScreenHeight - 450;
+
+        // Draw outer ring
+        Raylib.DrawCircleLines(
+            startX + orbSize/2,
+            startY,
+            orbSize/2 + 5,
+            Color.Gold
+        );
+
+        // Draw inner glow
+        Raylib.DrawCircle(
+            startX + orbSize/2,
+            startY,
+            orbSize/2 - 10,
+            new Color(255, 255, 200, 100)
+        );
+
+        // Draw main energy orb
+        Raylib.DrawCircle(
+            startX + orbSize/2,
+            startY,
+            orbSize/2,
+            Color.Yellow
+        );
+
+        // Draw decorative lines
+        for (int i = 0; i < 8; i++)
+        {
+            float angle = i * (float)(Math.PI / 4);
+            float x1 = startX + orbSize/2 + (float)Math.Cos(angle) * (orbSize/2 - 15);
+            float y1 = startY + (float)Math.Sin(angle) * (orbSize/2 - 15);
+            float x2 = startX + orbSize/2 + (float)Math.Cos(angle) * (orbSize/2 + 5);
+            float y2 = startY + (float)Math.Sin(angle) * (orbSize/2 + 5);
+            Raylib.DrawLine((int)x1, (int)y1, (int)x2, (int)y2, Color.Gold);
+        }
+
+        // Draw energy text
+        string energyText = $"{currentEnergy}/{maxEnergy}";
+        int textWidth = Raylib.MeasureText(energyText, 40);
+        Raylib.DrawText(
+            energyText,
+            startX + orbSize/2 - textWidth/2,
+            startY - 20,
+            40,
+            Color.Black
+        );
+    }
+
+    private static void DrawEndTurnButton(Combat combatRoom)
+    {
+        const int buttonWidth = 150;
+        const int buttonHeight = 50;
+        const int buttonX = ScreenWidth - buttonWidth - 200;
+        const int buttonY = ScreenHeight - buttonHeight - 400;
+
+        // Check if mouse is hovering over button
+        Vector2 mousePos = Raylib.GetMousePosition();
+        bool isHovering = mousePos.X >= buttonX && 
+                         mousePos.X <= buttonX + buttonWidth &&
+                         mousePos.Y >= buttonY && 
+                         mousePos.Y <= buttonY + buttonHeight;
+
+        // Draw button background
+        Raylib.DrawRectangle(
+            buttonX,
+            buttonY,
+            buttonWidth,
+            buttonHeight,
+            isHovering ? Color.SkyBlue : Color.Blue
+        );
+
+        // Draw button border
+        Raylib.DrawRectangleLinesEx(
+            new Rectangle(buttonX, buttonY, buttonWidth, buttonHeight),
+            2,
+            Color.DarkBlue
+        );
+
+        // Draw button text
+        string buttonText = "End Turn";
+        int textWidth = Raylib.MeasureText(buttonText, 20);
+        Raylib.DrawText(
+            buttonText,
+            buttonX + (buttonWidth - textWidth) / 2,
+            buttonY + (buttonHeight - 20) / 2,
+            20,
+            Color.White
+        );
+
+        // Handle button click
+        if (isHovering && Raylib.IsMouseButtonPressed(MouseButton.Left))
+        {
+            game.Map.Player.EndTurn();
+            combatRoom.CurrentEnergy = game.Map.Player.MaxEnergy; // Reset energy for next turn
+        }
     }
 }

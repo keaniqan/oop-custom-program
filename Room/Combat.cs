@@ -22,6 +22,12 @@ public class Combat: Room
         set { _enemy = value; }
     }
 
+    public int CurrentEnergy
+    {
+        get { return _currentEnergy; }
+        set { _currentEnergy = value; }
+    }
+
     public override void Reward()
     {
         // TODO: Implement reward

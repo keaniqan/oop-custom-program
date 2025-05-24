@@ -52,16 +52,16 @@ internal class Program
                         currentScreen = GameScreen.Gameplay;
                         var starterDeck = new List<Card>
                         {
-                            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.Hand, 0, AffinityType.None, false),
-                            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.Hand, 0, AffinityType.None, false),
-                            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.Hand, 0, AffinityType.None, false),
-                            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.Hand, 0, AffinityType.None, false),
-                            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.Hand, 0, AffinityType.None, false),
-                            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.Hand, 0, AffinityType.None, false),
-                            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.Hand, 0, AffinityType.None, false),
-                            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.Hand, 0, AffinityType.None, false),
-                            new Card("Bash", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action> {bashAttack, bashEffect}, CardLocation.Hand, 0, AffinityType.None, false),
-                            new Card("Bash", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action> {bashAttack, bashEffect}, CardLocation.Hand, 0, AffinityType.None, false),
+                            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.Hand, 1, AffinityType.None, false),
+                            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.Hand, 1, AffinityType.None, false),
+                            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.Hand, 1, AffinityType.None, false),
+                            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.Hand, 1, AffinityType.None, false),
+                            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.Hand, 1, AffinityType.None, false),
+                            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.Hand, 1, AffinityType.None, false),
+                            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.Hand, 1, AffinityType.None, false),
+                            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.Hand, 1, AffinityType.None, false),
+                            new Card("Bash", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action> {bashAttack, bashEffect}, CardLocation.Hand, 2, AffinityType.None, false),
+                            new Card("Bash", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action> {bashAttack, bashEffect}, CardLocation.Hand, 2, AffinityType.None, false),
                         };
                         player = new Player("Player", 100, 100, 0, 3, new List<Effect>(), 0, new List<Charm>(), starterDeck, 0.0);
                         

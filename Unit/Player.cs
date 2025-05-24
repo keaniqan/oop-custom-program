@@ -48,8 +48,16 @@ public class Player: Unit
         _shopDiscount += shopDiscount;
     }
     public void PlayCard(Card card){
-        card.DealCard(card);
-        card.DiscardCard(card);
+        if (GameRenderer.game?.Map?.Rooms?.Count > 0 && 
+            GameRenderer.game.Map.Rooms[0] is Combat combatRoom)
+        {
+            if (combatRoom.CurrentEnergy >= card.CardCost)
+            {
+                combatRoom.CurrentEnergy -= card.CardCost;
+                card.DealCard(card);
+                card.DiscardCard(card);
+            }
+        }
     }
     public void DiscardHand(){
         foreach (var card in _cards){
@@ -90,6 +98,12 @@ public class Player: Unit
 
     public void EndTurn(){  
         DiscardHand();
+    }
+
+    public int MaxEnergy
+    {
+        get { return _maxEnergy; }
+        set { _maxEnergy = value; }
     }
 }
 
