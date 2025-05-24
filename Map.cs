@@ -26,8 +26,7 @@ public class Map
         set { _player = value; }
     }
     
-    
-    
+
     
     
     
