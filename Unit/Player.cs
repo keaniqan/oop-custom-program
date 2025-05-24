@@ -68,11 +68,25 @@ public class Player: Unit
     }
     public void DrawCards(int amount){
         int cardsDrawn = 0;
-        foreach (var card in _cards){
-            if (cardsDrawn >= amount) break;
-            if (card.CardLocation == CardLocation.DrawPile){
+        while (cardsDrawn < amount)
+        {
+            // If draw pile is empty, refill from discard and shuffle
+            if (!_cards.Any(c => c.CardLocation == CardLocation.DrawPile))
+            {
+                EmptyDiscardPiletoDrawPile();
+                ShuffleDeck();
+            }
+            // Try to draw a card
+            var card = _cards.FirstOrDefault(c => c.CardLocation == CardLocation.DrawPile);
+            if (card != null)
+            {
                 card.DrawCard(card);
                 cardsDrawn++;
+            }
+            else
+            {
+                // No more cards to draw
+                break;
             }
         }
     }

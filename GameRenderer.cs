@@ -16,6 +16,26 @@ public class GameRenderer
     private static int draggedCardIndex = -1; // -1 means no card is being dragged
     private static Vector2 dragOffset; // Offset from mouse position to card position
     public static Game game; // Reference to the game instance
+    private static bool showMapOverlay = false;
+
+    // Map node and graph structures
+    internal class MapNode
+    {
+        public int Layer;
+        public int Index;
+        public string RoomType;
+        public List<MapNode> Connections = new List<MapNode>();
+        public int X, Y;
+        public bool IsAvailable = false;
+        public bool IsCurrent = false;
+    }
+    internal class MapGraph
+    {
+        public List<List<MapNode>> Layers = new List<List<MapNode>>();
+    }
+    internal static MapGraph mapGraph = null;
+    internal static int playerLayer = 0;
+    internal static int playerIndex = 0;
 
     public static void InitializeBookColors()
     {
@@ -233,6 +253,16 @@ public class GameRenderer
         {
             var card = cardsInHand[i];
             DrawCard(i, cardsInHand.Count, card.Name, card.Description, card.CardCost);
+        }
+
+        // Handle map overlay toggle
+        if (Raylib.IsKeyPressed(KeyboardKey.M))
+        {
+            showMapOverlay = !showMapOverlay;
+        }
+        if (showMapOverlay)
+        {
+            DrawMapOverlay();
         }
     }
 
@@ -744,5 +774,150 @@ public class GameRenderer
                 Console.WriteLine($"Error during turn transition: {e.Message}");
             }
         }
+    }
+
+    private static void GenerateMapGraph()
+    {
+        int totalLayers = 12;
+        int[] nodesPerLayer = new int[totalLayers];
+        for (int i = 0; i < totalLayers; i++)
+        {
+            nodesPerLayer[i] = (i % 2 == 0) ? 2 : 3; // alternate 2,3,2,3...
+        }
+        nodesPerLayer[0] = 1; // Start with 1 node
+        nodesPerLayer[totalLayers-1] = 1; // End with 1 node (boss)
+
+        mapGraph = new MapGraph();
+        //int nodeRadius = 30;
+        int verticalSpacing = 70;
+        int horizontalSpacing = 120;
+        int startY = 120;
+        int centerX = ScreenWidth / 2;
+
+        // Create nodes
+        for (int layer = 0; layer < totalLayers; layer++)
+        {
+            int nodes = nodesPerLayer[layer];
+            int y = startY + layer * verticalSpacing;
+            int totalWidth = (nodes - 1) * horizontalSpacing;
+            var layerNodes = new List<MapNode>();
+            for (int n = 0; n < nodes; n++)
+            {
+                int x = centerX - totalWidth / 2 + n * horizontalSpacing;
+                string roomType = (layer == 0) ? "Start" : (layer == totalLayers-1) ? "Boss" : (n % 3 == 0 ? "Elite" : (n % 2 == 0 ? "Combat" : "Event"));
+                layerNodes.Add(new MapNode { Layer = layer, Index = n, RoomType = roomType, X = x, Y = y });
+            }
+            mapGraph.Layers.Add(layerNodes);
+        }
+        // Connect nodes with improved branching logic
+        for (int layer = 1; layer < totalLayers; layer++)
+        {
+            var prevLayer = mapGraph.Layers[layer-1];
+            var currLayer = mapGraph.Layers[layer];
+            int prevCount = prevLayer.Count;
+            int currCount = currLayer.Count;
+            // 1. Proportional connections (prev to curr)
+            for (int n = 0; n < currCount; n++)
+            {
+                float prevPos = (float)n / (currCount - 1) * (prevCount - 1);
+                int left = (int)Math.Floor(prevPos);
+                int right = (int)Math.Ceiling(prevPos);
+                prevLayer[left].Connections.Add(currLayer[n]);
+                if (right != left) prevLayer[right].Connections.Add(currLayer[n]);
+            }
+            // 2. Ensure every node in currLayer has at least one incoming connection
+            foreach (var node in currLayer)
+            {
+                bool hasIncoming = prevLayer.Any(prev => prev.Connections.Contains(node));
+                if (!hasIncoming)
+                {
+                    // Connect to the closest node in prevLayer
+                    var closest = prevLayer.OrderBy(prev => Math.Abs(prev.X - node.X)).First();
+                    closest.Connections.Add(node);
+                }
+            }
+            // 3. Ensure every node in prevLayer has at least one outgoing connection
+            foreach (var prev in prevLayer)
+            {
+                if (!prev.Connections.Any())
+                {
+                    // Connect to the closest node in currLayer
+                    var closest = currLayer.OrderBy(curr => Math.Abs(curr.X - prev.X)).First();
+                    prev.Connections.Add(closest);
+                }
+            }
+        }
+        // Set starting node as available/current
+        mapGraph.Layers[0][0].IsAvailable = true;
+        mapGraph.Layers[0][0].IsCurrent = true;
+        playerLayer = 0;
+        playerIndex = 0;
+    }
+
+    public static int DrawMapSelectionScreen()
+    {
+        if (mapGraph == null) GenerateMapGraph();
+        DrawMapOverlay();
+        // Only allow selection of available nodes in the first layer (start)
+        var layer = mapGraph.Layers[0];
+        Vector2 mouse = Raylib.GetMousePosition();
+        int nodeRadius = 30;
+        for (int i = 0; i < layer.Count; i++)
+        {
+            var node = layer[i];
+            if (node.IsAvailable)
+            {
+                float dx = mouse.X - node.X;
+                float dy = mouse.Y - node.Y;
+                if (dx * dx + dy * dy <= nodeRadius * nodeRadius)
+                {
+                    if (Raylib.IsMouseButtonPressed(MouseButton.Left))
+                    {
+                        node.IsCurrent = true;
+                        return i;
+                    }
+                }
+            }
+        }
+        return -1;
+    }
+
+    public static void DrawMapOverlay()
+    {
+        if (mapGraph == null) GenerateMapGraph();
+        Raylib.DrawRectangle(0, 0, ScreenWidth, ScreenHeight, new Color(0, 0, 0, 180));
+        int nodeRadius = 30;
+        // Draw connections
+        for (int layer = 0; layer < mapGraph.Layers.Count-1; layer++)
+        {
+            foreach (var node in mapGraph.Layers[layer])
+            {
+                foreach (var next in node.Connections)
+                {
+                    Raylib.DrawLine(node.X, node.Y, next.X, next.Y, Color.Gray);
+                }
+            }
+        }
+        // Draw nodes
+        for (int layer = 0; layer < mapGraph.Layers.Count; layer++)
+        {
+            foreach (var node in mapGraph.Layers[layer])
+            {
+                Color fill = node.IsCurrent ? Color.Yellow : node.IsAvailable ? Color.LightGray : new Color(80,80,80,255);
+                Raylib.DrawCircle(node.X, node.Y, nodeRadius, fill);
+                Raylib.DrawCircleLines(node.X, node.Y, nodeRadius, Color.DarkGray);
+                Raylib.DrawText(node.RoomType, node.X-24, node.Y-10, 18, Color.Black);
+            }
+        }
+        // Draw close instruction
+        string closeText = "Click a node to start";
+        int textWidth = Raylib.MeasureText(closeText, 24);
+        Raylib.DrawText(closeText, ScreenWidth/2 - textWidth/2, ScreenHeight - 60, 24, Color.White);
+    }
+
+    public static void DrawEndCombatScreen()
+    {
+        Raylib.DrawRectangle(0, 0, ScreenWidth, ScreenHeight, new Color(0, 0, 0, 180));
+        Raylib.DrawText("Combat Ended", ScreenWidth/2 - 100, ScreenHeight/2 - 50, 40, Color.White);
     }
 }

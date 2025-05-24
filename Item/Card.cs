@@ -51,6 +51,11 @@ public class Card : Item
                     GameRenderer.game.Map.Rooms[0] is Combat combatRoom)
                 {
                     combatRoom.Enemy.Health -= action.Value;
+                    // Check if enemy is dead
+                    if (combatRoom.Enemy.Health <= 0)
+                    {
+                        combatRoom.EndCombat();
+                    }
                 }
             }
             else if (action.ActionType == ActionType.Block)

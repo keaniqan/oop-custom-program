@@ -23,6 +23,8 @@ public class Combat: Room
         _turnCount = 0;
         _game = GameRenderer.game;
         SetEnemyIntent();
+        // Draw 5 cards at the start of combat
+        _game?.Map?.Player?.DrawCards(5);
     }
 
     public Enemy Enemy
@@ -178,10 +180,32 @@ public class Combat: Room
         
         // Set turn phase back to player's turn
         _turnPhase = TurnPhase.PlayerStart;
+        // Draw 5 cards at the start of player's turn
+        _game.Map.Player.DrawCards(5);
     }
 
     public override void Reward()
     {
         // TODO: Implement reward
+    }
+
+    public void EndCombat()
+    {
+        this.IsCleared = true;
+        if (GameRenderer.game != null)
+        {
+            // Update current node and make next nodes available
+            var currentNode = GameRenderer.mapGraph.Layers[GameRenderer.playerLayer][GameRenderer.playerIndex];
+            currentNode.IsCurrent = false;
+            
+            // Make all connected nodes available
+            foreach (var nextNode in currentNode.Connections)
+            {
+                nextNode.IsAvailable = true;
+            }
+            
+            // Show map screen for next node selection
+
+        }
     }
 }

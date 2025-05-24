@@ -10,9 +10,10 @@ internal class Program
     private const int ScreenHeight = 1080;
     private const string GameTitle = "12 Hours Before Final";
     
-    private enum GameScreen
+    public enum GameScreen
     {
         TitleScreen,
+        MapSelection,
         Gameplay
     }
     
@@ -33,7 +34,7 @@ internal class Program
         Rectangle startButtonRec = new Rectangle(ScreenWidth / 2 - 100, ScreenHeight / 2 + 20, 200, 50);
         bool startButtonHover = false;
 
-        Action strikeAction = new(ActionType.Attack, 6, null, false);
+        Action strikeAction = new(ActionType.Attack, 50, null, false);
         Action defendAction = new(ActionType.Block, 5, null, false);
         Action bashAttack = new(ActionType.Attack, 8, null, false);
         Action bashEffect = new(ActionType.Effect, 0, EffectType.Vulnerable, false);
@@ -49,19 +50,19 @@ internal class Program
                     
                     if (startButtonHover && Raylib.IsMouseButtonPressed(MouseButton.Left))
                     {
-                        currentScreen = GameScreen.Gameplay;
+                        currentScreen = GameScreen.MapSelection;
                         var starterDeck = new List<Card>
                         {
-                            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.Hand, 1, AffinityType.None, false),
-                            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.Hand, 1, AffinityType.None, false),
-                            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.Hand, 1, AffinityType.None, false),
-                            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.Hand, 1, AffinityType.None, false),
-                            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.Hand, 1, AffinityType.None, false),
-                            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.Hand, 1, AffinityType.None, false),
-                            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.Hand, 1, AffinityType.None, false),
-                            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.Hand, 1, AffinityType.None, false),
-                            new Card("Bash", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action> {bashAttack, bashEffect}, CardLocation.Hand, 2, AffinityType.None, false),
-                            new Card("Bash", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action> {bashAttack, bashEffect}, CardLocation.Hand, 2, AffinityType.None, false),
+                            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),
+                            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),
+                            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),
+                            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),
+                            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
+                            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
+                            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
+                            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
+                            new Card("Bash", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action> {bashAttack, bashEffect}, CardLocation.DrawPile, 2, AffinityType.None, false),
+                            new Card("Bash", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action> {bashAttack, bashEffect}, CardLocation.DrawPile, 2, AffinityType.None, false),
                         };
                         player = new Player("Player", 100, 100, 0, 3, new List<Effect>(), 0, new List<Charm>(), starterDeck, 0.0);
                         
@@ -78,6 +79,16 @@ internal class Program
                     }
                     break;
                 
+                case GameScreen.MapSelection:
+                    // Handle map selection and node click
+                    int selectedNode = GameRenderer.DrawMapSelectionScreen();
+                    if (selectedNode >= 0)
+                    {
+                        // Node selected, start gameplay
+                        currentScreen = GameScreen.Gameplay;
+                        // TODO: Set up combat for the selected node if needed
+                    }
+                    break;
                 case GameScreen.Gameplay:
                     // Game logic will go here
                     break;
@@ -111,6 +122,9 @@ internal class Program
                         ScreenHeight - 50, 20, Color.Gray);
                     break;
                 
+                case GameScreen.MapSelection:
+                    GameRenderer.DrawMapOverlay();
+                    break;
                 case GameScreen.Gameplay:
                     GameRenderer.DrawGameplayScreen(game);
                     break;
