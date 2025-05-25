@@ -8,7 +8,6 @@ public class GameRenderer
 {
     private const int ScreenWidth = 1920;
     private const int ScreenHeight = 1080;
-    private static Color[,,] bookColors;
     private static Vector2 playerPosition;
     private static Font descriptionFont;
     private static Texture2D cardTexture;
@@ -17,6 +16,26 @@ public class GameRenderer
     private static Vector2 dragOffset; // Offset from mouse position to card position
     public static Game game; // Reference to the game instance
     private static bool showMapOverlay = false;
+    private static Texture2D scrollTexture;
+    private static Texture2D discardPileTexture;
+    private static Texture2D drawPileTexture;
+    private static Texture2D playerTexture;
+    private static Texture2D energyTexture;
+    private static Texture2D floorTexture;
+    private static Texture2D bookshelfTexture;
+    // Animation properties
+    private static Dictionary<int, CardAnimation> cardAnimations = new Dictionary<int, CardAnimation>();
+    private const float ANIMATION_DURATION = 0.5f; // Duration in seconds
+
+    private class CardAnimation
+    {
+        public float StartTime;
+        public Vector2 StartPosition;
+        public Vector2 TargetPosition;
+        public float StartScale;
+        public float TargetScale;
+        public bool IsPlaying;
+    }
 
     // Map node and graph structures
     internal class MapNode
@@ -37,31 +56,9 @@ public class GameRenderer
     internal static int playerLayer = 0;
     internal static int playerIndex = 0;
 
-    public static void InitializeBookColors()
+    public static void InitializeGame(Game gameInstance)
     {
-        // Initialize the book colors array based on shelf layout
-        int shelves = 10; // Ensure enough shelves for height
-        int bookshelves = 6; // Ensure we account for 5+ bookshelves
-        int booksPerShelf = 12;
-        
-        bookColors = new Color[bookshelves, shelves, booksPerShelf];
-        
-        // Generate random colors once
-        for (int shelf = 0; shelf < bookshelves; shelf++)
-        {
-            for (int row = 0; row < shelves; row++)
-            {
-                for (int book = 0; book < booksPerShelf; book++)
-                {
-                    bookColors[shelf, row, book] = new Color(
-                        Raylib.GetRandomValue(50, 200),
-                        Raylib.GetRandomValue(50, 200),
-                        Raylib.GetRandomValue(50, 200),
-                        255
-                    );
-                }
-            }
-        }
+        game = gameInstance;
 
         // Load the description font
         descriptionFont = Raylib.LoadFont("resources/fonts/romulus.png");
@@ -71,11 +68,27 @@ public class GameRenderer
 
         // Load the enemy texture
         enemyTexture = Raylib.LoadTexture("resources/enemy/BukuAddmath.png");
-    }
 
-    public static void InitializeGame(Game gameInstance)
-    {
-        game = gameInstance;
+        // Load the scroll texture
+        scrollTexture = Raylib.LoadTexture("resources/background/scroll.png");
+
+        // Load the discardpile texture
+        discardPileTexture = Raylib.LoadTexture("resources/cards/discardpile.png");
+
+        // Load the drawpile texture
+        drawPileTexture = Raylib.LoadTexture("resources/cards/drawpile.png");
+
+        // Load the player texture
+        playerTexture = Raylib.LoadTexture("resources/player/player.png");
+
+        // Load the energy texture
+        energyTexture = Raylib.LoadTexture("resources/background/energy.png");
+
+        // Load the floor texture
+        floorTexture = Raylib.LoadTexture("resources/background/floor.png");
+
+        // Load the bookshelf texture
+        bookshelfTexture = Raylib.LoadTexture("resources/background/bookshelf.png");
     }
 
     public static void DrawPlayer()
@@ -85,69 +98,15 @@ public class GameRenderer
             ScreenWidth / 2 - 350, 
             ScreenHeight - 350); // Moved higher up to be more visible
         
-        // Head (from behind)
-        Raylib.DrawCircle(
-            (int)playerPosition.X,
-            (int)playerPosition.Y - 150,
-            60,
-            Color.Beige);
-
-        // Hair as a circle on top
-        Raylib.DrawCircle(
-            (int)playerPosition.X - 10,
-            (int)playerPosition.Y - 160,
-            60,
-            new Color(70, 40, 20, 255)); // Dark brown hair
-
-        // Rectangle on top of head
-        Raylib.DrawRectangle(
-            (int)playerPosition.X - 20,
-            (int)playerPosition.Y - 218,
-            80,
-            40,
-            new Color(70, 40, 20, 255)); // Dark brown hair
-            
-        // Shoulders and upper back
-        Raylib.DrawRectangle(
-            (int)playerPosition.X - 90,
-            (int)playerPosition.Y - 90,
-            180,
-            120,
-            new Color(30, 100, 180, 255)); // Blue hoodie
-
-        // Left arm
-        Raylib.DrawRectangle(
-            (int)playerPosition.X - 100,
-            (int)playerPosition.Y - 80,
-            40,
-            120,
-            new Color(30, 100, 180, 255)); // blue hoodie
-
-        // Right arm
-        Raylib.DrawRectangle(
-            (int)playerPosition.X + 70,
-            (int)playerPosition.Y - 80,
-            40,
-            120,
-            new Color(30, 100, 180, 255)); // blue hoodie
-            
-        // Hoodie details
-        
-        // Hood outline
-        Raylib.DrawRectangle(
-            (int)playerPosition.X - 65,
-            (int)playerPosition.Y - 95,
-            130,
-            20,
-            new Color(20, 80, 160, 255)); // Darker blue
-            
-        // Shoulder details
-        Raylib.DrawLine(
-            (int)playerPosition.X - 90,
-            (int)playerPosition.Y - 40,
-            (int)playerPosition.X + 90,
-            (int)playerPosition.Y - 40,
-            new Color(20, 80, 160, 255)); // Seam line
+        // Draw the player texture
+        Raylib.DrawTexturePro(
+            playerTexture,
+            new Rectangle(0, 0, playerTexture.Width, playerTexture.Height),
+            new Rectangle(playerPosition.X - 280, playerPosition.Y - 400, 800, 750),
+            new Vector2(0, 0),
+            0,
+            Color.White
+        );
     }
 
     public static void DrawGameplayScreen(Game game)
@@ -157,49 +116,35 @@ public class GameRenderer
         // Draw wall background
         Raylib.DrawRectangle(0, 0, ScreenWidth, ScreenHeight - floorHeight + 30, Color.Beige);
         
-        // Draw wooden floor - cover half the screen 
-        Raylib.DrawRectangle(0, ScreenHeight - floorHeight + 30, ScreenWidth, floorHeight, Color.DarkBrown);
+        // Draw wooden floor using texture
+        Raylib.DrawTexturePro(
+            floorTexture,
+            new Rectangle(0, 0, floorTexture.Width, floorTexture.Height),
+            new Rectangle(0, ScreenHeight - floorHeight + 30, ScreenWidth, floorHeight),
+            new Vector2(0, 0),
+            0,
+            Color.White
+        );
         
         // Draw bookshelves - with specific spacing to fit 5 bookshelves
         int bookshelfWidth = 250;
         int spacing = (ScreenWidth - (5 * bookshelfWidth)) / 6; // Equal spacing between 5 bookshelves
         
-        int shelfIndex = 0;
         for (int i = 0; i < 5; i++) // Draw exactly 5 bookshelves
         {
             int x = spacing + i * (bookshelfWidth + spacing);
             
-            // Bookshelf frame
-            int shelfY = 50; // Moved up to adjust for higher floor
-            int shelfHeight = ScreenHeight - floorHeight - shelfY + 30;
-            Raylib.DrawRectangle(x, shelfY, bookshelfWidth, shelfHeight, Color.Brown);
-            
-            // Draw shelf lines
-            for (int y = shelfY + 50; y < ScreenHeight - floorHeight - 50; y += 100)
-            {
-                Raylib.DrawRectangle(x, y, bookshelfWidth, 20, Color.DarkBrown);
-            }
-            
-            // Draw books on each shelf
-            int rowIndex = 0;
-            for (int y = shelfY + 60; y < ScreenHeight - floorHeight - 50; y += 100)
-            {
-                int bookIndex = 0;
-                for (int bookX = x + 10; bookX < x + bookshelfWidth - 10; bookX += 20)
-                {
-                    // Use the pre-generated book colors
-                    if (shelfIndex < bookColors.GetLength(0) && 
-                        rowIndex < bookColors.GetLength(1) && 
-                        bookIndex < bookColors.GetLength(2))
-                    {
-                        Color bookColor = bookColors[shelfIndex, rowIndex, bookIndex];
-                        Raylib.DrawRectangle(bookX, y - 80, 15, 80, bookColor);
-                        bookIndex++;
-                    }
-                }
-                rowIndex++;
-            }
-            shelfIndex++;
+            // Draw bookshelf using texture
+            int shelfY = floorHeight - 300; // Moved up to adjust for higher floor
+            int shelfHeight = 350;
+            Raylib.DrawTexturePro(
+                bookshelfTexture,
+                new Rectangle(0, 0, bookshelfTexture.Width, bookshelfTexture.Height),
+                new Rectangle(x, shelfY, bookshelfWidth, shelfHeight),
+                new Vector2(0, 0),
+                0,
+                Color.White
+            );
         }
         
         // Draw some ceiling lamps
@@ -225,13 +170,6 @@ public class GameRenderer
         // Draw gameplay interface
         Raylib.DrawRectangle(
             0, 
-            ScreenHeight - floorHeight + 200, 
-            ScreenWidth, 
-            500, 
-            Color.Gray);
-
-        Raylib.DrawRectangle(
-            0, 
             ScreenHeight - floorHeight - 515, 
             ScreenWidth, 
             50, 
@@ -247,7 +185,23 @@ public class GameRenderer
         }
         
         // Draw player HP bar above the player
-        DrawHPBar(game.Map.Player, new Vector2(playerPosition.X - 100, playerPosition.Y - 300), true);
+        DrawHPBar(game.Map.Player, new Vector2(playerPosition.X - 100, playerPosition.Y - 350), true);
+
+        // Add Scroll Image behind the cards
+        Raylib.DrawTexturePro(
+            scrollTexture,
+            new Rectangle(0, 0, scrollTexture.Width, scrollTexture.Height),
+            new Rectangle(270, 700, scrollTexture.Width * 1.8f, scrollTexture.Height * 1.35f),
+            new Vector2(0, 0),
+            0,
+            Color.White
+        );
+
+        // Draw the discard pile
+        Raylib.DrawTexture(discardPileTexture, 1680, 800, Color.White);
+
+        // Draw the draw pile
+        Raylib.DrawTexture(drawPileTexture, 100, 800, Color.White);
 
         // Draw cards in player's hand
         var cardsInHand = game.Map.Player.Cards.Where(c => c.CardLocation == CardLocation.Hand).ToList();
@@ -332,11 +286,34 @@ public class GameRenderer
         Vector2 position = CalculateCardPosition(cardIndex, totalCards);
         const int cardWidth = 140;
         const int cardHeight = 209;
-        const int shadowWidth = 18; // Width of the shadow overlay
-        const int gradientSteps = 6; // Number of steps in the gradient
-        const int hoverElevation = 20; // How much the card elevates on hover
+        const int shadowWidth = 18;
+        const int gradientSteps = 6;
+        const int hoverElevation = 20;
         const int padding = 10;
         const int costBoxSize = 28;
+
+        // Check if this card was just drawn (moved from draw pile to hand)
+        var cardsInHand = game.Map.Player.Cards.Where(c => c.CardLocation == CardLocation.Hand).ToList();
+        if (cardIndex < cardsInHand.Count)
+        {
+            var card = cardsInHand[cardIndex];
+            // Only create animation if the card was just drawn (check if it's a new card in hand)
+            if (!cardAnimations.ContainsKey(cardIndex) && card.CardLocation == CardLocation.Hand && card.JustDrawn)
+            {
+                // Create draw animation
+                var animation = new CardAnimation
+                {
+                    StartTime = (float)Raylib.GetTime() + (cardIndex * 0.1f), // Stagger the animations
+                    StartPosition = new Vector2(100, 800), // Draw pile position
+                    TargetPosition = position,
+                    StartScale = 0.5f,
+                    TargetScale = 1.0f,
+                    IsPlaying = true
+                };
+                cardAnimations[cardIndex] = animation;
+                card.JustDrawn = false; // Mark the card as no longer newly drawn
+            }
+        }
 
         // Check if mouse is hovering over this card
         Vector2 mousePos = Raylib.GetMousePosition();
@@ -363,11 +340,24 @@ public class GameRenderer
                 // Check if card was released in upper half of screen
                 if (mousePos.Y < ScreenHeight / 2)
                 {
-                    // Play the card
-                    var cardsInHand = game.Map.Player.Cards.Where(c => c.CardLocation == CardLocation.Hand).ToList();
-                    if (cardIndex < cardsInHand.Count)
+                    // Start play animation
+                    var handCards = game.Map.Player.Cards.Where(c => c.CardLocation == CardLocation.Hand).ToList();
+                    if (cardIndex < handCards.Count)
                     {
-                        game.Map.Player.PlayCard(cardsInHand[cardIndex]);
+                        // Create animation
+                        var animation = new CardAnimation
+                        {
+                            StartTime = (float)Raylib.GetTime(),
+                            StartPosition = position,
+                            TargetPosition = new Vector2(1680, 800), // Discard pile position
+                            StartScale = 1.0f,
+                            TargetScale = 0.5f,
+                            IsPlaying = true
+                        };
+                        cardAnimations[cardIndex] = animation;
+
+                        // Play the card after animation
+                        game.Map.Player.PlayCard(handCards[cardIndex]);
                     }
                 }
                 draggedCardIndex = -1;
@@ -379,7 +369,41 @@ public class GameRenderer
             position.Y -= hoverElevation;
         }
 
-        // Draw the card texture
+        // Handle animation
+        if (cardAnimations.TryGetValue(cardIndex, out var anim) && anim.IsPlaying)
+        {
+            float currentTime = (float)Raylib.GetTime();
+            float elapsed = currentTime - anim.StartTime;
+            float progress = Math.Min(elapsed / ANIMATION_DURATION, 1.0f);
+
+            // Ease out cubic function for smoother animation
+            float easedProgress = 1 - (float)Math.Pow(1 - progress, 3);
+
+            // Update position
+            position = Vector2.Lerp(anim.StartPosition, anim.TargetPosition, easedProgress);
+
+            // Update scale
+            float scale = anim.StartScale + (anim.TargetScale - anim.StartScale) * easedProgress;
+
+            // Draw the card texture with animation
+            Raylib.DrawTexturePro(
+                cardTexture,
+                new Rectangle(0, 0, cardTexture.Width, cardTexture.Height),
+                new Rectangle(position.X, position.Y, cardWidth * scale, cardHeight * scale),
+                new Vector2(cardWidth * scale / 2, cardHeight * scale / 2),
+                0,
+                new Color((byte)255, (byte)255, (byte)255, (byte)(255 * (anim.TargetScale > anim.StartScale ? easedProgress : (1 - easedProgress)))) // Fade in for draw, fade out for discard
+            );
+
+            // Remove animation if complete
+            if (progress >= 1.0f)
+            {
+                cardAnimations.Remove(cardIndex);
+            }
+            return; // Skip normal card drawing during animation
+        }
+
+        // Draw the card texture (normal drawing)
         Raylib.DrawTexturePro(
             cardTexture,
             new Rectangle(0, 0, cardTexture.Width, cardTexture.Height),
@@ -693,40 +717,15 @@ public class GameRenderer
         const int startX = 200;
         const int startY = ScreenHeight - 450;
 
-        // Draw outer ring
-        Raylib.DrawCircleLines(
-            startX + orbSize/2,
-            startY,
-            orbSize/2 + 5,
-            Color.Gold
+        // Draw the energy texture
+        Raylib.DrawTexturePro(
+            energyTexture,
+            new Rectangle(0, 0, energyTexture.Width, energyTexture.Height),
+            new Rectangle(startX, startY - orbSize/2, orbSize, orbSize),
+            new Vector2(0, 0),
+            0,
+            Color.White
         );
-
-        // Draw inner glow
-        Raylib.DrawCircle(
-            startX + orbSize/2,
-            startY,
-            orbSize/2 - 10,
-            new Color(255, 255, 200, 100)
-        );
-
-        // Draw main energy orb
-        Raylib.DrawCircle(
-            startX + orbSize/2,
-            startY,
-            orbSize/2,
-            Color.Yellow
-        );
-
-        // Draw decorative lines
-        for (int i = 0; i < 8; i++)
-        {
-            float angle = i * (float)(Math.PI / 4);
-            float x1 = startX + orbSize/2 + (float)Math.Cos(angle) * (orbSize/2 - 15);
-            float y1 = startY + (float)Math.Sin(angle) * (orbSize/2 - 15);
-            float x2 = startX + orbSize/2 + (float)Math.Cos(angle) * (orbSize/2 + 5);
-            float y2 = startY + (float)Math.Sin(angle) * (orbSize/2 + 5);
-            Raylib.DrawLine((int)x1, (int)y1, (int)x2, (int)y2, Color.Gold);
-        }
 
         // Draw energy text
         string energyText = $"{currentEnergy}/{maxEnergy}";
@@ -788,6 +787,26 @@ public class GameRenderer
         {
             try
             {
+                // Get all cards in hand
+                var cardsInHand = game.Map.Player.Cards.Where(c => c.CardLocation == CardLocation.Hand).ToList();
+                
+                // Create animations for each card
+                for (int i = 0; i < cardsInHand.Count; i++)
+                {
+                    Vector2 cardPos = CalculateCardPosition(i, cardsInHand.Count);
+                    var animation = new CardAnimation
+                    {
+                        StartTime = (float)Raylib.GetTime() + (i * 0.1f), // Stagger the animations
+                        StartPosition = new Vector2(cardPos.X + 300, cardPos.Y),
+                        TargetPosition = new Vector2(1680, 800), // Discard pile position
+                        StartScale = 1.0f,
+                        TargetScale = 0.5f,
+                        IsPlaying = true
+                    };
+                    cardAnimations[i] = animation;
+                }
+
+                // End turn after starting animations
                 game.Map.Player.EndTurn();
                 combatRoom.StartEnemyTurn();
                 combatRoom.EndEnemyTurn();

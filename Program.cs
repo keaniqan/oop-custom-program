@@ -28,8 +28,6 @@ internal class Program
         Raylib.InitWindow(ScreenWidth, ScreenHeight, GameTitle);
         Raylib.SetTargetFPS(60);
         
-        // Initialize the book colors once
-        GameRenderer.InitializeBookColors();
         
         // Initialize all enemies
         enemies.Add(new Enemy("Math Textbook", 60, 60, 0, new List<Effect>(), EnemyType.Basic));

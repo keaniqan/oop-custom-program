@@ -10,12 +10,14 @@ public class Card : Item
     private int _cardCost;
     private AffinityType _cardAffinity;
     private bool _isPower;
+    private bool _justDrawn;
     public Card(string name, string description, int price, List<Action> actions, CardLocation cardLocation, int cardCost, AffinityType cardAffinity, bool isPower) : base(name, description, price, actions)
     {
         _cardLocation = cardLocation;
         _cardCost = cardCost;
         _cardAffinity = cardAffinity;
         _isPower = isPower;
+        _justDrawn = false;
     }
 
     public CardLocation CardLocation
@@ -38,6 +40,11 @@ public class Card : Item
     {
         get { return _isPower; }
         set { _isPower = value; }
+    }
+    public bool JustDrawn
+    {
+        get { return _justDrawn; }
+        set { _justDrawn = value; }
     }
     
     public void DealCard(Card card)
@@ -72,6 +79,7 @@ public class Card : Item
     public void DrawCard(Card card)
     {
         _cardLocation = CardLocation.Hand;
+        _justDrawn = true;
     }
     public void DiscardCard(Card card)
     {
