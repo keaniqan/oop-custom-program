@@ -28,4 +28,15 @@ public class Effect
         _stack -= 1;
     }
 
+    public EffectType EffectType
+    {
+        get { return _effectType; }
+        set { _effectType = value; }
+    }
+
+    public int Stack
+    {
+        get { return _stack; }
+        set { _stack = value; }
+    }
 }

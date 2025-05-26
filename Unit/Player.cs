@@ -14,6 +14,7 @@ public class Player: Unit
     private List<Card> _cards;
     private double _shopDiscount;
 
+
     public Player(string name, int health, int maxHealth, int block, int maxEnergy, List<Effect> effects, int gold, List<Charm> charms, List<Card> cards, double shopDiscount) : base(name, health, maxHealth, block, effects)
     {
         _maxEnergy = maxEnergy;
@@ -21,6 +22,37 @@ public class Player: Unit
         _charms = charms;
         _cards = cards;
         _shopDiscount = shopDiscount;
+
+        // Initialize all possible effects with 0 stacks
+        foreach (EffectType effectType in Enum.GetValues(typeof(EffectType)))
+        {
+            _effects.Add(new Effect(effectType, effectType.ToString(), 0, true));
+        }
+
+        // Print player information
+        Console.WriteLine("\nPlayer Information:");
+        Console.WriteLine("------------------");
+        Console.WriteLine($"Name: {Name}");
+        Console.WriteLine($"Health: {Health}/{MaxHealth}");
+        Console.WriteLine($"Block: {Block}");
+        Console.WriteLine($"Max Energy: {_maxEnergy}");
+        Console.WriteLine($"Gold: {_gold}");
+        Console.WriteLine($"Shop Discount: {_shopDiscount:P}");
+        
+        Console.WriteLine("\nEffects:");
+        Console.WriteLine("--------");
+        foreach (var effect in Effects)
+        {
+            Console.WriteLine($"- {effect.EffectType}: {effect.Stack} stacks");
+        }
+        
+        Console.WriteLine("\nCards in Deck:");
+        Console.WriteLine("--------------");
+        foreach (var card in _cards)
+        {
+            Console.WriteLine($"- {card.Name} (Cost: {card.CardCost})");
+        }
+        Console.WriteLine();
     }
 
     public List<Card> Cards

@@ -44,8 +44,7 @@ public abstract class Room
         _isAvailable = true;
     }
     
-
-    public void EnterRoom()
+    public virtual void EnterRoom()
     {
         _isCurrent = true;
     }

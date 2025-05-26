@@ -57,13 +57,7 @@ public class Card : Item
                 if (GameRenderer.game?.Map?.Rooms?.Count > 0 && 
                     GameRenderer.game.Map.Rooms[0] is Combat combatRoom)
                 {
-                    combatRoom.Enemy.Health -= action.Value;
-                    // Check if enemy is dead
-                    if (combatRoom.Enemy.Health <= 0)
-                    {
-                        combatRoom.EndCombat();
-                        Program.currentScreen = Program.GameScreen.ShowReward;
-                    }
+                    combatRoom.Enemy.TakeDamage(action.Value);
                 }
             }
             else if (action.ActionType == ActionType.Block)
@@ -71,7 +65,7 @@ public class Card : Item
                 // Add block to player
                 if (GameRenderer.game?.Map?.Player != null)
                 {
-                    GameRenderer.game.Map.Player.Block += action.Value;
+                    GameRenderer.game.Map.Player.AddBlock(action.Value);
                 }
             }
         }

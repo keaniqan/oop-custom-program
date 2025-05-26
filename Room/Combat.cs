@@ -160,6 +160,7 @@ public class Combat: Room
 
     public void StartEnemyTurn()
     {
+        _enemy.Block = 0;
         _turnPhase = TurnPhase.EnemyStart;
         
         // Execute current intent first
@@ -171,7 +172,7 @@ public class Combat: Room
         }
         else if (_enemy.Intent._block)
         {
-            _enemy.Block += _enemy.Intent._blockValue;
+            _enemy.AddBlock(_enemy.Intent._blockValue);
         }
         else if (_enemy.Intent._applyBuff)
         {
@@ -191,7 +192,6 @@ public class Combat: Room
         
         // Reset both player and enemy block at end of turn
         _game.Map.Player.Block = 0;
-        _enemy.Block = 0;
         
         // Set intent for next turn
         SetEnemyIntent();
@@ -200,36 +200,6 @@ public class Combat: Room
         _turnPhase = TurnPhase.PlayerStart;
         // Draw 5 cards at the start of player's turn
         _game.Map.Player.DrawCards(5);
-    }
-
-    public void EnemyTakeDamage(int damage)
-    {
-        // First reduce damage by block
-        if (_enemy.Block > 0)
-        {
-            if (_enemy.Block >= damage)
-            {
-                _enemy.Block -= damage;
-                damage = 0;
-            }
-            else
-            {
-                damage -= _enemy.Block;
-                _enemy.Block = 0;
-            }
-        }
-
-        // Then apply remaining damage to health
-        if (damage > 0)
-        {
-            _enemy.Health = Math.Max(0, _enemy.Health - damage);
-            
-            // Check if enemy is defeated
-            if (_enemy.Health <= 0)
-            {
-                EndCombat();
-            }
-        }
     }
 
     public override void Reward()
@@ -252,8 +222,33 @@ public class Combat: Room
                 nextNode.IsAvailable = true;
             }
             
-            // Change current screen to map selection
-            Program.currentScreen = Program.GameScreen.MapSelection;
+            // Show reward screen first
+            Program.currentScreen = Program.GameScreen.Reward;
         }
+    }
+
+    public override void EnterRoom()
+    {
+        base.EnterRoom();
+        
+        // Ensure all cards are in draw pile first
+        if (_game?.Map?.Player != null)
+        {
+            foreach (var card in _game.Map.Player.Cards)
+            {
+                card.CardLocation = CardLocation.DrawPile;
+            }
+            // Shuffle the deck
+            _game.Map.Player.ShuffleDeck();
+            // Draw initial hand
+            _game.Map.Player.DrawCards(5);
+        }
+
+        // Reset turn count and energy
+        _turnCount = 0;
+        _currentEnergy = _game?.Map?.Player?.MaxEnergy ?? 3;
+        
+        // Set initial enemy intent
+        SetEnemyIntent();
     }
 }

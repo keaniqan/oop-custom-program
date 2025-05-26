@@ -929,7 +929,15 @@ public class GameRenderer
                             playerLayer = layer;
                             playerIndex = i;
                             
-                            return i;
+                            // Calculate the actual room index based on the map graph
+                            int roomIndex = 0;
+                            for (int l = 0; l < layer; l++)
+                            {
+                                roomIndex += mapGraph.Layers[l].Count;
+                            }
+                            roomIndex += i;
+                            
+                            return roomIndex;
                         }
                     }
                 }

@@ -13,38 +13,26 @@ internal class Program
     public enum GameScreen
     {
         TitleScreen,
+        Gameplay,
         MapSelection,
-        ShowReward,
-        Gameplay
+        Reward
     }
     
     private static Game game;
     private static Player player;
     public static GameScreen currentScreen = GameScreen.TitleScreen;
-    private static List<Enemy> enemies = new List<Enemy>();
     
     static void Main(string[] args)
     {
         Raylib.InitWindow(ScreenWidth, ScreenHeight, GameTitle);
         Raylib.SetTargetFPS(60);
         
-        
-        // Initialize all enemies
-        enemies.Add(new Enemy("Math Textbook", 60, 60, 0, new List<Effect>(), EnemyType.Basic));
-        enemies.Add(new Enemy("Physics Formula Book", 70, 70, 0, new List<Effect>(), EnemyType.Basic));
-        enemies.Add(new Enemy("Chemistry Lab Manual", 80, 80, 0, new List<Effect>(), EnemyType.Elite));
-        enemies.Add(new Enemy("Biology Study Guide", 90, 90, 0, new List<Effect>(), EnemyType.Elite));
-        enemies.Add(new Enemy("History Textbook", 100, 100, 0, new List<Effect>(), EnemyType.Elite));
-        enemies.Add(new Enemy("Final Exam", 150, 150, 0, new List<Effect>(), EnemyType.Boss));
+        // Initialize game elements
+        InitializeGame();
         
         // Button state
         Rectangle startButtonRec = new Rectangle(ScreenWidth / 2 - 100, ScreenHeight / 2 + 20, 200, 50);
         bool startButtonHover = false;
-
-        Action strikeAction = new(ActionType.Attack, 50, null, false);
-        Action defendAction = new(ActionType.Block, 5, null, false);
-        Action bashAttack = new(ActionType.Attack, 8, null, false);
-        Action bashEffect = new(ActionType.Effect, 0, EffectType.Vulnerable, false);
 
         while (!Raylib.WindowShouldClose())
         {
@@ -58,69 +46,28 @@ internal class Program
                     if (startButtonHover && Raylib.IsMouseButtonPressed(MouseButton.Left))
                     {
                         currentScreen = GameScreen.MapSelection;
-                        var starterDeck = new List<Card>
-                        {
-                            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),
-                            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),
-                            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),
-                            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),
-                            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
-                            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
-                            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
-                            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
-                            new Card("Bash", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action> {bashAttack, bashEffect}, CardLocation.DrawPile, 2, AffinityType.None, false),
-                            new Card("Bash", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action> {bashAttack, bashEffect}, CardLocation.DrawPile, 2, AffinityType.None, false),
-                        };
-                        player = new Player("Player", 100, 100, 0, 3, new List<Effect>(), 0, new List<Charm>(), starterDeck, 0.0);
-                        
-                        // Create a basic enemy
-                        var enemy = new Enemy("Slime", 50, 50, 0, new List<Effect>(), EnemyType.Basic);
-                        
-                        // Initialize game first
-                        game = new Game(DateTime.Now.Millisecond, player);
-                        GameRenderer.InitializeGame(game); // Set the game reference in GameRenderer
-                        
-                        // Create a combat room with the enemy
-                        var combatRoom = new Combat(false, true, true, enemy, EnemyType.Basic, TurnPhase.PlayerStart, 3);
-                        game.Map.Rooms = new List<Room> { combatRoom }; // Add the combat room to the game
                     }
                     break;
                 
-                case GameScreen.MapSelection:
-                    // Handle map selection and node click
-                    int selectedNode = GameRenderer.DrawMapSelectionScreen();
-                    if (selectedNode >= 0)
-                    {
-                        // Get the selected node's room type
-                        var selectedRoomType = GameRenderer.mapGraph.Layers[GameRenderer.playerLayer][selectedNode].RoomType;
-                        
-                        // Get the appropriate enemy
-                        Enemy enemy;
-                        if (selectedRoomType == "Boss")
-                        {
-                            enemy = enemies[5]; // Final Exam
-                        }
-                        else
-                        {
-                            // Randomly select an enemy from the first 5 enemies (excluding boss)
-                            Random random = new Random();
-                            int randomIndex = random.Next(0, 5); // 0 to 4
-                            enemy = enemies[randomIndex];
-                        }
-                        
-                        // Reset enemy HP to full
-                        enemy.Health = enemy.MaxHealth;
-                        
-                        // Create a combat room with the enemy
-                        var combatRoom = new Combat(false, true, true, enemy, enemy.EnemyType, TurnPhase.PlayerStart, 3);
-                        game.Map.Rooms = new List<Room> { combatRoom }; // Add the combat room to the game
-                        
-                        // Node selected, start gameplay
-                        currentScreen = GameScreen.Gameplay;
-                    }
-                    break;
                 case GameScreen.Gameplay:
                     // Game logic will go here
+                    break;
+
+                case GameScreen.MapSelection:
+                    int selectedNode = GameRenderer.DrawMapSelectionScreen();
+                    if (selectedNode != -1)
+                    {
+                        // Update the current room based on the selected node
+                        if (game?.Map?.Rooms != null && selectedNode < game.Map.Rooms.Count)
+                        {
+                            // Move the selected room to the front of the list
+                            var selectedRoom = game.Map.Rooms[selectedNode];
+                            game.Map.Rooms.RemoveAt(selectedNode);
+                            game.Map.Rooms.Insert(0, selectedRoom);
+                            game.Map.Rooms[0].EnterRoom();
+                        }
+                        currentScreen = GameScreen.Gameplay;
+                    }
                     break;
             }
             
@@ -152,13 +99,13 @@ internal class Program
                         ScreenHeight - 50, 20, Color.Gray);
                     break;
                 
-                case GameScreen.MapSelection:
-                    GameRenderer.DrawMapOverlay();
-                    break;
                 case GameScreen.Gameplay:
                     GameRenderer.DrawGameplayScreen(game);
                     break;
-                case GameScreen.ShowReward:
+                case GameScreen.MapSelection:
+                    GameRenderer.DrawMapSelectionScreen();
+                    break;
+                case GameScreen.Reward:
                     GameRenderer.DrawRewardScreen();
                     break;
             }
@@ -167,5 +114,70 @@ internal class Program
         }
         
         Raylib.CloseWindow();
+    }
+
+    private static void InitializeGame()
+    {
+        // Create starter deck
+        var starterDeck = CreateStarterDeck();
+        
+        // Create player
+        player = new Player("Player", 100, 100, 0, 3, new List<Effect>(), 0, new List<Charm>(), starterDeck, 0.0);
+        
+        // Create game instance
+        game = new Game(DateTime.Now.Millisecond, player);
+        
+        // Initialize game renderer
+        GameRenderer.InitializeGame(game);
+        
+        // Create map with multiple rooms
+        CreateMap();
+    }
+
+    private static List<Card> CreateStarterDeck()
+    {
+        Action strikeAction = new(ActionType.Attack, 50, null, false);
+        Action defendAction = new(ActionType.Block, 5, null, false);
+        Action bashAttack = new(ActionType.Attack, 8, null, false);
+        Action bashEffect = new(ActionType.Effect, 0, EffectType.Vulnerable, false);
+
+        return new List<Card>
+        {
+            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Bash", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action> {bashAttack, bashEffect}, CardLocation.DrawPile, 2, AffinityType.None, false),
+            new Card("Bash", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action> {bashAttack, bashEffect}, CardLocation.DrawPile, 2, AffinityType.None, false),
+        };
+    }
+
+    private static void CreateMap()
+    {
+        // Create enemies for each room
+        var mathEnemy = new Enemy("Math Textbook", 60, 60, 0, new List<Effect>(), EnemyType.Basic);
+        var physicsEnemy = new Enemy("Physics Formula Book", 70, 70, 0, new List<Effect>(), EnemyType.Basic);
+        var chemistryEnemy = new Enemy("Chemistry Lab Manual", 80, 80, 0, new List<Effect>(), EnemyType.Elite);
+        var biologyEnemy = new Enemy("Biology Study Guide", 90, 90, 0, new List<Effect>(), EnemyType.Elite);
+        var historyEnemy = new Enemy("History Textbook", 100, 100, 0, new List<Effect>(), EnemyType.Elite);
+        var finalExamEnemy = new Enemy("Final Exam", 150, 150, 0, new List<Effect>(), EnemyType.Boss);
+
+        // Create rooms with enemies
+        var rooms = new List<Room>
+        {
+            new Combat(false, true, true, mathEnemy, EnemyType.Basic, TurnPhase.PlayerStart, 3),
+            new Combat(false, true, true, physicsEnemy, EnemyType.Basic, TurnPhase.PlayerStart, 3),
+            new Combat(false, true, true, chemistryEnemy, EnemyType.Elite, TurnPhase.PlayerStart, 3),
+            new Combat(false, true, true, biologyEnemy, EnemyType.Elite, TurnPhase.PlayerStart, 3),
+            new Combat(false, true, true, historyEnemy, EnemyType.Elite, TurnPhase.PlayerStart, 3),
+            new Combat(false, true, true, finalExamEnemy, EnemyType.Boss, TurnPhase.PlayerStart, 3)
+        };
+
+        // Set the rooms in the game's map
+        game.Map.Rooms = rooms;
     }
 }

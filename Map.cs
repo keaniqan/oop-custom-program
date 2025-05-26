@@ -25,9 +25,4 @@ public class Map
         get { return _player; }
         set { _player = value; }
     }
-    
-
-    
-    
-    
 }

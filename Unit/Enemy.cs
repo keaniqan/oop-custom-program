@@ -1,5 +1,5 @@
 using Raylib_cs;
-
+#nullable disable
 namespace MyApp;
 
 public class Enemy: Unit
@@ -10,6 +10,17 @@ public class Enemy: Unit
     public Enemy(string name, int health, int maxHealth, int block, List<Effect> effects, EnemyType enemyType) : base(name, health, maxHealth, block, effects)
     {
         _enemyType = enemyType;
+        // Initialize all possible effects with 0 stacks except for Buffer, Logos, Momentos, and Literas
+        foreach (EffectType effectType in Enum.GetValues(typeof(EffectType)))
+        {
+            if (effectType != EffectType.Buffer && 
+                effectType != EffectType.Logos && 
+                effectType != EffectType.Momentos && 
+                effectType != EffectType.Literas)
+            {
+                _effects.Add(new Effect(effectType, effectType.ToString(), 0, true));
+            }
+        }
     }
     public Intent Intent
     {
@@ -44,4 +55,34 @@ public class Enemy: Unit
         this.AddEffect(effect);
     }
 
+    public override void TakeDamage(int damage)
+    {
+        // First reduce damage by block
+        if (Block > 0)
+        {
+            if (Block >= damage)
+            {
+                Block -= damage;
+                damage = 0;
+            }
+            else
+            {
+                damage -= Block;
+                Block = 0;
+            }
+        }
+
+        // Then apply remaining damage to health
+        if (damage > 0)
+        {
+            Health = Math.Max(0, Health - damage);
+            
+            // Check if enemy is defeated
+            if (Health <= 0 && GameRenderer.game?.Map?.Rooms?.Count > 0 && 
+                GameRenderer.game.Map.Rooms[0] is Combat combatRoom)
+            {
+                combatRoom.EndCombat();
+            }
+        }
+    }
 }

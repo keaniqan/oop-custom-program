@@ -5,7 +5,7 @@ using System.Numerics;
 using Raylib_cs;
 #nullable disable
 namespace MyApp;
-public class Unit
+public abstract class Unit
 {
     private string _name;
     private int _health;
@@ -20,12 +20,6 @@ public class Unit
         _maxHealth = maxHealth;
         _block = block;
         _effects = new List<Effect>();
-        
-        // Initialize all possible effects with 0 stacks
-        foreach (EffectType effectType in Enum.GetValues(typeof(EffectType)))
-        {
-            _effects.Add(new Effect(effectType, effectType.ToString(), 0, true));
-        }
     }
 
     public string Name
@@ -77,7 +71,7 @@ public class Unit
     {
         effect.DecreaseEffect(this);
     }
-    public void TakeDamage(int damage)
+    public virtual void TakeDamage(int damage)
     {
         // First reduce damage by block
         if (_block > 0)
