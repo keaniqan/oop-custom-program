@@ -94,4 +94,13 @@ public abstract class Unit
             _health = Math.Max(0, _health - damage);
         }
     }
+
+    public void AddEffectStack(EffectType effectType, int amount)
+    {
+        var effect = _effects.FirstOrDefault(e => e.EffectType == effectType);
+        if (effect != null)
+        {
+            effect.Stack += amount;
+        }
+    }
 }

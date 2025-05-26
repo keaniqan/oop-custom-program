@@ -21,8 +21,11 @@ public class GameRenderer
     private static Texture2D drawPileTexture;
     private static Texture2D playerTexture;
     private static Texture2D energyTexture;
-    private static Texture2D floorTexture;
+    private static Texture2D tileTexture;
     private static Texture2D bookshelfTexture;
+    private static Texture2D wallTexture;
+    private static Texture2D combinedWallTexture;
+    private static Texture2D buttonTexture;  // Add button texture
     // Animation properties
     private static Dictionary<int, CardAnimation> cardAnimations = new Dictionary<int, CardAnimation>();
     private const float ANIMATION_DURATION = 0.5f; // Duration in seconds
@@ -84,11 +87,38 @@ public class GameRenderer
         // Load the energy texture
         energyTexture = Raylib.LoadTexture("resources/background/energy.png");
 
-        // Load the floor texture
-        floorTexture = Raylib.LoadTexture("resources/background/floor.png");
+        // Load the tile texture for the new floor
+        tileTexture = Raylib.LoadTexture("resources/background/tiles.png");
 
         // Load the bookshelf texture
         bookshelfTexture = Raylib.LoadTexture("resources/background/bookshelf.png");
+
+        // Load the wall texture
+        wallTexture = Raylib.LoadTexture("resources/background/wall.png");
+
+        // Load the button texture
+        buttonTexture = Raylib.LoadTexture("resources/background/button.png");
+
+        // Combine multiple wall.png into one large wall texture
+        int floorHeight = ScreenHeight / 2;
+        int wallAreaHeight = ScreenHeight - floorHeight + 30;
+        int wallTileW = wallTexture.Width;
+        int wallTileH = wallTexture.Height;
+        int tilesX = (int)Math.Ceiling((float)ScreenWidth / wallTileW);
+        int tilesY = (int)Math.Ceiling((float)wallAreaHeight / wallTileH);
+        RenderTexture2D wallRender = Raylib.LoadRenderTexture(ScreenWidth, wallAreaHeight);
+        Raylib.BeginTextureMode(wallRender);
+        Raylib.ClearBackground(new Color(0, 0, 0, 0));
+        for (int y = 0; y < tilesY; y++)
+        {
+            for (int x = 0; x < tilesX; x++)
+            {
+                Raylib.DrawTexture(wallTexture, x * wallTileW, y * wallTileH, Color.White);
+            }
+        }
+        Raylib.EndTextureMode();
+        combinedWallTexture = Raylib.LoadTextureFromImage(Raylib.LoadImageFromTexture(wallRender.Texture));
+        Raylib.UnloadRenderTexture(wallRender);
     }
 
     public static void DrawPlayer()
@@ -113,18 +143,47 @@ public class GameRenderer
     {
         int floorHeight = ScreenHeight / 2;
         
-        // Draw wall background
-        Raylib.DrawRectangle(0, 0, ScreenWidth, ScreenHeight - floorHeight + 30, Color.Beige);
+        // Draw simple wall
+        Raylib.DrawRectangle(0, 0, ScreenWidth, floorHeight + 30, Color.DarkGray);
+
+        // Add decorative patterns to the wall
+        int patternSize = 100;  // Size of each pattern block
+        Color patternColor = new Color(60, 60, 60, 255);  // Slightly lighter than wall
+
+        // Draw vertical lines
+        for (int x = patternSize; x < ScreenWidth; x += patternSize)
+        {
+            Raylib.DrawLine(x, 0, x, floorHeight + 30, patternColor);
+        }
+
+        // Draw horizontal lines
+        for (int y = patternSize; y < floorHeight + 30; y += patternSize)
+        {
+            Raylib.DrawLine(0, y, ScreenWidth, y, patternColor);
+        }
         
-        // Draw wooden floor using texture
-        Raylib.DrawTexturePro(
-            floorTexture,
-            new Rectangle(0, 0, floorTexture.Width, floorTexture.Height),
-            new Rectangle(0, ScreenHeight - floorHeight + 30, ScreenWidth, floorHeight),
-            new Vector2(0, 0),
-            0,
-            Color.White
-        );
+        // Draw new tiled floor using tileTexture, transformed to 45-degree angle
+        int tileW = tileTexture.Width;
+        int tileH = tileTexture.Height;
+        float scaleX = 0.5f;
+        float scaleY = 0.35f; // Compress vertically for 45-degree look
+        int drawTileW = (int)(tileW * scaleX);
+        int drawTileH = (int)(tileH * scaleY);
+        int floorY = ScreenHeight - floorHeight + 30;
+        for (int y = floorY; y < ScreenHeight; y += drawTileH)
+        {
+            for (int x = 0; x < ScreenWidth; x += drawTileW)
+            {
+                Raylib.DrawTexturePro(
+                    tileTexture,
+                    new Rectangle(0, 0, tileW, tileH),
+                    new Rectangle(x, y, drawTileW, drawTileH),
+                    new Vector2(0, 0),
+                    0,
+                    Color.White
+                );
+            }
+        }
         
         // Draw bookshelves - with specific spacing to fit 5 bookshelves
         int bookshelfWidth = 250;
@@ -173,7 +232,7 @@ public class GameRenderer
             ScreenHeight - floorHeight - 515, 
             ScreenWidth, 
             50, 
-            Color.Gray);
+            Color.DarkBrown);
 
         // Draw HP bars
         if (game.Map.Rooms.Count > 0 && game.Map.Rooms[0] is Combat combatRoom)
@@ -185,7 +244,7 @@ public class GameRenderer
         }
         
         // Draw player HP bar above the player
-        DrawHPBar(game.Map.Player, new Vector2(playerPosition.X - 100, playerPosition.Y - 350), true);
+        DrawHPBar(game.Map.Player, new Vector2(playerPosition.X - 100, playerPosition.Y - 380), true);
 
         // Add Scroll Image behind the cards
         Raylib.DrawTexturePro(
@@ -709,34 +768,87 @@ public class GameRenderer
             20,
             Color.White
         );
+
+        // Draw effect stacks
+        DrawEffectStacks(unit, new Vector2(position.X, position.Y + barHeight + 10));
+    }
+
+    private static void DrawEffectStacks(Unit unit, Vector2 startPosition)
+    {
+        const int circleRadius = 15;
+        const int circleSpacing = 35;
+        int currentX = (int)startPosition.X;
+
+        // Draw each effect that has stacks
+        foreach (var effect in unit.Effects)
+        {
+            if (effect.Stack > 0)
+            {
+                Color effectColor = effect.EffectType switch
+                {
+                    EffectType.StrengthUp => Color.Red,
+                    EffectType.DexterityUp => Color.Green,
+                    EffectType.Artifact => Color.Blue,
+                    EffectType.Thorn => Color.Purple,
+                    EffectType.Frail => Color.Orange,
+                    EffectType.Vulnerable => Color.Yellow,
+                    EffectType.Buffer => new Color(0, 255, 255, 255),  // Cyan
+                    EffectType.Logos => Color.Magenta,
+                    EffectType.Momentos => Color.Pink,
+                    EffectType.Literas => new Color(173, 216, 230, 255),  // LightBlue
+                    _ => Color.White
+                };
+
+                DrawEffectCircle(currentX, (int)startPosition.Y, circleRadius, effectColor, effect.Stack.ToString());
+                currentX += circleSpacing;
+            }
+        }
+    }
+
+    private static void DrawEffectCircle(int x, int y, int radius, Color color, string text)
+    {
+        // Draw circle background
+        Raylib.DrawCircle(x, y, radius, color);
+        
+        // Draw circle border
+        Raylib.DrawCircleLines(x, y, radius, Color.White);
+        
+        // Draw text
+        Vector2 textSize = Raylib.MeasureTextEx(descriptionFont, text, 16, 1);
+        Raylib.DrawTextPro(
+            descriptionFont,
+            text,
+            new Vector2(x - textSize.X/2, y - textSize.Y/2),
+            new Vector2(0, 0),
+            0,
+            16,
+            1,
+            Color.White
+        );
     }
 
     private static void DrawEnergyCounter(int maxEnergy, int currentEnergy)
     {
-        const int orbSize = 120;
-        const int startX = 200;
-        const int startY = ScreenHeight - 450;
+        // Sectioned bar settings
+        const int sectionWidth = 50;
+        const int sectionHeight = 50;
+        const int sectionSpacing = 8;
+        const int startX = 370;
+        const int startY = ScreenHeight - 410;
 
-        // Draw the energy texture
-        Raylib.DrawTexturePro(
-            energyTexture,
-            new Rectangle(0, 0, energyTexture.Width, energyTexture.Height),
-            new Rectangle(startX, startY - orbSize/2, orbSize, orbSize),
-            new Vector2(0, 0),
-            0,
-            Color.White
-        );
-
-        // Draw energy text
-        string energyText = $"{currentEnergy}/{maxEnergy}";
-        int textWidth = Raylib.MeasureText(energyText, 40);
-        Raylib.DrawText(
-            energyText,
-            startX + orbSize/2 - textWidth/2,
-            startY - 20,
-            40,
-            Color.Black
-        );
+        for (int i = 0; i < maxEnergy; i++)
+        {
+            int x = startX + i * (sectionWidth + sectionSpacing);
+            Color fill = i < currentEnergy ? Color.White : new Color(180, 180, 180, 120); // Dimmed for empty
+            Raylib.DrawTexturePro(
+                energyTexture,
+                new Rectangle(0, 0, energyTexture.Width, energyTexture.Height),
+                new Rectangle(x, startY, sectionWidth, sectionHeight),
+                new Vector2(0, 0),
+                0,
+                fill
+            );
+        }
     }
 
     private static void DrawEndTurnButton(Combat combatRoom)
@@ -752,23 +864,17 @@ public class GameRenderer
         Vector2 mousePos = Raylib.GetMousePosition();
         bool isHovering = mousePos.X >= buttonX && 
                          mousePos.X <= buttonX + buttonWidth &&
-                         mousePos.Y >= buttonY && 
-                         mousePos.Y <= buttonY + buttonHeight;
+                         mousePos.Y >= buttonY - 30 && 
+                         mousePos.Y <= buttonY + buttonHeight - 30;
 
-        // Draw button background
-        Raylib.DrawRectangle(
-            buttonX,
-            buttonY,
-            buttonWidth,
-            buttonHeight,
-            isHovering ? Color.SkyBlue : Color.Blue
-        );
-
-        // Draw button border
-        Raylib.DrawRectangleLinesEx(
+        // Draw button using texture
+        Raylib.DrawTexturePro(
+            buttonTexture,
+            new Rectangle(0, 0, buttonTexture.Width, buttonTexture.Height),
             new Rectangle(buttonX, buttonY, buttonWidth, buttonHeight),
-            2,
-            Color.DarkBlue
+            new Vector2(0, 0),
+            0,
+            isHovering ? Color.DarkGray : new Color(200, 200, 200, 255)  // Slightly dim when not hovering
         );
 
         // Draw button text

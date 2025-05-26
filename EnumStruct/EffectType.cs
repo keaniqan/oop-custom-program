@@ -4,6 +4,7 @@ namespace MyApp
     {
         StrengthUp,
         DexterityUp,
+        Weak,
         Artifact,
         Thorn,
         Frail,

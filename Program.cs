@@ -137,22 +137,25 @@ internal class Program
     private static List<Card> CreateStarterDeck()
     {
         Action strikeAction = new(ActionType.Attack, 50, null, false);
-        Action defendAction = new(ActionType.Block, 5, null, false);
         Action bashAttack = new(ActionType.Attack, 8, null, false);
-        Action bashEffect = new(ActionType.Effect, 0, EffectType.Vulnerable, false);
+        Action addVulnerable = new(ActionType.Effect, 1, EffectType.Vulnerable, false);
+        Action addWeak = new(ActionType.Effect, 1, EffectType.Weak, false);
 
+        Action defendAction = new(ActionType.Block, 5, null, true);
+        Action addStrength = new(ActionType.Effect, 1, EffectType.StrengthUp, true);
+        
         return new List<Card>
         {
-            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),
-            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),
-            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),
-            new Card("Strike", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),
-            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
-            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
-            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
-            new Card("Defend", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
-            new Card("Bash", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action> {bashAttack, bashEffect}, CardLocation.DrawPile, 2, AffinityType.None, false),
-            new Card("Bash", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action> {bashAttack, bashEffect}, CardLocation.DrawPile, 2, AffinityType.None, false),
+            new Card("Study", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Study", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Study", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Memory", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Memory", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Memory", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Unthinking", "Apply 2 Weak.", 1, new List<Action> {addWeak, addWeak}, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Crit Thinking", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action> {bashAttack, addVulnerable, addStrength}, CardLocation.DrawPile, 2, AffinityType.None, false),
+            new Card("New Lesson", "Gain 1 Strength.", 2, new List<Action> {addStrength}, CardLocation.DrawPile, 1, AffinityType.None, false),
+
         };
     }
 
@@ -199,29 +202,43 @@ internal class Program
             new EnemyTemplate("Shakespeare Anthology", 85, 95, EnemyType.Elite),
             new EnemyTemplate("Philosophy Debate Outline", 92, 97, EnemyType.Elite),
             new EnemyTemplate("Statistics Exam Key", 88, 93, EnemyType.Elite),
-
         };
 
-        // Create rooms with enemy templates
+        // Pick a random basic enemy for the first room
+        var basicEnemies = enemyTemplates.Where(t => t.Type == EnemyType.Basic).ToList();
+        var rng = new Random();
+        var firstRoomTemplate = basicEnemies[rng.Next(basicEnemies.Count)];
+        enemyTemplates.Remove(firstRoomTemplate); // Optional: remove to avoid duplicate
+
+        // Remove boss from shuffle pool if present
+        var bossTemplate = new EnemyTemplate("Final Exam", 150, 150, EnemyType.Boss);
+
+        // Create a list for the rest of the rooms (excluding the first and boss)
+        var shufflePool = enemyTemplates.ToList();
+        // Shuffle
+        int n = shufflePool.Count;
+        while (n > 1)
+        {
+            n--;
+            int k = rng.Next(n + 1);
+            var temp = shufflePool[k];
+            shufflePool[k] = shufflePool[n];
+            shufflePool[n] = temp;
+        }
+
+        // Add the boss as the last room
+        shufflePool.Add(bossTemplate);
+        // Insert the first room at the start
+        shufflePool.Insert(0, firstRoomTemplate);
+
+        // Create rooms from templates
         var rooms = new List<Room>();
-        foreach (var template in enemyTemplates)
+        foreach (var template in shufflePool)
         {
             rooms.Add(new Combat(false, true, true, template.CreateEnemy(), template.Type, TurnPhase.PlayerStart, 3));
         }
 
         // Set the rooms in the game's map
         game.Map.Rooms = rooms;
-        
-        // Shuffle all rooms except the boss room
-        Random rng = new Random();
-        int n = rooms.Count - 1; // Don't shuffle the last room (boss)
-        while (n > 1)
-        {
-            n--;
-            int k = rng.Next(n + 1);
-            Room temp = rooms[k];
-            rooms[k] = rooms[n];
-            rooms[n] = temp;
-        }
     }
 }

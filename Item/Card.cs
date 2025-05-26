@@ -51,21 +51,64 @@ public class Card : Item
     {
         foreach (var action in card.Actions)
         {
-            if (action.ActionType == ActionType.Attack)
+            if (action.ActionType == ActionType.Draw)
             {
-                // Deal damage to enemy
+                GameRenderer.game.Map.Player.DrawCards(action.Value);
+            }
+            if (action.ActionType == ActionType.Heal)
+            {
+                GameRenderer.game.Map.Player.AddHealth(action.Value);
+            }
+            if (action.ActionType == ActionType.Energy)
+            {
+                if (GameRenderer.game?.Map?.Rooms?.Count > 0 && 
+                    GameRenderer.game.Map.Rooms[0] is Combat combatRoom)
+                {
+                    combatRoom.AddEnergy(action.Value);
+                }
+            }
+            if (!action.IsTargetPlayer)
+            {
+                if (action.ActionType == ActionType.Attack)
+                {
+                    // Deal damage to enemy
                 if (GameRenderer.game?.Map?.Rooms?.Count > 0 && 
                     GameRenderer.game.Map.Rooms[0] is Combat combatRoom)
                 {
                     combatRoom.Enemy.TakeDamage(action.Value);
                 }
+                }
+                else if (action.ActionType == ActionType.Block)
+                {
+                    // Add block to player
+                    if (GameRenderer.game?.Map?.Rooms?.Count > 0 && 
+                        GameRenderer.game.Map.Rooms[0] is Combat combatRoom)
+                    {
+                        combatRoom.Enemy.AddBlock(action.Value);
+                    }
+                }
+                else if (action.ActionType == ActionType.Effect)
+                {
+                    if (GameRenderer.game?.Map?.Rooms?.Count > 0 && 
+                        GameRenderer.game.Map.Rooms[0] is Combat combatRoom)
+                    {
+                        combatRoom.Enemy.AddEffectStack(action.EffectType.Value, action.Value);
+                    }
+                }
             }
-            else if (action.ActionType == ActionType.Block)
+            if (action.IsTargetPlayer)
             {
-                // Add block to player
-                if (GameRenderer.game?.Map?.Player != null)
+                if (action.ActionType == ActionType.Attack)
+                {
+                    GameRenderer.game.Map.Player.TakeDamage(action.Value);
+                }
+                else if (action.ActionType == ActionType.Block)
                 {
                     GameRenderer.game.Map.Player.AddBlock(action.Value);
+                }
+                else if (action.ActionType == ActionType.Effect)
+                {
+                    GameRenderer.game.Map.Player.AddEffectStack(action.EffectType.Value, action.Value);
                 }
             }
         }

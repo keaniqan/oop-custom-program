@@ -227,6 +227,11 @@ public class Combat: Room
         }
     }
 
+    public void AddEnergy(int energy)
+    {
+        _currentEnergy += energy;
+    }
+
     public override void EnterRoom()
     {
         base.EnterRoom();
