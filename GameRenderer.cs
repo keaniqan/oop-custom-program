@@ -6,8 +6,8 @@ using Raylib_cs;
 namespace MyApp;
 public class GameRenderer
 {
-    private const int ScreenWidth = 1920;
-    private const int ScreenHeight = 1080;
+    public const int ScreenWidth = 1920;
+    public const int ScreenHeight = 1080;
     private static Vector2 playerPosition;
     private static Font descriptionFont;
     private static Texture2D cardTexture;
@@ -29,6 +29,16 @@ public class GameRenderer
     // Animation properties
     private static Dictionary<int, CardAnimation> cardAnimations = new Dictionary<int, CardAnimation>();
     private const float ANIMATION_DURATION = 0.5f; // Duration in seconds
+
+    // Add damage number animation class
+    private class DamageNumberAnimation
+    {
+        public float StartTime;
+        public Vector2 Position;
+        public int Damage;
+        public bool IsPlaying;
+    }
+    private static List<DamageNumberAnimation> damageAnimations = new List<DamageNumberAnimation>();
 
     private class CardAnimation
     {
@@ -259,8 +269,38 @@ public class GameRenderer
         // Draw the discard pile
         Raylib.DrawTexture(discardPileTexture, 1680, 800, Color.White);
 
+        // Draw discard pile count
+        int discardCount = game.Map.Player.Cards.Count(c => c.CardLocation == CardLocation.DiscardPile);
+        string discardText = discardCount.ToString();
+        Vector2 discardTextSize = Raylib.MeasureTextEx(descriptionFont, discardText, 30, 1);
+        Raylib.DrawTextPro(
+            descriptionFont,
+            discardText,
+            new Vector2(1680 + discardPileTexture.Width/2 - discardTextSize.X/2, 860 + discardPileTexture.Height/2 - discardTextSize.Y/2),
+            new Vector2(0, 0),
+            0,
+            30,
+            1,
+            Color.White
+        );
+
         // Draw the draw pile
         Raylib.DrawTexture(drawPileTexture, 100, 800, Color.White);
+
+        // Draw draw pile count
+        int drawCount = game.Map.Player.Cards.Count(c => c.CardLocation == CardLocation.DrawPile);
+        string drawText = drawCount.ToString();
+        Vector2 drawTextSize = Raylib.MeasureTextEx(descriptionFont, drawText, 30, 1);
+        Raylib.DrawTextPro(
+            descriptionFont,
+            drawText,
+            new Vector2(100 + drawPileTexture.Width/2 - drawTextSize.X/2, 860 + drawPileTexture.Height/2 - drawTextSize.Y/2),
+            new Vector2(0, 0),
+            0,
+            30,
+            1,
+            Color.White
+        );
 
         // Draw cards in player's hand
         var cardsInHand = game.Map.Player.Cards.Where(c => c.CardLocation == CardLocation.Hand).ToList();
@@ -572,7 +612,7 @@ public class GameRenderer
         }
     }
 
-    private static void DrawEnemy(Combat combatRoom)
+    public static void DrawEnemy(Combat combatRoom)
     {
         const int bookWidth = 220;
         const int bookHeight = 300;
@@ -655,6 +695,42 @@ public class GameRenderer
                 bookHeight,
                 new Color(shade, shade, shade, (byte)255)
             );
+        }
+
+        // Draw damage numbers
+        float currentTime = (float)Raylib.GetTime();
+        for (int i = damageAnimations.Count - 1; i >= 0; i--)
+        {
+            var anim = damageAnimations[i];
+            if (anim.IsPlaying)
+            {
+                float elapsed = currentTime - anim.StartTime;
+                float progress = Math.Min(elapsed / ANIMATION_DURATION, 1.0f);
+                
+                // Calculate position (move up and fade out)
+                float y = anim.Position.Y - (progress * 50); // Move up 50 pixels
+                float alpha = 1.0f - progress; // Fade out
+                
+                // Draw damage number
+                string damageText = anim.Damage.ToString();
+                Vector2 textSize = Raylib.MeasureTextEx(descriptionFont, damageText, 40, 1);
+                Raylib.DrawTextPro(
+                    descriptionFont,
+                    damageText,
+                    new Vector2(anim.Position.X - textSize.X/2, y),
+                    new Vector2(0, 0),
+                    0,
+                    40,
+                    1,
+                    new Color((byte)255, (byte)0, (byte)0, (byte)(255 * alpha))
+                );
+
+                // Remove animation if complete
+                if (progress >= 1.0f)
+                {
+                    damageAnimations.RemoveAt(i);
+                }
+            }
         }
 
         // Draw enemy intent
@@ -788,7 +864,6 @@ public class GameRenderer
                 {
                     EffectType.StrengthUp => Color.Red,
                     EffectType.DexterityUp => Color.Green,
-                    EffectType.Artifact => Color.Blue,
                     EffectType.Thorn => Color.Purple,
                     EffectType.Frail => Color.Orange,
                     EffectType.Vulnerable => Color.Yellow,
@@ -1155,5 +1230,18 @@ public class GameRenderer
         {
             Program.currentScreen = Program.GameScreen.MapSelection;
         }
+    }
+
+    // Add method to create damage number animation
+    public static void CreateDamageNumber(int damage, Vector2 position)
+    {
+        var animation = new DamageNumberAnimation
+        {
+            StartTime = (float)Raylib.GetTime(),
+            Position = position,
+            Damage = damage,
+            IsPlaying = true
+        };
+        damageAnimations.Add(animation);
     }
 }

@@ -136,14 +136,14 @@ internal class Program
 
     private static List<Card> CreateStarterDeck()
     {
-        Action strikeAction = new(ActionType.Attack, 50, null, false);
+        Action strikeAction = new(ActionType.Attack, 100, null, false);
         Action bashAttack = new(ActionType.Attack, 8, null, false);
         Action addVulnerable = new(ActionType.Effect, 1, EffectType.Vulnerable, false);
         Action addWeak = new(ActionType.Effect, 1, EffectType.Weak, false);
 
         Action defendAction = new(ActionType.Block, 5, null, true);
         Action addStrength = new(ActionType.Effect, 1, EffectType.StrengthUp, true);
-        
+
         return new List<Card>
         {
             new Card("Study", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),

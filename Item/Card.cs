@@ -72,19 +72,73 @@ public class Card : Item
                 if (action.ActionType == ActionType.Attack)
                 {
                     // Deal damage to enemy
-                if (GameRenderer.game?.Map?.Rooms?.Count > 0 && 
-                    GameRenderer.game.Map.Rooms[0] is Combat combatRoom)
-                {
-                    combatRoom.Enemy.TakeDamage(action.Value);
-                }
-                }
-                else if (action.ActionType == ActionType.Block)
-                {
-                    // Add block to player
                     if (GameRenderer.game?.Map?.Rooms?.Count > 0 && 
                         GameRenderer.game.Map.Rooms[0] is Combat combatRoom)
                     {
-                        combatRoom.Enemy.AddBlock(action.Value);
+                        int damage = action.Value;
+                        
+                        // Apply Vulnerable effect
+                        var vulnerableEffect = combatRoom.Enemy.Effects.FirstOrDefault(e => e.EffectType == EffectType.Vulnerable);
+                        if (vulnerableEffect != null && vulnerableEffect.Stack > 0)
+                        {
+                            damage = (int)(damage * 1.5f); // 50% more damage
+                        }
+                        
+                        // Apply strength effect
+                        var strengthEffect = GameRenderer.game.Map.Player.Effects.FirstOrDefault(e => e.EffectType == EffectType.StrengthUp);
+                        if (strengthEffect != null)
+                        {
+                            damage += strengthEffect.Stack;
+                        }
+
+                        // Apply weak effect
+                        var weakEffect = GameRenderer.game.Map.Player.Effects.FirstOrDefault(e => e.EffectType == EffectType.Weak);
+                        if (weakEffect != null && weakEffect.Stack > 0)
+                        {
+                            damage = (int)(damage * 0.75f); // 25% less damage
+                        }
+
+                        // Deal damage and check for thorn effect
+                        combatRoom.Enemy.TakeDamage(damage);
+                        
+                        // Create damage number animation
+                        Vector2 enemyPos = new Vector2(
+                            GameRenderer.ScreenWidth - 600,  // Enemy X position
+                            GameRenderer.ScreenHeight / 2 - 100  // Enemy Y position
+                        );
+                        GameRenderer.CreateDamageNumber(damage, enemyPos);
+                        
+                        // Check for thorn effect on enemy
+                        var thornEffect = combatRoom.Enemy.Effects.FirstOrDefault(e => e.EffectType == EffectType.Thorn);
+                        if (thornEffect != null)
+                        {
+                            GameRenderer.game.Map.Player.TakeDamage(thornEffect.Stack);
+                        }
+                    }
+                }
+                else if (action.ActionType == ActionType.Block)
+                {
+                    // Add block to enemy
+                    if (GameRenderer.game?.Map?.Rooms?.Count > 0 && 
+                        GameRenderer.game.Map.Rooms[0] is Combat combatRoom)
+                    {
+                        int block = action.Value;
+                        
+                        // Apply dexterity effect
+                        var dexterityEffect = combatRoom.Enemy.Effects.FirstOrDefault(e => e.EffectType == EffectType.DexterityUp);
+                        if (dexterityEffect != null)
+                        {
+                            block += dexterityEffect.Stack;
+                        }
+
+                        // Apply frail effect
+                        var frailEffect = combatRoom.Enemy.Effects.FirstOrDefault(e => e.EffectType == EffectType.Frail);
+                        if (frailEffect != null && frailEffect.Stack > 0)
+                        {
+                            block = (int)(block * 0.75f); // 25% less block
+                        }
+
+                        combatRoom.Enemy.AddBlock(block);
                     }
                 }
                 else if (action.ActionType == ActionType.Effect)
@@ -100,11 +154,36 @@ public class Card : Item
             {
                 if (action.ActionType == ActionType.Attack)
                 {
-                    GameRenderer.game.Map.Player.TakeDamage(action.Value);
+                    int damage = action.Value;
+                    
+                    // Apply vulnerable effect
+                    var vulnerableEffect = GameRenderer.game.Map.Player.Effects.FirstOrDefault(e => e.EffectType == EffectType.Vulnerable);
+                    if (vulnerableEffect != null && vulnerableEffect.Stack > 0)
+                    {
+                        damage = (int)(damage * 1.5f); // 50% more damage
+                    }
+                    
+                    GameRenderer.game.Map.Player.TakeDamage(damage);
                 }
                 else if (action.ActionType == ActionType.Block)
                 {
-                    GameRenderer.game.Map.Player.AddBlock(action.Value);
+                    int block = action.Value;
+                    
+                    // Apply dexterity effect
+                    var dexterityEffect = GameRenderer.game.Map.Player.Effects.FirstOrDefault(e => e.EffectType == EffectType.DexterityUp);
+                    if (dexterityEffect != null)
+                    {
+                        block += dexterityEffect.Stack;
+                    }
+
+                    // Apply frail effect
+                    var frailEffect = GameRenderer.game.Map.Player.Effects.FirstOrDefault(e => e.EffectType == EffectType.Frail);
+                    if (frailEffect != null)
+                    {
+                        block = (int)(block * 0.75f); // 25% less block
+                    }
+
+                    GameRenderer.game.Map.Player.AddBlock(block);
                 }
                 else if (action.ActionType == ActionType.Effect)
                 {
