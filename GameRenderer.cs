@@ -846,7 +846,55 @@ public class GameRenderer
             for (int n = 0; n < nodes; n++)
             {
                 int x = centerX - totalWidth / 2 + n * horizontalSpacing;
-                string roomType = (layer == 0) ? "Start" : (layer == totalLayers-1) ? "Boss" : "Combat";
+                string roomType;
+                
+                // Calculate the room index based on the map graph
+                int roomIndex = 0;
+                for (int l = 0; l < layer; l++)
+                {
+                    roomIndex += mapGraph.Layers[l].Count;
+                }
+                roomIndex += n;
+
+                // Check if we have a room at this index
+                if (game?.Map?.Rooms != null && roomIndex < game.Map.Rooms.Count)
+                {
+                    if (game.Map.Rooms[roomIndex] is Combat combatRoom)
+                    {
+                        switch (combatRoom.Enemy.EnemyType)
+                        {
+                            case EnemyType.Basic:
+                                roomType = "Enemy";
+                                break;
+                            case EnemyType.Elite:
+                                roomType = "Elite";
+                                break;
+                            case EnemyType.Boss:
+                                roomType = "Boss";
+                                break;
+                            default:
+                                roomType = "Enemy";
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        roomType = "Start";
+                    }
+                }
+                else
+                {
+                    // Default room types if no room exists yet
+                    if (layer == 0)
+                        roomType = "Start";
+                    else if (layer == totalLayers-1)
+                        roomType = "Boss";
+                    else if (layer % 3 == 0 && n == nodes - 1)
+                        roomType = "Elite";
+                    else
+                        roomType = "Enemy";
+                }
+                
                 layerNodes.Add(new MapNode { Layer = layer, Index = n, RoomType = roomType, X = x, Y = y });
             }
             mapGraph.Layers.Add(layerNodes);
@@ -858,34 +906,47 @@ public class GameRenderer
             var currLayer = mapGraph.Layers[layer];
             int prevCount = prevLayer.Count;
             int currCount = currLayer.Count;
-            // 1. Proportional connections (prev to curr)
-            for (int n = 0; n < currCount; n++)
+
+            // Special handling for 2-to-3 and 3-to-2 transitions
+            if (prevCount == 2 && currCount == 3)
             {
-                float prevPos = (float)n / (currCount - 1) * (prevCount - 1);
-                int left = (int)Math.Floor(prevPos);
-                int right = (int)Math.Ceiling(prevPos);
-                prevLayer[left].Connections.Add(currLayer[n]);
-                if (right != left) prevLayer[right].Connections.Add(currLayer[n]);
+                // Left node connects to left and center
+                prevLayer[0].Connections.Add(currLayer[0]);
+                prevLayer[0].Connections.Add(currLayer[1]);
+                // Right node connects to center and right
+                prevLayer[1].Connections.Add(currLayer[1]);
+                prevLayer[1].Connections.Add(currLayer[2]);
             }
-            // 2. Ensure every node in currLayer has at least one incoming connection
+            else if (prevCount == 3 && currCount == 2)
+            {
+                // Left connects to left
+                prevLayer[0].Connections.Add(currLayer[0]);
+                // Center connects to both
+                prevLayer[1].Connections.Add(currLayer[0]);
+                prevLayer[1].Connections.Add(currLayer[1]);
+                // Right connects to right
+                prevLayer[2].Connections.Add(currLayer[1]);
+            }
+            else
+            {
+                // For each node in prevLayer, connect to its two nearest neighbors in currLayer
+                for (int p = 0; p < prevCount; p++)
+                {
+                    float proportional = (float)p / (prevCount - 1) * (currCount - 1);
+                    int left = (int)Math.Floor(proportional);
+                    int right = (int)Math.Ceiling(proportional);
+                    prevLayer[p].Connections.Add(currLayer[left]);
+                    if (right != left) prevLayer[p].Connections.Add(currLayer[right]);
+                }
+            }
+            // Ensure every node in currLayer has at least one incoming connection
             foreach (var node in currLayer)
             {
                 bool hasIncoming = prevLayer.Any(prev => prev.Connections.Contains(node));
                 if (!hasIncoming)
                 {
-                    // Connect to the closest node in prevLayer
                     var closest = prevLayer.OrderBy(prev => Math.Abs(prev.X - node.X)).First();
                     closest.Connections.Add(node);
-                }
-            }
-            // 3. Ensure every node in prevLayer has at least one outgoing connection
-            foreach (var prev in prevLayer)
-            {
-                if (!prev.Connections.Any())
-                {
-                    // Connect to the closest node in currLayer
-                    var closest = currLayer.OrderBy(curr => Math.Abs(curr.X - prev.X)).First();
-                    prev.Connections.Add(closest);
                 }
             }
         }

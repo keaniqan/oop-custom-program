@@ -156,28 +156,72 @@ internal class Program
         };
     }
 
+    private class EnemyTemplate
+    {
+        public string Name { get; set; }
+        public int Health { get; set; }
+        public int MaxHealth { get; set; }
+        public EnemyType Type { get; set; }
+
+        public EnemyTemplate(string name, int health, int maxHealth, EnemyType type)
+        {
+            Name = name;
+            Health = health;
+            MaxHealth = maxHealth;
+            Type = type;
+        }
+
+        public Enemy CreateEnemy()
+        {
+            return new Enemy(Name, Health, MaxHealth, 0, new List<Effect>(), Type);
+        }
+    }
+
     private static void CreateMap()
     {
-        // Create enemies for each room
-        var mathEnemy = new Enemy("Math Textbook", 60, 60, 0, new List<Effect>(), EnemyType.Basic);
-        var physicsEnemy = new Enemy("Physics Formula Book", 70, 70, 0, new List<Effect>(), EnemyType.Basic);
-        var chemistryEnemy = new Enemy("Chemistry Lab Manual", 80, 80, 0, new List<Effect>(), EnemyType.Elite);
-        var biologyEnemy = new Enemy("Biology Study Guide", 90, 90, 0, new List<Effect>(), EnemyType.Elite);
-        var historyEnemy = new Enemy("History Textbook", 100, 100, 0, new List<Effect>(), EnemyType.Elite);
-        var finalExamEnemy = new Enemy("Final Exam", 150, 150, 0, new List<Effect>(), EnemyType.Boss);
-
-        // Create rooms with enemies
-        var rooms = new List<Room>
+        // Create enemy templates
+        var enemyTemplates = new List<EnemyTemplate>
         {
-            new Combat(false, true, true, mathEnemy, EnemyType.Basic, TurnPhase.PlayerStart, 3),
-            new Combat(false, true, true, physicsEnemy, EnemyType.Basic, TurnPhase.PlayerStart, 3),
-            new Combat(false, true, true, chemistryEnemy, EnemyType.Elite, TurnPhase.PlayerStart, 3),
-            new Combat(false, true, true, biologyEnemy, EnemyType.Elite, TurnPhase.PlayerStart, 3),
-            new Combat(false, true, true, historyEnemy, EnemyType.Elite, TurnPhase.PlayerStart, 3),
-            new Combat(false, true, true, finalExamEnemy, EnemyType.Boss, TurnPhase.PlayerStart, 3)
+            // Basic Enemies
+            new EnemyTemplate("Math Textbook", 60, 60, EnemyType.Basic),
+            new EnemyTemplate("Physics Formula Book", 70, 70, EnemyType.Basic),
+            new EnemyTemplate("English Grammar Notes", 50, 55, EnemyType.Basic),
+            new EnemyTemplate("Geography Atlas", 65, 65, EnemyType.Basic),
+            new EnemyTemplate("Spelling Test Sheet", 55, 50, EnemyType.Basic),
+            new EnemyTemplate("Computer Science Pseudocode", 68, 72, EnemyType.Basic),
+            new EnemyTemplate("Economics Diagram Packet", 60, 58, EnemyType.Basic),
+
+            // Elite Enemies
+            new EnemyTemplate("Chemistry Lab Manual", 80, 80, EnemyType.Elite),
+            new EnemyTemplate("Biology Study Guide", 90, 90, EnemyType.Elite),
+            new EnemyTemplate("History Textbook", 100, 100, EnemyType.Elite),
+            new EnemyTemplate("Calculus Workbook", 95, 105, EnemyType.Elite),
+            new EnemyTemplate("Shakespeare Anthology", 85, 95, EnemyType.Elite),
+            new EnemyTemplate("Philosophy Debate Outline", 92, 97, EnemyType.Elite),
+            new EnemyTemplate("Statistics Exam Key", 88, 93, EnemyType.Elite),
+
         };
+
+        // Create rooms with enemy templates
+        var rooms = new List<Room>();
+        foreach (var template in enemyTemplates)
+        {
+            rooms.Add(new Combat(false, true, true, template.CreateEnemy(), template.Type, TurnPhase.PlayerStart, 3));
+        }
 
         // Set the rooms in the game's map
         game.Map.Rooms = rooms;
+        
+        // Shuffle all rooms except the boss room
+        Random rng = new Random();
+        int n = rooms.Count - 1; // Don't shuffle the last room (boss)
+        while (n > 1)
+        {
+            n--;
+            int k = rng.Next(n + 1);
+            Room temp = rooms[k];
+            rooms[k] = rooms[n];
+            rooms[n] = temp;
+        }
     }
 }
