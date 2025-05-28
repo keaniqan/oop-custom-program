@@ -136,7 +136,7 @@ internal class Program
 
     private static List<Card> CreateStarterDeck()
     {
-        Action strikeAction = new(ActionType.Attack, 100, null, false);
+        Action strikeAction = new(ActionType.Attack, 6, null, false);
         Action bashAttack = new(ActionType.Attack, 8, null, false);
         Action addVulnerable = new(ActionType.Effect, 1, EffectType.Vulnerable, false);
         Action addWeak = new(ActionType.Effect, 1, EffectType.Weak, false);
@@ -188,20 +188,20 @@ internal class Program
             // Basic Enemies
             new EnemyTemplate("Math Textbook", 60, 60, EnemyType.Basic),
             new EnemyTemplate("Physics Formula Book", 70, 70, EnemyType.Basic),
-            new EnemyTemplate("English Grammar Notes", 50, 55, EnemyType.Basic),
+            new EnemyTemplate("English Grammar Notes", 55, 55, EnemyType.Basic),
             new EnemyTemplate("Geography Atlas", 65, 65, EnemyType.Basic),
-            new EnemyTemplate("Spelling Test Sheet", 55, 50, EnemyType.Basic),
-            new EnemyTemplate("Computer Science Pseudocode", 68, 72, EnemyType.Basic),
-            new EnemyTemplate("Economics Diagram Packet", 60, 58, EnemyType.Basic),
+            new EnemyTemplate("Spelling Test Sheet", 50, 50, EnemyType.Basic),
+            new EnemyTemplate("Computer Science Pseudocode", 72, 72, EnemyType.Basic),
+            new EnemyTemplate("Economics Diagram Packet", 60, 60, EnemyType.Basic),
 
             // Elite Enemies
             new EnemyTemplate("Chemistry Lab Manual", 80, 80, EnemyType.Elite),
             new EnemyTemplate("Biology Study Guide", 90, 90, EnemyType.Elite),
             new EnemyTemplate("History Textbook", 100, 100, EnemyType.Elite),
-            new EnemyTemplate("Calculus Workbook", 95, 105, EnemyType.Elite),
-            new EnemyTemplate("Shakespeare Anthology", 85, 95, EnemyType.Elite),
-            new EnemyTemplate("Philosophy Debate Outline", 92, 97, EnemyType.Elite),
-            new EnemyTemplate("Statistics Exam Key", 88, 93, EnemyType.Elite),
+            new EnemyTemplate("Calculus Workbook", 95, 95, EnemyType.Elite),
+            new EnemyTemplate("Shakespeare Anthology", 95, 95, EnemyType.Elite),
+            new EnemyTemplate("Philosophy Debate Outline", 97, 97, EnemyType.Elite),
+            new EnemyTemplate("Statistics Exam Key", 93, 93, EnemyType.Elite),
         };
 
         // Pick a random basic enemy for the first room

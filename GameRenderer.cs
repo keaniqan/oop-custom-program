@@ -10,6 +10,7 @@ public class GameRenderer
     public const int ScreenHeight = 1080;
     private static Vector2 playerPosition;
     private static Font descriptionFont;
+    private static Font cardNameFont;  // Add new font field for card names
     private static Texture2D cardTexture;
     private static Texture2D enemyTexture;
     private static int draggedCardIndex = -1; // -1 means no card is being dragged
@@ -26,6 +27,13 @@ public class GameRenderer
     private static Texture2D wallTexture;
     private static Texture2D combinedWallTexture;
     private static Texture2D buttonTexture;  // Add button texture
+    private static Texture2D vulnerableTexture;  // Add vulnerable texture
+    private static Texture2D bufferTexture;     // Add buffer texture
+    private static Texture2D dexterityTexture;  // Add dexterity texture
+    private static Texture2D frailTexture;      // Add frail texture
+    private static Texture2D strengthTexture;   // Add strength texture
+    private static Texture2D thornTexture;      // Add thorn texture
+    private static Texture2D weakTexture;       // Add weak texture
     // Animation properties
     private static Dictionary<int, CardAnimation> cardAnimations = new Dictionary<int, CardAnimation>();
     private const float ANIMATION_DURATION = 0.5f; // Duration in seconds
@@ -76,6 +84,9 @@ public class GameRenderer
         // Load the description font
         descriptionFont = Raylib.LoadFont("resources/fonts/romulus.png");
         
+        // Load the card name font
+        cardNameFont = Raylib.LoadFont("resources/fonts/alagard.png");
+        
         // Load the card texture
         cardTexture = Raylib.LoadTexture("resources/cards/cards.png");
 
@@ -108,6 +119,15 @@ public class GameRenderer
 
         // Load the button texture
         buttonTexture = Raylib.LoadTexture("resources/background/button.png");
+
+        // Load effect textures
+        vulnerableTexture = Raylib.LoadTexture("resources/effects/vulnerable.png");
+        bufferTexture = Raylib.LoadTexture("resources/effects/buffer.png");
+        dexterityTexture = Raylib.LoadTexture("resources/effects/dexterity.png");
+        frailTexture = Raylib.LoadTexture("resources/effects/frail.png");
+        strengthTexture = Raylib.LoadTexture("resources/effects/strength.png");
+        thornTexture = Raylib.LoadTexture("resources/effects/thorn.png");
+        weakTexture = Raylib.LoadTexture("resources/effects/weak.png");
 
         // Combine multiple wall.png into one large wall texture
         int floorHeight = ScreenHeight / 2;
@@ -319,6 +339,16 @@ public class GameRenderer
         {
             DrawMapOverlay();
         }
+
+        // Draw vulnerable texture (moved to end to appear on top)
+        Raylib.DrawTexturePro(
+            vulnerableTexture,
+            new Rectangle(0, 0, vulnerableTexture.Width, vulnerableTexture.Height),
+            new Rectangle(ScreenWidth - 200, 100, 150, 150),  // Position in top-right corner
+            new Vector2(0, 0),
+            0,
+            Color.White
+        );
     }
 
     private static void DrawLightEffect(int x, int y, int radius, Color color)
@@ -332,8 +362,8 @@ public class GameRenderer
 
     private static Vector2 CalculateCardPosition(int cardIndex, int totalCards)
     {
-        const int cardWidth = 140;
-        const int cardHeight = 209;
+        const int cardWidth = 168;  // 
+        const int cardHeight = 251; // 
         const int cardSpacing = 22;
         const int bottomMargin = 55;
         const int stackOffset = 30; // How much each card overlaps
@@ -383,8 +413,8 @@ public class GameRenderer
         }
 
         Vector2 position = CalculateCardPosition(cardIndex, totalCards);
-        const int cardWidth = 140;
-        const int cardHeight = 209;
+        const int cardWidth = 168;  // Increased from 140 by 20%
+        const int cardHeight = 251; // Increased from 209 by 20%
         const int shadowWidth = 18;
         const int gradientSteps = 6;
         const int hoverElevation = 20;
@@ -540,12 +570,12 @@ public class GameRenderer
 
         // Draw card name
         Raylib.DrawTextPro(
-            descriptionFont,
+            cardNameFont,
             cardName,
             new Vector2(position.X + costBoxSize + padding * 2, position.Y + padding),
             new Vector2(0, 0),
             0,
-            20,
+            20,  
             1,
             Color.Black
         );
@@ -851,8 +881,8 @@ public class GameRenderer
 
     private static void DrawEffectStacks(Unit unit, Vector2 startPosition)
     {
-        const int circleRadius = 15;
-        const int circleSpacing = 35;
+        const int effectSize = 30;  // Size for effect icons
+        const int effectSpacing = 35;
         int currentX = (int)startPosition.X;
 
         // Draw each effect that has stacks
@@ -860,46 +890,66 @@ public class GameRenderer
         {
             if (effect.Stack > 0)
             {
-                Color effectColor = effect.EffectType switch
-                {
-                    EffectType.StrengthUp => Color.Red,
-                    EffectType.DexterityUp => Color.Green,
-                    EffectType.Thorn => Color.Purple,
-                    EffectType.Frail => Color.Orange,
-                    EffectType.Vulnerable => Color.Yellow,
-                    EffectType.Buffer => new Color(0, 255, 255, 255),  // Cyan
-                    EffectType.Logos => Color.Magenta,
-                    EffectType.Momentos => Color.Pink,
-                    EffectType.Literas => new Color(173, 216, 230, 255),  // LightBlue
-                    _ => Color.White
-                };
+                Texture2D effectTexture;
+                bool shouldDraw = true;
 
-                DrawEffectCircle(currentX, (int)startPosition.Y, circleRadius, effectColor, effect.Stack.ToString());
-                currentX += circleSpacing;
+                switch (effect.EffectType)
+                {
+                    case EffectType.Vulnerable:
+                        effectTexture = vulnerableTexture;
+                        break;
+                    case EffectType.Buffer:
+                        effectTexture = bufferTexture;
+                        break;
+                    case EffectType.DexterityUp:
+                        effectTexture = dexterityTexture;
+                        break;
+                    case EffectType.Frail:
+                        effectTexture = frailTexture;
+                        break;
+                    case EffectType.StrengthUp:
+                        effectTexture = strengthTexture;
+                        break;
+                    case EffectType.Thorn:
+                        effectTexture = thornTexture;
+                        break;
+                    case EffectType.Weak:
+                        effectTexture = weakTexture;
+                        break;
+                    default:
+                        shouldDraw = false;
+                        effectTexture = vulnerableTexture; // Dummy value, won't be used
+                        break;
+                }
+
+                if (shouldDraw)
+                {
+                    // Draw effect texture
+                    Raylib.DrawTexturePro(
+                        effectTexture,
+                        new Rectangle(0, 0, effectTexture.Width, effectTexture.Height),
+                        new Rectangle(currentX - effectSize/2, (int)startPosition.Y - effectSize/2, effectSize, effectSize),
+                        new Vector2(0, 0),
+                        0,
+                        Color.White
+                    );
+                    // Draw stack count
+                    string stackText = effect.Stack.ToString();
+                    Vector2 textSize = Raylib.MeasureTextEx(descriptionFont, stackText, 16, 1);
+                    Raylib.DrawTextPro(
+                        descriptionFont,
+                        stackText,
+                        new Vector2(currentX - textSize.X/2, (int)startPosition.Y - textSize.Y/2),
+                        new Vector2(0, 0),
+                        0,
+                        16,
+                        1,
+                        Color.White
+                    );
+                }
+                currentX += effectSpacing;
             }
         }
-    }
-
-    private static void DrawEffectCircle(int x, int y, int radius, Color color, string text)
-    {
-        // Draw circle background
-        Raylib.DrawCircle(x, y, radius, color);
-        
-        // Draw circle border
-        Raylib.DrawCircleLines(x, y, radius, Color.White);
-        
-        // Draw text
-        Vector2 textSize = Raylib.MeasureTextEx(descriptionFont, text, 16, 1);
-        Raylib.DrawTextPro(
-            descriptionFont,
-            text,
-            new Vector2(x - textSize.X/2, y - textSize.Y/2),
-            new Vector2(0, 0),
-            0,
-            16,
-            1,
-            Color.White
-        );
     }
 
     private static void DrawEnergyCounter(int maxEnergy, int currentEnergy)
