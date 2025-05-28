@@ -36,6 +36,21 @@ public class GameRenderer
     private static Texture2D weakTexture;       // Add weak texture
     private static Texture2D rewardBackground;     // Add energy texture
     private static Texture2D shopBackground;    // Add shop background texture
+    private static Texture2D studyGuideTexture;    // Add study guide charm texture
+    private static Texture2D coffeeMugTexture;     // Add coffee mug charm texture
+    private static Texture2D luckyPenTexture;      // Add lucky pen charm texture
+    private static Texture2D bookmarkTexture;      // Add bookmark charm texture
+    private static Texture2D calculatorTexture;    // Add calculator charm texture
+    private static Texture2D highlighterTexture;   // Add highlighter charm texture
+    private static Texture2D stickyNotesTexture;   // Add sticky notes charm texture
+    private static Texture2D studyTimerTexture;    // Add study timer charm texture
+    private static Texture2D flashCardsTexture;    // Add flash cards charm texture
+    private static Texture2D textBookTexture;      // Add text book charm texture
+    private static Texture2D notebookTexture;      // Add notebook charm texture
+    private static Texture2D smartWatchTexture;    // Add smart watch charm texture
+    private static Texture2D studyGroupTexture;    // Add study group charm texture
+    private static Texture2D allNighterTexture;    // Add all-nighter charm texture
+    private static Texture2D geniusIdeaTexture;    // Add genius idea charm texture
     // Animation properties
     private static Dictionary<int, CardAnimation> cardAnimations = new Dictionary<int, CardAnimation>();
     private const float ANIMATION_DURATION = 0.5f; // Duration in seconds
@@ -89,6 +104,7 @@ public class GameRenderer
 
     // Shop-related fields
     private static List<Card> shopCards = new List<Card>();
+    private static List<Charm> shopCharms = new List<Charm>();
     private static bool shopCardsGenerated = false;
     private static int playerGold = 100; // Starting gold
 
@@ -145,6 +161,24 @@ public class GameRenderer
         weakTexture = Raylib.LoadTexture("resources/effects/weak.png");
         rewardBackground = Raylib.LoadTexture("resources/background/rewardbook.png");
         shopBackground = Raylib.LoadTexture("resources/background/shop.png");
+
+        // Load charm textures
+        studyGuideTexture = Raylib.LoadTexture("resources/charms/studyguide.png");
+        coffeeMugTexture = Raylib.LoadTexture("resources/charms/coffeemug.png");
+        luckyPenTexture = Raylib.LoadTexture("resources/charms/luckypen.png");
+        bookmarkTexture = Raylib.LoadTexture("resources/charms/bookmark.png");
+        calculatorTexture = Raylib.LoadTexture("resources/charms/calculator.png");
+        highlighterTexture = Raylib.LoadTexture("resources/charms/highlighter.png");
+        stickyNotesTexture = Raylib.LoadTexture("resources/charms/stickynotes.png");
+        studyTimerTexture = Raylib.LoadTexture("resources/charms/studytimer.png");
+        flashCardsTexture = Raylib.LoadTexture("resources/charms/flashcards.png");
+        textBookTexture = Raylib.LoadTexture("resources/charms/textbook.png");
+        notebookTexture = Raylib.LoadTexture("resources/charms/notebook.png");
+        smartWatchTexture = Raylib.LoadTexture("resources/charms/smartwatch.png");
+        studyGroupTexture = Raylib.LoadTexture("resources/charms/studygroup.png");
+        allNighterTexture = Raylib.LoadTexture("resources/charms/allnighter.png");
+        geniusIdeaTexture = Raylib.LoadTexture("resources/charms/geniusidea.png");
+
         // Combine multiple wall.png into one large wall texture
         int floorHeight = ScreenHeight / 2;
         int wallAreaHeight = ScreenHeight - floorHeight + 30;
@@ -206,6 +240,50 @@ public class GameRenderer
         for (int y = patternSize; y < floorHeight + 30; y += patternSize)
         {
             Raylib.DrawLine(0, y, ScreenWidth, y, patternColor);
+        }
+
+        // Draw charm icon in top left corner
+        const int charmIconSize = 100;
+        const int charmPadding = 20;
+        
+        // Draw the appropriate charm icon based on the player's charm
+        if (game?.Map?.Player?.Charms != null && game.Map.Player.Charms.Count > 0)
+        {
+            var charm = game.Map.Player.Charms[0]; // Get the first charm
+            
+            switch (charm.CharmType)
+            {
+                case CharmType.StudyGuide:
+                    Raylib.DrawTexturePro(
+                        studyGuideTexture,
+                        new Rectangle(0, 0, studyGuideTexture.Width, studyGuideTexture.Height),
+                        new Rectangle(charmPadding + 10, charmPadding + 60, charmIconSize - 10, charmIconSize - 10),
+                        new Vector2(0, 0),
+                        0,
+                        Color.White
+                    );
+                    break;
+                case CharmType.CoffeeMug:
+                    Raylib.DrawTexturePro(
+                        coffeeMugTexture,
+                        new Rectangle(0, 0, coffeeMugTexture.Width, coffeeMugTexture.Height),
+                        new Rectangle(charmPadding + 10, charmPadding + 60, charmIconSize - 10, charmIconSize - 10),
+                        new Vector2(0, 0),
+                        0,
+                        Color.White
+                    );
+                    break;
+                case CharmType.LuckyPen:
+                    Raylib.DrawTexturePro(
+                        luckyPenTexture,
+                        new Rectangle(0, 0, luckyPenTexture.Width, luckyPenTexture.Height),
+                        new Rectangle(charmPadding + 5, charmPadding + 60, charmIconSize - 10, charmIconSize - 10),
+                        new Vector2(0, 0),
+                        0,
+                        Color.White
+                    );
+                    break;
+            }
         }
         
         // Draw new tiled floor using tileTexture, transformed to 45-degree angle
@@ -278,7 +356,8 @@ public class GameRenderer
             ScreenHeight - floorHeight - 515, 
             ScreenWidth, 
             50, 
-            Color.DarkBrown);
+            Color.DarkBrown
+        );
 
         // Draw HP bars
         if (game.Map.Rooms.Count > 0 && game.Map.Rooms[0] is Combat combatRoom)
@@ -1075,10 +1154,25 @@ public class GameRenderer
         const int startX = 370;
         const int startY = ScreenHeight - 410;
 
-        for (int i = 0; i < maxEnergy; i++)
+        // Calculate total number of orbs to display
+        int totalOrbs = Math.Max(maxEnergy, currentEnergy);
+
+        for (int i = 0; i < totalOrbs; i++)
         {
             int x = startX + i * (sectionWidth + sectionSpacing);
-            Color fill = i < currentEnergy ? Color.White : new Color(180, 180, 180, 120); // Dimmed for empty
+            Color fill;
+            
+            if (i < maxEnergy)
+            {
+                // Normal energy orbs
+                fill = i < currentEnergy ? Color.White : new Color(180, 180, 180, 120); // Dimmed for empty
+            }
+            else
+            {
+                // Extra energy orb (beyond max)
+                fill = Color.Yellow; // Special color for extra energy
+            }
+
             Raylib.DrawTexturePro(
                 energyTexture,
                 new Rectangle(0, 0, energyTexture.Width, energyTexture.Height),
@@ -1657,20 +1751,25 @@ public class GameRenderer
         string goldText = $"Gold: {playerGold}";
         Raylib.DrawText(goldText, 50, 50, 30, Color.Gold);
 
-        // Generate shop cards if not already done
+        // Generate shop items if not already done
         if (!shopCardsGenerated)
         {
-            shopCards = Program.GenerateRewardCards(); // Reuse reward card generation for now
+            shopCards = Program.GenerateRewardCards();
+            shopCharms = Program.GenerateShopCharms();
             shopCardsGenerated = true;
         }
+
+        // Draw cards section
+        string cardsTitle = "Cards";
+        Raylib.DrawText(cardsTitle, 50, 120, 30, Color.White);
 
         // Draw cards
         const int cardWidth = 235;
         const int cardHeight = 351;
-        const int cardSpacing = 100;
-        int totalWidth = (cardWidth * 3) + (cardSpacing * 2);
-        int startX = (ScreenWidth - totalWidth) / 2;
-        int startY = ScreenHeight/2 - cardHeight/2;
+        const int cardSpacing = 50;
+        int totalCardWidth = (cardWidth * 3) + (cardSpacing * 2);
+        int startCardX = (ScreenWidth - totalCardWidth) / 2;
+        int startCardY = 180;
 
         Vector2 mousePos = Raylib.GetMousePosition();
 
@@ -1678,8 +1777,8 @@ public class GameRenderer
         {
             Card card = shopCards[i];
             Vector2 position = new Vector2(
-                startX + (i * (cardWidth + cardSpacing)),
-                startY
+                startCardX + (i * (cardWidth + cardSpacing)),
+                startCardY
             );
 
             // Check if mouse is hovering over card
@@ -1704,7 +1803,7 @@ public class GameRenderer
                 Color.White
             );
 
-            // Draw cost box (now shows gold cost)
+            // Draw cost box
             const int padding = 10;
             const int costBoxSize = 28;
             Raylib.DrawRectangle(
@@ -1712,12 +1811,11 @@ public class GameRenderer
                 (int)position.Y + padding,
                 costBoxSize,
                 costBoxSize,
-                Color.Gold
+                Color.Red
             );
 
-            // Draw gold cost (using card cost * 10 as gold cost)
-            int goldCost = card.Price;
-            string costText = goldCost.ToString();
+            // Draw cost number
+            string costText = card.CardCost.ToString();
             Vector2 costTextSize = Raylib.MeasureTextEx(descriptionFont, costText, 19, 1);
             Raylib.DrawTextPro(
                 descriptionFont,
@@ -1730,7 +1828,7 @@ public class GameRenderer
                 0,
                 19,
                 1,
-                Color.Black
+                Color.White
             );
 
             // Draw card name
@@ -1789,18 +1887,181 @@ public class GameRenderer
                 Color.Black
             );
 
+            // Draw price
+            int price = 100; // Fixed price for cards
+            string priceText = $"{price} Gold";
+            Vector2 priceTextSize = Raylib.MeasureTextEx(descriptionFont, priceText, 24, 1);
+            Raylib.DrawTextPro(
+                descriptionFont,
+                priceText,
+                new Vector2(
+                    position.X + (cardWidth - priceTextSize.X) / 2,
+                    position.Y + cardHeight - 40
+                ),
+                new Vector2(0, 0),
+                0,
+                24,
+                1,
+                Color.Gold
+            );
+
             // Handle card purchase
             if (isHovering && Raylib.IsMouseButtonPressed(MouseButton.Left))
             {
-                int purchaseCost = card.Price;
-                if (playerGold >= purchaseCost)
+                if (playerGold >= price)
                 {
                     // Purchase card
                     if (game?.Map?.Player != null)
                     {
                         game.Map.Player.AddCard(card);
-                        playerGold -= purchaseCost;
+                        playerGold -= price;
                         shopCards.RemoveAt(i);
+                    }
+                }
+            }
+        }
+
+        // Draw charms section
+        string charmsTitle = "Charms";
+        Raylib.DrawText(charmsTitle, 50, startCardY + cardHeight + 50, 30, Color.White);
+
+        // Draw charms
+        const int charmWidth = 300;
+        const int charmHeight = 400;
+        const int charmSpacing = 100;
+        int totalCharmWidth = (charmWidth * 3) + (charmSpacing * 2);
+        int startCharmX = (ScreenWidth - totalCharmWidth) / 2;
+        int startCharmY = startCardY + cardHeight + 80;
+
+        for (int i = 0; i < shopCharms.Count; i++)
+        {
+            Charm charm = shopCharms[i];
+            Vector2 position = new Vector2(
+                startCharmX + (i * (charmWidth + charmSpacing)),
+                startCharmY
+            );
+
+            // Check if mouse is hovering over charm
+            bool isHovering = mousePos.X >= position.X && 
+                            mousePos.X <= position.X + charmWidth &&
+                            mousePos.Y >= position.Y && 
+                            mousePos.Y <= position.Y + charmHeight;
+
+            // Apply hover effect
+            if (isHovering)
+            {
+                position.Y -= 20;
+            }
+
+            // Draw charm box
+            Color boxColor = isHovering ? new Color(200, 200, 255, 255) : Color.White;
+            Raylib.DrawRectangleRec(
+                new Rectangle(position.X, position.Y, charmWidth, charmHeight),
+                boxColor
+            );
+            Raylib.DrawRectangleLinesEx(
+                new Rectangle(position.X, position.Y, charmWidth, charmHeight),
+                2,
+                Color.DarkBlue
+            );
+
+            // Draw charm icon
+            const int iconSize = 100;
+            int iconX = (int)position.X + (charmWidth - iconSize) / 2;
+            int iconY = (int)position.Y + 50;
+            Texture2D charmTexture = GetCharmTexture(charm.CharmType);
+            Raylib.DrawTexturePro(
+                charmTexture,
+                new Rectangle(0, 0, charmTexture.Width, charmTexture.Height),
+                new Rectangle(iconX, iconY, iconSize, iconSize),
+                new Vector2(0, 0),
+                0,
+                Color.White
+            );
+
+            // Draw charm name
+            Raylib.DrawText(
+                charm.Name,
+                (int)position.X + 20,
+                iconY + iconSize + 20,
+                30,
+                Color.DarkBlue
+            );
+
+            // Draw charm description (wrapped)
+            string description = charm.Description;
+            string[] words = description.Split(' ');
+            string currentLine = "";
+            int lineY = iconY + iconSize + 60;
+            int maxWidth = charmWidth - 40;
+
+            foreach (string word in words)
+            {
+                string testLine = currentLine + word + " ";
+                int textWidth = (int)Raylib.MeasureTextEx(descriptionFont, testLine, 20, 1).X;
+                
+                if (textWidth > maxWidth)
+                {
+                    Raylib.DrawTextPro(
+                        descriptionFont,
+                        currentLine,
+                        new Vector2(position.X + 20, lineY),
+                        new Vector2(0, 0),
+                        0,
+                        20,
+                        1,
+                        Color.Black
+                    );
+                    currentLine = word + " ";
+                    lineY += 25;
+                }
+                else
+                {
+                    currentLine = testLine;
+                }
+            }
+            
+            // Draw the last line
+            Raylib.DrawTextPro(
+                descriptionFont,
+                currentLine,
+                new Vector2(position.X + 20, lineY),
+                new Vector2(0, 0),
+                0,
+                20,
+                1,
+                Color.Black
+            );
+
+            // Draw price
+            int price = GetCharmPrice(charm.CharmType);
+            string priceText = $"{price} Gold";
+            Vector2 priceTextSize = Raylib.MeasureTextEx(descriptionFont, priceText, 24, 1);
+            Raylib.DrawTextPro(
+                descriptionFont,
+                priceText,
+                new Vector2(
+                    position.X + (charmWidth - priceTextSize.X) / 2,
+                    position.Y + charmHeight - 40
+                ),
+                new Vector2(0, 0),
+                0,
+                24,
+                1,
+                Color.Gold
+            );
+
+            // Handle charm purchase
+            if (isHovering && Raylib.IsMouseButtonPressed(MouseButton.Left))
+            {
+                if (playerGold >= price)
+                {
+                    // Purchase charm
+                    if (game?.Map?.Player != null)
+                    {
+                        game.Map.Player.AddCharm(charm);
+                        playerGold -= price;
+                        shopCharms.RemoveAt(i);
                     }
                 }
             }
@@ -1841,8 +2102,78 @@ public class GameRenderer
             // Reset shop state
             shopCardsGenerated = false;
             shopCards.Clear();
+            shopCharms.Clear();
             // Return to reward screen
             Program.currentScreen = Program.GameScreen.Reward;
+        }
+    }
+
+    private static Texture2D GetCharmTexture(CharmType charmType)
+    {
+        switch (charmType)
+        {
+            case CharmType.StudyGuide:
+                return studyGuideTexture;
+            case CharmType.CoffeeMug:
+                return coffeeMugTexture;
+            case CharmType.LuckyPen:
+                return luckyPenTexture;
+            case CharmType.Bookmark:
+                return bookmarkTexture;
+            case CharmType.Calculator:
+                return calculatorTexture;
+            case CharmType.Highlighter:
+                return highlighterTexture;
+            case CharmType.StickyNotes:
+                return stickyNotesTexture;
+            case CharmType.StudyTimer:
+                return studyTimerTexture;
+            case CharmType.FlashCards:
+                return flashCardsTexture;
+            case CharmType.TextBook:
+                return textBookTexture;
+            case CharmType.Notebook:
+                return notebookTexture;
+            case CharmType.SmartWatch:
+                return smartWatchTexture;
+            case CharmType.StudyGroup:
+                return studyGroupTexture;
+            case CharmType.AllNighter:
+                return allNighterTexture;
+            case CharmType.GeniusIdea:
+                return geniusIdeaTexture;
+            default:
+                return studyGuideTexture; // Default texture
+        }
+    }
+
+    private static int GetCharmPrice(CharmType charmType)
+    {
+        switch (charmType)
+        {
+            // Common Charms
+            case CharmType.Bookmark:
+            case CharmType.Calculator:
+            case CharmType.Highlighter:
+            case CharmType.StickyNotes:
+                return 100;
+
+            // Uncommon Charms
+            case CharmType.StudyTimer:
+            case CharmType.FlashCards:
+            case CharmType.TextBook:
+            case CharmType.Notebook:
+                return 200;
+
+            // Rare Charms
+            case CharmType.SmartWatch:
+            case CharmType.StudyGroup:
+            case CharmType.AllNighter:
+            case CharmType.GeniusIdea:
+                return 300;
+
+            default:
+                return 100;
         }
     }
 
@@ -1997,5 +2328,117 @@ public class GameRenderer
             IsPlaying = true
         };
         damageAnimations.Add(animation);
+    }
+
+    public static int DrawCharmSelectionScreen()
+    {
+        const int charmWidth = 300;
+        const int charmHeight = 400;
+        const int padding = 50;
+        const int titleHeight = 100;
+        const int iconSize = 100;  // Size for charm icons
+        
+        // Draw title
+        string title = "Choose Your Starting Charm";
+        Raylib.DrawText(
+            title,
+            ScreenWidth / 2 - Raylib.MeasureText(title, 40) / 2,
+            titleHeight,
+            40,
+            Color.DarkBlue
+        );
+
+        // Draw subtitle
+        string subtitle = "Select one charm to help you in your journey";
+        Raylib.DrawText(
+            subtitle,
+            ScreenWidth / 2 - Raylib.MeasureText(subtitle, 20) / 2,
+            titleHeight + 50,
+            20,
+            Color.Gray
+        );
+
+        // Calculate positions for the three charms
+        int totalWidth = (charmWidth * 3) + (padding * 2);
+        int startX = (ScreenWidth - totalWidth) / 2;
+        int startY = ScreenHeight / 2 - charmHeight / 2;
+
+        // Charm data
+        var charms = new[]
+        {
+            new { Name = "Study Guide", Description = "Start each combat with 1 extra energy", Type = CharmType.StudyGuide, Texture = studyGuideTexture },
+            new { Name = "Coffee Mug", Description = "Start each combat with 1 extra card draw", Type = CharmType.CoffeeMug, Texture = coffeeMugTexture },
+            new { Name = "Lucky Pen", Description = "10% chance to draw an extra card when you draw cards", Type = CharmType.LuckyPen, Texture = luckyPenTexture }
+        };
+
+        // Draw each charm
+        for (int i = 0; i < charms.Length; i++)
+        {
+            int x = startX + (i * (charmWidth + padding));
+            Rectangle charmRec = new Rectangle(x, startY, charmWidth, charmHeight);
+            
+            // Check for hover
+            Vector2 mousePoint = Raylib.GetMousePosition();
+            bool isHovered = Raylib.CheckCollisionPointRec(mousePoint, charmRec);
+            
+            // Draw charm box
+            Color boxColor = isHovered ? new Color(200, 200, 255, 255) : Color.White;
+            Raylib.DrawRectangleRec(charmRec, boxColor);
+            Raylib.DrawRectangleLinesEx(charmRec, 2, Color.DarkBlue);
+
+            // Draw charm icon
+            int iconX = x + (charmWidth - iconSize) / 2;
+            int iconY = startY + padding;
+            Raylib.DrawTexturePro(
+                charms[i].Texture,
+                new Rectangle(0, 0, charms[i].Texture.Width, charms[i].Texture.Height),
+                new Rectangle(iconX, iconY, iconSize, iconSize),
+                new Vector2(0, 0),
+                0,
+                Color.White
+            );
+
+            // Draw charm name
+            Raylib.DrawText(
+                charms[i].Name,
+                x + padding,
+                iconY + iconSize + 20,
+                30,
+                Color.DarkBlue
+            );
+
+            // Draw charm description (wrapped)
+            string description = charms[i].Description;
+            int maxWidth = charmWidth - (padding * 2);
+            int lineHeight = 25;
+            int currentY = iconY + iconSize + 60;
+            
+            string[] words = description.Split(' ');
+            string currentLine = "";
+            
+            foreach (string word in words)
+            {
+                string testLine = currentLine + (currentLine == "" ? "" : " ") + word;
+                if (Raylib.MeasureText(testLine, 20) <= maxWidth)
+                {
+                    currentLine = testLine;
+                }
+                else
+                {
+                    Raylib.DrawText(currentLine, x + padding, currentY, 20, Color.Black);
+                    currentY += lineHeight;
+                    currentLine = word;
+                }
+            }
+            Raylib.DrawText(currentLine, x + padding, currentY, 20, Color.Black);
+
+            // Check for click
+            if (isHovered && Raylib.IsMouseButtonPressed(MouseButton.Left))
+            {
+                return i;
+            }
+        }
+
+        return -1; // No charm selected
     }
 }

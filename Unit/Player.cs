@@ -46,6 +46,13 @@ public class Player: Unit
             Console.WriteLine($"- {effect.EffectType}: {effect.Stack} stacks");
         }
         
+        Console.WriteLine("\nCharms:");
+        Console.WriteLine("-------");
+        foreach (var charm in _charms)
+        {
+            Console.WriteLine($"- {charm.Name}: {charm.Description}");
+        }
+        
         Console.WriteLine("\nCards in Deck:");
         Console.WriteLine("--------------");
         foreach (var card in _cards)
@@ -61,6 +68,12 @@ public class Player: Unit
         set { _cards = value; }
     }
     
+    public List<Charm> Charms
+    {
+        get { return _charms; }
+        set { _charms = value; }
+    }
+
     public void AddCharm(Charm charm){
         _charms.Add(charm);
     }
@@ -155,8 +168,101 @@ public class Player: Unit
         }
     }
 
-    public void EndTurn(){  
+    public void RemoveCharm(Charm charm)
+    {
+        _charms.Remove(charm);
+    }
+
+    public void TriggerStartOfCombat()
+    {
+        foreach (var charm in _charms)
+        {
+            if (charm.IsActive)
+            {
+                charm.ExecuteActions(this);
+            }
+        }
+    }
+
+    public void TriggerEndOfTurn()
+    {
+        foreach (var charm in _charms)
+        {
+            if (charm.IsActive)
+            {
+                charm.ExecuteActions(this);
+            }
+        }
+    }
+
+    public void TriggerCardPlayed(Card card)
+    {
+        foreach (var charm in _charms)
+        {
+            if (charm.IsActive)
+            {
+                charm.ExecuteActions(this);
+            }
+        }
+    }
+
+    public void TriggerDamageTaken(int damage)
+    {
+        foreach (var charm in _charms)
+        {
+            if (charm.IsActive)
+            {
+                charm.ExecuteActions(this);
+            }
+        }
+    }
+
+    public void TriggerEnemyDamaged(Enemy enemy, int damage)
+    {
+        foreach (var charm in _charms)
+        {
+            if (charm.IsActive)
+            {
+                charm.ExecuteActions(this);
+            }
+        }
+    }
+
+    public void TriggerBlockGained(int block)
+    {
+        foreach (var charm in _charms)
+        {
+            if (charm.IsActive)
+            {
+                charm.ExecuteActions(this);
+            }
+        }
+    }
+
+    public override void EndTurn(){  
         DiscardHand();
+        
+        // Reduce stacks of vulnerable, frail, and weak effects by one
+        var vulnerableEffect = _effects.FirstOrDefault(e => e.EffectType == EffectType.Vulnerable);
+        if (vulnerableEffect != null && vulnerableEffect.Stack > 0)
+        {
+            vulnerableEffect.Stack--;
+        }
+
+        var frailEffect = _effects.FirstOrDefault(e => e.EffectType == EffectType.Frail);
+        if (frailEffect != null && frailEffect.Stack > 0)
+        {
+            frailEffect.Stack--;
+        }
+
+        var weakEffect = _effects.FirstOrDefault(e => e.EffectType == EffectType.Weak);
+        if (weakEffect != null && weakEffect.Stack > 0)
+        {
+            weakEffect.Stack--;
+        }
+
+        // Trigger end of turn effects for charms
+        TriggerEndOfTurn();
     }
 
     public int MaxEnergy

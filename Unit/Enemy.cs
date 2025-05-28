@@ -55,6 +55,28 @@ public class Enemy: Unit
         this.AddEffect(effect);
     }
 
+    public override void EndTurn()
+    {
+        // Reduce stacks of vulnerable, frail, and weak effects by one
+        var vulnerableEffect = _effects.FirstOrDefault(e => e.EffectType == EffectType.Vulnerable);
+        if (vulnerableEffect != null && vulnerableEffect.Stack > 0)
+        {
+            vulnerableEffect.Stack--;
+        }
+
+        var frailEffect = _effects.FirstOrDefault(e => e.EffectType == EffectType.Frail);
+        if (frailEffect != null && frailEffect.Stack > 0)
+        {
+            frailEffect.Stack--;
+        }
+
+        var weakEffect = _effects.FirstOrDefault(e => e.EffectType == EffectType.Weak);
+        if (weakEffect != null && weakEffect.Stack > 0)
+        {
+            weakEffect.Stack--;
+        }
+    }
+
     public override void TakeDamage(int damage)
     {
         // First reduce damage by block

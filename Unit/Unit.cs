@@ -103,4 +103,6 @@ public abstract class Unit
             effect.Stack += amount;
         }
     }
+
+    public abstract void EndTurn();
 }

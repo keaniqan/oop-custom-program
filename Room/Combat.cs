@@ -12,6 +12,7 @@ public class Combat: Room
     private int _currentEnergy;
     private Random _random;
     private int _turnCount;
+    private int _goldReward;
     private Game _game;
 
     public Combat(bool isCleared, bool isAvailable, bool isCurrent, Enemy enemy, EnemyType enemyType, TurnPhase turnPhase, int currentEnergy) : base(isCleared, isAvailable, isCurrent)
@@ -193,6 +194,9 @@ public class Combat: Room
         // Reset both player and enemy block at end of turn
         _game.Map.Player.Block = 0;
         
+        // Reduce enemy effect stacks
+        _enemy.EndTurn();
+        
         // Set intent for next turn
         SetEnemyIntent();
         
@@ -204,7 +208,20 @@ public class Combat: Room
 
     public override void Reward()
     {
-        // TODO: Implement reward
+        if (_enemy.EnemyType == EnemyType.Basic)
+        {
+            _goldReward = _random.Next(75, 125);
+        }
+        else if (_enemy.EnemyType == EnemyType.Elite)
+        {
+            _goldReward = _random.Next(125, 225);
+        }
+        else if (_enemy.EnemyType == EnemyType.Boss)
+        {
+            _goldReward = _random.Next(225, 325);
+        }
+        _game.Map.Player.AddGold(_goldReward);
+        Program.currentScreen = Program.GameScreen.Reward;
     }
 
     public void EndCombat()
@@ -223,7 +240,7 @@ public class Combat: Room
             }
             
             // Show reward screen first
-            Program.currentScreen = Program.GameScreen.Reward;
+            Reward();
         }
     }
 
@@ -236,6 +253,10 @@ public class Combat: Room
     {
         base.EnterRoom();
         
+        // Reset turn count and energy first
+        _turnCount = 0;
+        _currentEnergy = _game?.Map?.Player?.MaxEnergy ?? 3;
+        
         // Ensure all cards are in draw pile first
         if (_game?.Map?.Player != null)
         {
@@ -247,11 +268,10 @@ public class Combat: Room
             _game.Map.Player.ShuffleDeck();
             // Draw initial hand
             _game.Map.Player.DrawCards(5);
-        }
 
-        // Reset turn count and energy
-        _turnCount = 0;
-        _currentEnergy = _game?.Map?.Player?.MaxEnergy ?? 3;
+            // Trigger start of combat effects for charms
+            _game.Map.Player.TriggerStartOfCombat();
+        }
         
         // Set initial enemy intent
         SetEnemyIntent();

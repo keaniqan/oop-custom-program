@@ -13,8 +13,9 @@ internal class Program
     public enum GameScreen
     {
         TitleScreen,
-        Gameplay,
+        CharmSelection,
         MapSelection,
+        Gameplay,
         Reward,
         Shop
     }
@@ -32,7 +33,7 @@ internal class Program
         InitializeGame();
         
         // Button state
-        Rectangle startButtonRec = new Rectangle(ScreenWidth / 2 - 100, ScreenHeight / 2 + 20, 200, 50);
+        Rectangle startButtonRec = new Rectangle(ScreenWidth / 2 - 100, ScreenHeight / 2, 200, 50);
         bool startButtonHover = false;
 
         while (!Raylib.WindowShouldClose())
@@ -42,14 +43,26 @@ internal class Program
             {
                 case GameScreen.TitleScreen:
                     Vector2 mousePoint = Raylib.GetMousePosition();
+                    mousePoint = new Vector2(mousePoint.X, mousePoint.Y + 25);
                     startButtonHover = Raylib.CheckCollisionPointRec(mousePoint, startButtonRec);
                     
                     if (startButtonHover && Raylib.IsMouseButtonPressed(MouseButton.Left))
                     {
-                        currentScreen = GameScreen.MapSelection;
+                        currentScreen = GameScreen.CharmSelection;
                     }
                     break;
                 
+                case GameScreen.CharmSelection:
+                    int selectedCharm = GameRenderer.DrawCharmSelectionScreen();
+                    if (selectedCharm != -1)
+                    {
+                        // Add the selected charm to the player
+                        var charm = CreateStarterCharm(selectedCharm);
+                        player.AddCharm(charm);
+                        currentScreen = GameScreen.MapSelection;
+                    }
+                    break;
+
                 case GameScreen.Gameplay:
                     // Game logic will go here
                     break;
@@ -65,6 +78,7 @@ internal class Program
                             var selectedRoom = game.Map.Rooms[selectedNode];
                             game.Map.Rooms.RemoveAt(selectedNode);
                             game.Map.Rooms.Insert(0, selectedRoom);
+                            game.Map.CurrentRoom = selectedRoom;
                             game.Map.Rooms[0].EnterRoom();
                         }
                         currentScreen = GameScreen.Gameplay;
@@ -98,6 +112,10 @@ internal class Program
                     Raylib.DrawText("Click START to begin your final exam adventure!",
                         ScreenWidth / 2 - Raylib.MeasureText("Click START to begin your final exam adventure!", 20) / 2,
                         ScreenHeight - 50, 20, Color.Gray);
+                    break;
+                
+                case GameScreen.CharmSelection:
+                    GameRenderer.DrawCharmSelectionScreen();
                     break;
                 
                 case GameScreen.Gameplay:
@@ -144,7 +162,8 @@ internal class Program
         Action bashAttack = new(ActionType.Attack, 8, null, false);
         Action addVulnerable = new(ActionType.Effect, 1, EffectType.Vulnerable, false);
         Action addWeak = new(ActionType.Effect, 1, EffectType.Weak, false);
-
+        Action drawCards = new(ActionType.Draw, 2, null, true);
+        Action gainEnergy = new(ActionType.Energy, 1, null, true);
         Action defendAction = new(ActionType.Block, 5, null, true);
         Action addStrength = new(ActionType.Effect, 1, EffectType.StrengthUp, true);
 
@@ -158,6 +177,8 @@ internal class Program
             new Card("Memory", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
             new Card("Memory", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
             new Card("Memory", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Coffee Break", "Gain 1 Energy. Draw 1 card.", 100, new List<Action> { gainEnergy, drawCards }, CardLocation.DrawPile, 0, AffinityType.None, true),
+            new Card("Study Guide", "Draw 2 cards. Gain 1 Energy.", 80, new List<Action> { drawCards, gainEnergy }, CardLocation.DrawPile, 1, AffinityType.None, false),
             new Card("Crit Thinking", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action> {bashAttack, addVulnerable, addVulnerable}, CardLocation.DrawPile, 2, AffinityType.None, false),     
         };
     }
@@ -176,6 +197,7 @@ internal class Program
         Action drawCards = new(ActionType.Draw, 2, null, true);
         Action gainEnergy = new(ActionType.Energy, 1, null, true);
         Action healAction = new(ActionType.Heal, 4, null, true);
+
 
         return new List<Card>
         {
@@ -302,5 +324,154 @@ internal class Program
 
         // Set the rooms in the game's map
         game.Map.Rooms = rooms;
+    }
+
+    private static Charm CreateStarterCharm(int index)
+    {
+        switch (index)
+        {
+            case 0:
+                return new Charm(
+                    "Study Guide",
+                    "Start each combat with 1 extra energy",
+                    CharmType.StudyGuide,
+                    new List<Action> { new Action(ActionType.Energy, 1, null, true) }
+                );
+            case 1:
+                return new Charm(
+                    "Coffee Mug",
+                    "Start each combat with 1 extra card draw",
+                    CharmType.CoffeeMug,
+                    new List<Action> { new Action(ActionType.Draw, 1, null, true) }
+                );
+            case 2:
+                return new Charm(
+                    "Lucky Pen",
+                    "10% chance to draw an extra card when you draw cards",
+                    CharmType.LuckyPen,
+                    new List<Action> { new Action(ActionType.Draw, 1, null, true) }
+                );
+            default:
+                return new Charm(
+                    "Study Guide",
+                    "Start each combat with 1 extra energy",
+                    CharmType.StudyGuide,
+                    new List<Action> { new Action(ActionType.Energy, 1, null, true) }
+                );
+        }
+    }
+
+    private static List<Charm> CreateShopCharmPool()
+    {
+        var charmPool = new List<Charm>();
+
+        // Common Charms
+        charmPool.Add(new Charm(
+            "Bookmark",
+            "Draw 1 extra card at the start of your turn",
+            CharmType.Bookmark,
+            new List<Action> { new Action(ActionType.Draw, 1, null, true) }
+        ));
+
+        charmPool.Add(new Charm(
+            "Calculator",
+            "Gain 1 energy at the start of your turn",
+            CharmType.Calculator,
+            new List<Action> { new Action(ActionType.Energy, 1, null, true) }
+        ));
+
+        charmPool.Add(new Charm(
+            "Highlighter",
+            "Cards that cost 0 deal 2 more damage",
+            CharmType.Highlighter,
+            new List<Action> { new Action(ActionType.Effect, 2, EffectType.StrengthUp, true) }
+        ));
+
+        charmPool.Add(new Charm(
+            "Sticky Notes",
+            "When you play a card, gain 1 block",
+            CharmType.StickyNotes,
+            new List<Action> { new Action(ActionType.Block, 1, null, true) }
+        ));
+
+        // Uncommon Charms
+        charmPool.Add(new Charm(
+            "Study Timer",
+            "Every 3 turns, gain 1 energy",
+            CharmType.StudyTimer,
+            new List<Action> { new Action(ActionType.Energy, 1, null, true) }
+        ));
+
+        charmPool.Add(new Charm(
+            "Flash Cards",
+            "When you shuffle your draw pile, draw 1 card",
+            CharmType.FlashCards,
+            new List<Action> { new Action(ActionType.Draw, 1, null, true) }
+        ));
+
+        charmPool.Add(new Charm(
+            "Text Book",
+            "Start each combat with 2 Strength",
+            CharmType.TextBook,
+            new List<Action> { new Action(ActionType.Effect, 2, EffectType.StrengthUp, true) }
+        ));
+
+        charmPool.Add(new Charm(
+            "Notebook",
+            "Start each combat with 2 Dexterity",
+            CharmType.Notebook,
+            new List<Action> { new Action(ActionType.Effect, 2, EffectType.DexterityUp, true) }
+        ));
+
+        // Rare Charms
+        charmPool.Add(new Charm(
+            "Smart Watch",
+            "At the start of your turn, gain 1 energy and draw 1 card",
+            CharmType.SmartWatch,
+            new List<Action> { 
+                new Action(ActionType.Energy, 1, null, true),
+                new Action(ActionType.Draw, 1, null, true)
+            }
+        ));
+
+        charmPool.Add(new Charm(
+            "Study Group",
+            "Your first card each turn costs 0",
+            CharmType.StudyGroup,
+            new List<Action> { new Action(ActionType.Effect, 1, EffectType.Buffer, true) }
+        ));
+
+        charmPool.Add(new Charm(
+            "All-Nighter",
+            "Start each combat with 2 extra energy",
+            CharmType.AllNighter,
+            new List<Action> { new Action(ActionType.Energy, 2, null, true) }
+        ));
+
+        charmPool.Add(new Charm(
+            "Genius Idea",
+            "When you play a card, there's a 25% chance to play it again",
+            CharmType.GeniusIdea,
+            new List<Action> { new Action(ActionType.Effect, 1, EffectType.Buffer, true) }
+        ));
+
+        return charmPool;
+    }
+
+    public static List<Charm> GenerateShopCharms()
+    {
+        var charmPool = CreateShopCharmPool();
+        var random = new Random();
+        var selectedCharms = new List<Charm>();
+        
+        // Select 3 random unique charms from the pool
+        while (selectedCharms.Count < 3 && charmPool.Count > 0)
+        {
+            int index = random.Next(charmPool.Count);
+            selectedCharms.Add(charmPool[index]);
+            charmPool.RemoveAt(index);
+        }
+        
+        return selectedCharms;
     }
 }
