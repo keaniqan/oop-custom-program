@@ -15,7 +15,8 @@ internal class Program
         TitleScreen,
         Gameplay,
         MapSelection,
-        Reward
+        Reward,
+        Shop
     }
     
     private static Game game;
@@ -108,6 +109,9 @@ internal class Program
                 case GameScreen.Reward:
                     GameRenderer.DrawRewardScreen();
                     break;
+                case GameScreen.Shop:
+                    GameRenderer.DrawShopScreen();
+                    break;
             }
             
             Raylib.EndDrawing();
@@ -136,7 +140,7 @@ internal class Program
 
     private static List<Card> CreateStarterDeck()
     {
-        Action strikeAction = new(ActionType.Attack, 6, null, false);
+        Action strikeAction = new(ActionType.Attack, 100, null, false);
         Action bashAttack = new(ActionType.Attack, 8, null, false);
         Action addVulnerable = new(ActionType.Effect, 1, EffectType.Vulnerable, false);
         Action addWeak = new(ActionType.Effect, 1, EffectType.Weak, false);
@@ -149,14 +153,72 @@ internal class Program
             new Card("Study", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),
             new Card("Study", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),
             new Card("Study", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Study", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),
             new Card("Memory", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
             new Card("Memory", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
             new Card("Memory", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
-            new Card("Unthinking", "Apply 2 Weak.", 1, new List<Action> {addWeak, addWeak}, CardLocation.DrawPile, 1, AffinityType.None, false),
-            new Card("Crit Thinking", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action> {bashAttack, addVulnerable, addStrength}, CardLocation.DrawPile, 2, AffinityType.None, false),
+            new Card("Memory", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Crit Thinking", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action> {bashAttack, addVulnerable, addVulnerable}, CardLocation.DrawPile, 2, AffinityType.None, false),     
+        };
+    }
+
+    private static List<Card> CreateRewardCardPool()
+    {
+        Action strikeAction = new(ActionType.Attack, 6, null, false);
+        Action bashAttack = new(ActionType.Attack, 8, null, false);
+        Action addVulnerable = new(ActionType.Effect, 1, EffectType.Vulnerable, false);
+        Action addWeak = new(ActionType.Effect, 1, EffectType.Weak, false);
+        Action defendAction = new(ActionType.Block, 5, null, true);
+        Action addStrength = new(ActionType.Effect, 1, EffectType.StrengthUp, true);
+        Action addDexterity = new(ActionType.Effect, 1, EffectType.DexterityUp, true);
+        Action addThorn = new(ActionType.Effect, 1, EffectType.Thorn, true);
+        Action addBuffer = new(ActionType.Effect, 1, EffectType.Buffer, true);
+        Action drawCards = new(ActionType.Draw, 2, null, true);
+        Action gainEnergy = new(ActionType.Energy, 1, null, true);
+        Action healAction = new(ActionType.Heal, 4, null, true);
+
+        return new List<Card>
+        {
+            // Attack Cards
+            new Card("Quick Study", "Deal 6 damage. Draw 1 card.", 70, new List<Action> { strikeAction, drawCards }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Deep Analysis", "Deal 8 damage. Apply 2 Vulnerable.", 70, new List<Action> { bashAttack, addVulnerable, addVulnerable }, CardLocation.DrawPile, 2, AffinityType.None, false),
+            new Card("Critical Review", "Deal 12 damage. Apply 1 Weak.", 85, new List<Action> { new Action(ActionType.Attack, 12, null, false), addWeak }, CardLocation.DrawPile, 2, AffinityType.None, false),
+            new Card("Unthinking", "Apply 2 Weak.", 80, new List<Action> {addWeak, addWeak}, CardLocation.DrawPile, 1, AffinityType.None, false),
+
+            // Defense Cards
+            new Card("Mental Block", "Gain 7 block. Gain 1 Dexterity.", 90, new List<Action> { new Action(ActionType.Block, 7, null, true), addDexterity }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Study Break", "Gain 8 block. Draw 1 card.", 90, new List<Action> { new Action(ActionType.Block, 8, null, true), drawCards }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Last Minute Cram", "Gain 12 block. Gain 1 Frail.", 77, new List<Action> { new Action(ActionType.Block, 12, null, true), new Action(ActionType.Effect, 1, EffectType.Frail, true) }, CardLocation.DrawPile, 2, AffinityType.None, false),
+            
+            // Power Cards
+            new Card("Study Group", "Gain 1 Strength. Draw 1 card.", 71, new List<Action> { addStrength, drawCards }, CardLocation.DrawPile, 1, AffinityType.None, true),
+            new Card("Coffee Break", "Gain 1 Energy. Draw 1 card.", 100, new List<Action> { gainEnergy, drawCards }, CardLocation.DrawPile, 0, AffinityType.None, true),
+            new Card("All-Nighter", "Gain 2 Strength. Gain 2 Dexterity.", 82, new List<Action> { addStrength, addStrength, addDexterity, addDexterity }, CardLocation.DrawPile, 2, AffinityType.None, true),
             new Card("New Lesson", "Gain 1 Strength.", 2, new List<Action> {addStrength}, CardLocation.DrawPile, 1, AffinityType.None, false),
 
+
+            // Utility Cards
+            new Card("Power Nap", "Heal 4 HP. Gain 1 Energy.", 104, new List<Action> { healAction, gainEnergy }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Study Guide", "Draw 2 cards. Gain 1 Energy.", 80, new List<Action> { drawCards, gainEnergy }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Defend Notes", "Gain 5 block. Gain 1 Thorn.", 91, new List<Action> { defendAction, addThorn }, CardLocation.DrawPile, 1, AffinityType.None, false),
         };
+    }
+
+    public static List<Card> GenerateRewardCards()
+    {
+        var rewardPool = CreateRewardCardPool();
+        var random = new Random();
+        var selectedCards = new List<Card>();
+        
+        // Select 3 random unique cards from the pool
+        while (selectedCards.Count < 3 && rewardPool.Count > 0)
+        {
+            int index = random.Next(rewardPool.Count);
+            selectedCards.Add(rewardPool[index]);
+            rewardPool.RemoveAt(index);
+        }
+        
+        return selectedCards;
     }
 
     private class EnemyTemplate
@@ -186,13 +248,13 @@ internal class Program
         var enemyTemplates = new List<EnemyTemplate>
         {
             // Basic Enemies
-            new EnemyTemplate("Math Textbook", 60, 60, EnemyType.Basic),
-            new EnemyTemplate("Physics Formula Book", 70, 70, EnemyType.Basic),
-            new EnemyTemplate("English Grammar Notes", 55, 55, EnemyType.Basic),
-            new EnemyTemplate("Geography Atlas", 65, 65, EnemyType.Basic),
-            new EnemyTemplate("Spelling Test Sheet", 50, 50, EnemyType.Basic),
-            new EnemyTemplate("Computer Science Pseudocode", 72, 72, EnemyType.Basic),
-            new EnemyTemplate("Economics Diagram Packet", 60, 60, EnemyType.Basic),
+            new EnemyTemplate("Math Textbook", 30, 30, EnemyType.Basic),
+            new EnemyTemplate("Physics Formula Book", 35, 35, EnemyType.Basic),
+            new EnemyTemplate("English Grammar Notes", 27, 27, EnemyType.Basic),
+            new EnemyTemplate("Geography Atlas", 32, 32, EnemyType.Basic),
+            new EnemyTemplate("Spelling Test Sheet", 25, 25, EnemyType.Basic),
+            new EnemyTemplate("Computer Science Pseudocode", 36, 36, EnemyType.Basic),
+            new EnemyTemplate("Economics Diagram Packet", 30, 30, EnemyType.Basic),
 
             // Elite Enemies
             new EnemyTemplate("Chemistry Lab Manual", 80, 80, EnemyType.Elite),

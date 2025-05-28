@@ -18,7 +18,7 @@ public class Player: Unit
     public Player(string name, int health, int maxHealth, int block, int maxEnergy, List<Effect> effects, int gold, List<Charm> charms, List<Card> cards, double shopDiscount) : base(name, health, maxHealth, block, effects)
     {
         _maxEnergy = maxEnergy;
-        _gold = gold;
+        _gold = 100;
         _charms = charms;
         _cards = cards;
         _shopDiscount = shopDiscount;

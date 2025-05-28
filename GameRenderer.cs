@@ -34,6 +34,8 @@ public class GameRenderer
     private static Texture2D strengthTexture;   // Add strength texture
     private static Texture2D thornTexture;      // Add thorn texture
     private static Texture2D weakTexture;       // Add weak texture
+    private static Texture2D rewardBackground;     // Add energy texture
+    private static Texture2D shopBackground;    // Add shop background texture
     // Animation properties
     private static Dictionary<int, CardAnimation> cardAnimations = new Dictionary<int, CardAnimation>();
     private const float ANIMATION_DURATION = 0.5f; // Duration in seconds
@@ -77,12 +79,25 @@ public class GameRenderer
     internal static int playerLayer = 0;
     internal static int playerIndex = 0;
 
+    private static List<Card> rewardCards = new List<Card>();
+    private static bool rewardCardsGenerated = false;
+
+    private static bool showDrawPileOverlay = false;
+    private static bool showDiscardPileOverlay = false;
+    private static float lastClickTime = 0;
+    private const float CLICK_DELAY = 0.2f; // 200ms delay between clicks
+
+    // Shop-related fields
+    private static List<Card> shopCards = new List<Card>();
+    private static bool shopCardsGenerated = false;
+    private static int playerGold = 100; // Starting gold
+
     public static void InitializeGame(Game gameInstance)
     {
         game = gameInstance;
 
         // Load the description font
-        descriptionFont = Raylib.LoadFont("resources/fonts/romulus.png");
+        descriptionFont = Raylib.LoadFont("resources/fonts/alagard.png");
         
         // Load the card name font
         cardNameFont = Raylib.LoadFont("resources/fonts/alagard.png");
@@ -128,7 +143,8 @@ public class GameRenderer
         strengthTexture = Raylib.LoadTexture("resources/effects/strength.png");
         thornTexture = Raylib.LoadTexture("resources/effects/thorn.png");
         weakTexture = Raylib.LoadTexture("resources/effects/weak.png");
-
+        rewardBackground = Raylib.LoadTexture("resources/background/rewardbook.png");
+        shopBackground = Raylib.LoadTexture("resources/background/shop.png");
         // Combine multiple wall.png into one large wall texture
         int floorHeight = ScreenHeight / 2;
         int wallAreaHeight = ScreenHeight - floorHeight + 30;
@@ -286,17 +302,72 @@ public class GameRenderer
             Color.White
         );
 
-        // Draw the discard pile
-        Raylib.DrawTexture(discardPileTexture, 1680, 800, Color.White);
+        // Check for mouse position
+        Vector2 mousePos = Raylib.GetMousePosition();
+        Rectangle drawPileRect = new Rectangle(100, 800, drawPileTexture.Width, drawPileTexture.Height);
+        Rectangle discardPileRect = new Rectangle(1680, 800, discardPileTexture.Width, discardPileTexture.Height);
+
+        // Check for hover states
+        bool isDrawPileHovered = Raylib.CheckCollisionPointRec(mousePos, drawPileRect);
+        bool isDiscardPileHovered = Raylib.CheckCollisionPointRec(mousePos, discardPileRect);
+
+        // Draw hover effects
+        if (isDrawPileHovered)
+        {
+            // Draw glow effect
+            Raylib.DrawCircle(
+                (int)(drawPileRect.X + drawPileTexture.Width/2),
+                (int)(drawPileRect.Y + drawPileTexture.Height/2),
+                drawPileTexture.Width/2 + 10,
+                new Color(255, 255, 255, 100)
+            );
+        }
+
+        if (isDiscardPileHovered)
+        {
+            // Draw glow effect
+            Raylib.DrawCircle(
+                (int)(discardPileRect.X + discardPileTexture.Width/2),
+                (int)(discardPileRect.Y + discardPileTexture.Height/2),
+                discardPileTexture.Width/2 + 10,
+                new Color(255, 255, 255, 100)
+            );
+        }
+
+        // Draw the discard pile with hover effect
+        float discardScale = isDiscardPileHovered ? 1.1f : 1.0f;
+        float discardX = discardPileRect.X - (discardPileTexture.Width * (discardScale - 1)) / 2;
+        float discardY = discardPileRect.Y - (discardPileTexture.Height * (discardScale - 1)) / 2;
+        Raylib.DrawTexturePro(
+            discardPileTexture,
+            new Rectangle(0, 0, discardPileTexture.Width, discardPileTexture.Height),
+            new Rectangle(discardX, discardY, discardPileTexture.Width * discardScale, discardPileTexture.Height * discardScale),
+            new Vector2(0, 0),
+            0,
+            Color.White
+        );
 
         // Draw discard pile count
         int discardCount = game.Map.Player.Cards.Count(c => c.CardLocation == CardLocation.DiscardPile);
         string discardText = discardCount.ToString();
         Vector2 discardTextSize = Raylib.MeasureTextEx(descriptionFont, discardText, 30, 1);
+        
+        // Draw black circle behind discard pile number
+        float discardNumberX = discardX + (discardPileTexture.Width * discardScale)/2;
+        float discardNumberY = discardY + (discardPileTexture.Height * discardScale)/2;
+        float discardCircleRadius = Math.Max(discardTextSize.X, discardTextSize.Y) * 0.7f;
+        Raylib.DrawCircle(
+            (int)discardNumberX,
+            (int)discardNumberY,
+            discardCircleRadius,
+            new Color(0, 0, 0, 150)
+        );
+        
         Raylib.DrawTextPro(
             descriptionFont,
             discardText,
-            new Vector2(1680 + discardPileTexture.Width/2 - discardTextSize.X/2, 860 + discardPileTexture.Height/2 - discardTextSize.Y/2),
+            new Vector2(discardNumberX - discardTextSize.X/2, 
+                       discardNumberY - discardTextSize.Y/2),
             new Vector2(0, 0),
             0,
             30,
@@ -304,23 +375,66 @@ public class GameRenderer
             Color.White
         );
 
-        // Draw the draw pile
-        Raylib.DrawTexture(drawPileTexture, 100, 800, Color.White);
+        // Draw the draw pile with hover effect
+        float drawScale = isDrawPileHovered ? 1.1f : 1.0f;
+        float drawX = drawPileRect.X - (drawPileTexture.Width * (drawScale - 1)) / 2;
+        float drawY = drawPileRect.Y - (drawPileTexture.Height * (drawScale - 1)) / 2;
+        Raylib.DrawTexturePro(
+            drawPileTexture,
+            new Rectangle(0, 0, drawPileTexture.Width, drawPileTexture.Height),
+            new Rectangle(drawX, drawY, drawPileTexture.Width * drawScale, drawPileTexture.Height * drawScale),
+            new Vector2(0, 0),
+            0,
+            Color.White
+        );
 
         // Draw draw pile count
         int drawCount = game.Map.Player.Cards.Count(c => c.CardLocation == CardLocation.DrawPile);
         string drawText = drawCount.ToString();
         Vector2 drawTextSize = Raylib.MeasureTextEx(descriptionFont, drawText, 30, 1);
+        
+        // Draw black circle behind draw pile number
+        float drawNumberX = drawX + (drawPileTexture.Width * drawScale)/2;
+        float drawNumberY = drawY + (drawPileTexture.Height * drawScale)/2;
+        float drawCircleRadius = Math.Max(drawTextSize.X, drawTextSize.Y) * 0.7f;
+        Raylib.DrawCircle(
+            (int)drawNumberX,
+            (int)drawNumberY,
+            drawCircleRadius,
+            new Color(0, 0, 0, 150)
+        );
+        
         Raylib.DrawTextPro(
             descriptionFont,
             drawText,
-            new Vector2(100 + drawPileTexture.Width/2 - drawTextSize.X/2, 860 + drawPileTexture.Height/2 - drawTextSize.Y/2),
+            new Vector2(drawNumberX - drawTextSize.X/2, 
+                       drawNumberY - drawTextSize.Y/2),
             new Vector2(0, 0),
             0,
             30,
             1,
             Color.White
         );
+
+        // Check for clicks on draw pile or discard pile
+        float currentTime = (float)Raylib.GetTime();
+        if ((Raylib.IsMouseButtonPressed(MouseButton.Left) || Raylib.IsKeyPressed(KeyboardKey.D)) && 
+            currentTime - lastClickTime > CLICK_DELAY)
+        {
+            if (!showDrawPileOverlay && !showDiscardPileOverlay)
+            {
+                if (isDrawPileHovered)
+                {
+                    showDrawPileOverlay = true;
+                    lastClickTime = currentTime;
+                }
+                else if (isDiscardPileHovered)
+                {
+                    showDiscardPileOverlay = true;
+                    lastClickTime = currentTime;
+                }
+            }
+        }
 
         // Draw cards in player's hand
         var cardsInHand = game.Map.Player.Cards.Where(c => c.CardLocation == CardLocation.Hand).ToList();
@@ -340,15 +454,15 @@ public class GameRenderer
             DrawMapOverlay();
         }
 
-        // Draw vulnerable texture (moved to end to appear on top)
-        Raylib.DrawTexturePro(
-            vulnerableTexture,
-            new Rectangle(0, 0, vulnerableTexture.Width, vulnerableTexture.Height),
-            new Rectangle(ScreenWidth - 200, 100, 150, 150),  // Position in top-right corner
-            new Vector2(0, 0),
-            0,
-            Color.White
-        );
+        // Draw overlays if active
+        if (showDrawPileOverlay)
+        {
+            DrawPileOverlay(game.Map.Player.Cards.Where(c => c.CardLocation == CardLocation.DrawPile).ToList(), "Draw Pile");
+        }
+        else if (showDiscardPileOverlay)
+        {
+            DrawPileOverlay(game.Map.Player.Cards.Where(c => c.CardLocation == CardLocation.DiscardPile).ToList(), "Discard Pile");
+        }
     }
 
     private static void DrawLightEffect(int x, int y, int radius, Color color)
@@ -572,7 +686,7 @@ public class GameRenderer
         Raylib.DrawTextPro(
             cardNameFont,
             cardName,
-            new Vector2(position.X + costBoxSize + padding * 2, position.Y + padding),
+            new Vector2(position.X + costBoxSize + padding * 2 - 30, position.Y + padding + 30),
             new Vector2(0, 0),
             0,
             20,  
@@ -583,7 +697,7 @@ public class GameRenderer
         // Draw description
         string[] words = description.Split(' ');
         string currentLine = "";
-        int lineY = (int)position.Y + 46;
+        int lineY = (int)position.Y + 46 + 30;
         int maxWidth = cardWidth - (padding * 2);
 
         foreach (string word in words)
@@ -738,8 +852,8 @@ public class GameRenderer
                 float progress = Math.Min(elapsed / ANIMATION_DURATION, 1.0f);
                 
                 // Calculate position (move up and fade out)
-                float y = anim.Position.Y - (progress * 50); // Move up 50 pixels
-                float alpha = 1.0f - progress; // Fade out
+                float y = anim.Position.Y - (progress * 80); // Move up 50 pixels
+                float alpha = 2.0f - progress; // Fade out
                 
                 // Draw damage number
                 string damageText = anim.Damage.ToString();
@@ -750,7 +864,7 @@ public class GameRenderer
                     new Vector2(anim.Position.X - textSize.X/2, y),
                     new Vector2(0, 0),
                     0,
-                    40,
+                    100,
                     1,
                     new Color((byte)255, (byte)0, (byte)0, (byte)(255 * alpha))
                 );
@@ -1274,11 +1388,601 @@ public class GameRenderer
     public static void DrawRewardScreen()
     {
         Raylib.DrawRectangle(0, 0, ScreenWidth, ScreenHeight, new Color(0, 0, 0, 180));
-        Raylib.DrawText("Reward", ScreenWidth/2 - 100, ScreenHeight/2 - 50, 40, Color.White);
-        Raylib.DrawText("Click anywhere to continue", ScreenWidth/2 - 200, ScreenHeight/2 + 50, 20, Color.White);
-        if (Raylib.IsMouseButtonPressed(MouseButton.Left))
+
+        Raylib.DrawTexturePro(
+            rewardBackground,
+            new Rectangle(0, 0, rewardBackground.Width, rewardBackground.Height),
+            new Rectangle(0, 0, ScreenWidth, ScreenHeight),
+            new Vector2(0, 0),
+            0,
+            Color.White
+        );
+
+        // Generate reward cards if not already done
+        if (!rewardCardsGenerated)
         {
+            rewardCards = Program.GenerateRewardCards();
+            rewardCardsGenerated = true;
+        }
+
+        // Draw semi-transparent background
+        Raylib.DrawRectangle(0, 0, ScreenWidth, ScreenHeight, new Color(0, 0, 0, 90));
+
+        // Draw title
+        string titleText = "Choose a Card";
+        int titleWidth = Raylib.MeasureText(titleText, 40);
+        Raylib.DrawText(titleText, ScreenWidth/2 - titleWidth/2, 50, 40, Color.White);
+
+        // Draw cards
+        const int cardWidth = 235;  // Match the gameplay card width
+        const int cardHeight = 351; // Match the gameplay card height
+        const int cardSpacing = 100;
+        int totalWidth = (cardWidth * 3) + (cardSpacing * 2);
+        int startX = (ScreenWidth - totalWidth) / 2;
+        int startY = ScreenHeight/2 - cardHeight/2;
+
+        Vector2 mousePos = Raylib.GetMousePosition();
+
+        for (int i = 0; i < rewardCards.Count; i++)
+        {
+            Card card = rewardCards[i];
+            Vector2 position = new Vector2(
+                startX + (i * (cardWidth + cardSpacing)),
+                startY
+            );
+
+            // Check if mouse is hovering over card
+            bool isHovering = mousePos.X >= position.X && 
+                            mousePos.X <= position.X + cardWidth &&
+                            mousePos.Y >= position.Y && 
+                            mousePos.Y <= position.Y + cardHeight;
+
+            // Apply hover effect
+            if (isHovering)
+            {
+                position.Y -= 20; // Lift card on hover
+            }
+
+            // Draw the card texture
+            Raylib.DrawTexturePro(
+                cardTexture,
+                new Rectangle(0, 0, cardTexture.Width, cardTexture.Height),
+                new Rectangle(position.X, position.Y, cardWidth, cardHeight),
+                new Vector2(0, 0),
+                0,
+                Color.White
+            );
+
+            // Draw cost box
+            const int padding = 10;
+            const int costBoxSize = 28;
+            Raylib.DrawRectangle(
+                (int)position.X + padding,
+                (int)position.Y + padding,
+                costBoxSize,
+                costBoxSize,
+                Color.Red
+            );
+
+            // Draw cost number
+            string costText = card.CardCost.ToString();
+            Vector2 costTextSize = Raylib.MeasureTextEx(descriptionFont, costText, 19, 1);
+            Raylib.DrawTextPro(
+                descriptionFont,
+                costText,
+                new Vector2(
+                    position.X + padding + (costBoxSize - costTextSize.X) / 2,
+                    position.Y + padding + (costBoxSize - costTextSize.Y) / 2
+                ),
+                new Vector2(0, 0),
+                0,
+                19,
+                1,
+                Color.White
+            );
+
+            // Draw card name
+            Raylib.DrawTextPro(
+                cardNameFont,
+                card.Name,
+                new Vector2(position.X + costBoxSize + padding * 2 - 30, position.Y + padding + 30),
+                new Vector2(0, 0),
+                0,
+                20,
+                1,
+                Color.Black
+            );
+
+            // Draw description
+            string[] words = card.Description.Split(' ');
+            string currentLine = "";
+            int lineY = (int)position.Y + 46 + 30;
+            int maxWidth = cardWidth - (padding * 2);
+
+            foreach (string word in words)
+            {
+                string testLine = currentLine + word + " ";
+                int textWidth = (int)Raylib.MeasureTextEx(descriptionFont, testLine, 20, 1).X;
+                
+                if (textWidth > maxWidth)
+                {
+                    Raylib.DrawTextPro(
+                        descriptionFont,
+                        currentLine,
+                        new Vector2(position.X + padding, lineY),
+                        new Vector2(0, 0),
+                        0,
+                        20,
+                        1,
+                        Color.Black
+                    );
+                    currentLine = word + " ";
+                    lineY += 18;
+                }
+                else
+                {
+                    currentLine = testLine;
+                }
+            }
+            
+            // Draw the last line
+            Raylib.DrawTextPro(
+                descriptionFont,
+                currentLine,
+                new Vector2(position.X + padding, lineY),
+                new Vector2(0, 0),
+                0,
+                20,
+                1,
+                Color.Black
+            );
+
+            // Handle card selection
+            if (isHovering && Raylib.IsMouseButtonPressed(MouseButton.Left))
+            {
+                // Add selected card to player's deck
+                if (game?.Map?.Player != null)
+                {
+                    game.Map.Player.AddCard(card);
+                    // Reset reward screen state
+                    rewardCardsGenerated = false;
+                    rewardCards.Clear();
+                    // Return to map selection
+                    Program.currentScreen = Program.GameScreen.MapSelection;
+                }
+            }
+        }
+
+        // Draw instruction text
+        string instructionText = "Click a card to add it to your deck";
+        int instructionWidth = Raylib.MeasureText(instructionText, 20);
+        Raylib.DrawText(instructionText, ScreenWidth/2 - instructionWidth/2, ScreenHeight - 50, 20, Color.White);
+
+        // Draw shop button
+        const int shopButtonWidth = 150;
+        const int shopButtonHeight = 50;
+        Rectangle shopButtonRect = new Rectangle(
+            50,
+            ScreenHeight - shopButtonHeight - 50,
+            shopButtonWidth,
+            shopButtonHeight
+        );
+
+        // Check if mouse is hovering over shop button
+        bool isShopHovering = Raylib.CheckCollisionPointRec(mousePos, shopButtonRect);
+
+        // Draw shop button
+        Color shopButtonColor = isShopHovering ? new Color(200, 200, 200, 255) : Color.White;
+        Raylib.DrawRectangleRec(shopButtonRect, shopButtonColor);
+        Raylib.DrawRectangleLinesEx(shopButtonRect, 2, Color.Gray);
+
+        // Draw shop button text
+        string shopText = "Shop";
+        int shopTextWidth = Raylib.MeasureText(shopText, 20);
+        Raylib.DrawText(
+            shopText,
+            (int)(shopButtonRect.X + (shopButtonWidth - shopTextWidth) / 2),
+            (int)(shopButtonRect.Y + (shopButtonHeight - 20) / 2),
+            20,
+            Color.Black
+        );
+
+        // Handle shop button click
+        if (isShopHovering && Raylib.IsMouseButtonPressed(MouseButton.Left))
+        {
+            Program.currentScreen = Program.GameScreen.Shop;
+        }
+
+        // Draw skip button
+        const int skipButtonWidth = 150;
+        const int skipButtonHeight = 50;
+        Rectangle skipButtonRect = new Rectangle(
+            ScreenWidth - skipButtonWidth - 50,
+            ScreenHeight - skipButtonHeight - 50,
+            skipButtonWidth,
+            skipButtonHeight
+        );
+
+        // Check if mouse is hovering over skip button
+        bool isSkipHovering = Raylib.CheckCollisionPointRec(mousePos, skipButtonRect);
+
+        // Draw skip button
+        Color skipButtonColor = isSkipHovering ? new Color(200, 200, 200, 255) : Color.White;
+        Raylib.DrawRectangleRec(skipButtonRect, skipButtonColor);
+        Raylib.DrawRectangleLinesEx(skipButtonRect, 2, Color.Gray);
+
+        // Draw skip button text
+        string skipText = "Skip";
+        int skipTextWidth = Raylib.MeasureText(skipText, 20);
+        Raylib.DrawText(
+            skipText,
+            (int)(skipButtonRect.X + (skipButtonWidth - skipTextWidth) / 2),
+            (int)(skipButtonRect.Y + (skipButtonHeight - 20) / 2),
+            20,
+            Color.Black
+        );
+
+        // Handle skip button click
+        if (isSkipHovering && Raylib.IsMouseButtonPressed(MouseButton.Left))
+        {
+            // Reset reward screen state
+            rewardCardsGenerated = false;
+            rewardCards.Clear();
+            // Return to map selection
             Program.currentScreen = Program.GameScreen.MapSelection;
+        }
+    }
+
+    public static void DrawShopScreen()
+    {
+        // Draw shop background
+        Raylib.DrawTexturePro(
+            shopBackground,
+            new Rectangle(0, 0, shopBackground.Width, shopBackground.Height),
+            new Rectangle(0, 0, ScreenWidth, ScreenHeight),
+            new Vector2(0, 0),
+            0,
+            Color.White
+        );
+
+        // Draw semi-transparent overlay
+        Raylib.DrawRectangle(0, 0, ScreenWidth, ScreenHeight, new Color(0, 0, 0, 120));
+
+        // Draw title
+        string titleText = "Shop";
+        int titleWidth = Raylib.MeasureText(titleText, 40);
+        Raylib.DrawText(titleText, ScreenWidth/2 - titleWidth/2, 50, 40, Color.White);
+
+        // Draw gold amount
+        string goldText = $"Gold: {playerGold}";
+        Raylib.DrawText(goldText, 50, 50, 30, Color.Gold);
+
+        // Generate shop cards if not already done
+        if (!shopCardsGenerated)
+        {
+            shopCards = Program.GenerateRewardCards(); // Reuse reward card generation for now
+            shopCardsGenerated = true;
+        }
+
+        // Draw cards
+        const int cardWidth = 235;
+        const int cardHeight = 351;
+        const int cardSpacing = 100;
+        int totalWidth = (cardWidth * 3) + (cardSpacing * 2);
+        int startX = (ScreenWidth - totalWidth) / 2;
+        int startY = ScreenHeight/2 - cardHeight/2;
+
+        Vector2 mousePos = Raylib.GetMousePosition();
+
+        for (int i = 0; i < shopCards.Count; i++)
+        {
+            Card card = shopCards[i];
+            Vector2 position = new Vector2(
+                startX + (i * (cardWidth + cardSpacing)),
+                startY
+            );
+
+            // Check if mouse is hovering over card
+            bool isHovering = mousePos.X >= position.X && 
+                            mousePos.X <= position.X + cardWidth &&
+                            mousePos.Y >= position.Y && 
+                            mousePos.Y <= position.Y + cardHeight;
+
+            // Apply hover effect
+            if (isHovering)
+            {
+                position.Y -= 20;
+            }
+
+            // Draw the card texture
+            Raylib.DrawTexturePro(
+                cardTexture,
+                new Rectangle(0, 0, cardTexture.Width, cardTexture.Height),
+                new Rectangle(position.X, position.Y, cardWidth, cardHeight),
+                new Vector2(0, 0),
+                0,
+                Color.White
+            );
+
+            // Draw cost box (now shows gold cost)
+            const int padding = 10;
+            const int costBoxSize = 28;
+            Raylib.DrawRectangle(
+                (int)position.X + padding,
+                (int)position.Y + padding,
+                costBoxSize,
+                costBoxSize,
+                Color.Gold
+            );
+
+            // Draw gold cost (using card cost * 10 as gold cost)
+            int goldCost = card.Price;
+            string costText = goldCost.ToString();
+            Vector2 costTextSize = Raylib.MeasureTextEx(descriptionFont, costText, 19, 1);
+            Raylib.DrawTextPro(
+                descriptionFont,
+                costText,
+                new Vector2(
+                    position.X + padding + (costBoxSize - costTextSize.X) / 2,
+                    position.Y + padding + (costBoxSize - costTextSize.Y) / 2
+                ),
+                new Vector2(0, 0),
+                0,
+                19,
+                1,
+                Color.Black
+            );
+
+            // Draw card name
+            Raylib.DrawTextPro(
+                cardNameFont,
+                card.Name,
+                new Vector2(position.X + costBoxSize + padding * 2 - 30, position.Y + padding + 30),
+                new Vector2(0, 0),
+                0,
+                20,
+                1,
+                Color.Black
+            );
+
+            // Draw description
+            string[] words = card.Description.Split(' ');
+            string currentLine = "";
+            int lineY = (int)position.Y + 46 + 30;
+            int maxWidth = cardWidth - (padding * 2);
+
+            foreach (string word in words)
+            {
+                string testLine = currentLine + word + " ";
+                int textWidth = (int)Raylib.MeasureTextEx(descriptionFont, testLine, 20, 1).X;
+                
+                if (textWidth > maxWidth)
+                {
+                    Raylib.DrawTextPro(
+                        descriptionFont,
+                        currentLine,
+                        new Vector2(position.X + padding, lineY),
+                        new Vector2(0, 0),
+                        0,
+                        20,
+                        1,
+                        Color.Black
+                    );
+                    currentLine = word + " ";
+                    lineY += 18;
+                }
+                else
+                {
+                    currentLine = testLine;
+                }
+            }
+            
+            // Draw the last line
+            Raylib.DrawTextPro(
+                descriptionFont,
+                currentLine,
+                new Vector2(position.X + padding, lineY),
+                new Vector2(0, 0),
+                0,
+                20,
+                1,
+                Color.Black
+            );
+
+            // Handle card purchase
+            if (isHovering && Raylib.IsMouseButtonPressed(MouseButton.Left))
+            {
+                int purchaseCost = card.Price;
+                if (playerGold >= purchaseCost)
+                {
+                    // Purchase card
+                    if (game?.Map?.Player != null)
+                    {
+                        game.Map.Player.AddCard(card);
+                        playerGold -= purchaseCost;
+                        shopCards.RemoveAt(i);
+                    }
+                }
+            }
+        }
+
+        // Draw back button
+        const int backButtonWidth = 150;
+        const int backButtonHeight = 50;
+        Rectangle backButtonRect = new Rectangle(
+            ScreenWidth - backButtonWidth - 50,
+            ScreenHeight - backButtonHeight - 50,
+            backButtonWidth,
+            backButtonHeight
+        );
+
+        // Check if mouse is hovering over back button
+        bool isBackHovering = Raylib.CheckCollisionPointRec(mousePos, backButtonRect);
+
+        // Draw back button
+        Color backButtonColor = isBackHovering ? new Color(200, 200, 200, 255) : Color.White;
+        Raylib.DrawRectangleRec(backButtonRect, backButtonColor);
+        Raylib.DrawRectangleLinesEx(backButtonRect, 2, Color.Gray);
+
+        // Draw back button text
+        string backText = "Back";
+        int backTextWidth = Raylib.MeasureText(backText, 20);
+        Raylib.DrawText(
+            backText,
+            (int)(backButtonRect.X + (backButtonWidth - backTextWidth) / 2),
+            (int)(backButtonRect.Y + (backButtonHeight - 20) / 2),
+            20,
+            Color.Black
+        );
+
+        // Handle back button click
+        if (isBackHovering && Raylib.IsMouseButtonPressed(MouseButton.Left))
+        {
+            // Reset shop state
+            shopCardsGenerated = false;
+            shopCards.Clear();
+            // Return to reward screen
+            Program.currentScreen = Program.GameScreen.Reward;
+        }
+    }
+
+    private static void DrawPileOverlay(List<Card> cards, string title)
+    {
+        // Draw semi-transparent background
+        Raylib.DrawRectangle(0, 0, ScreenWidth, ScreenHeight, new Color(0, 0, 0, 180));
+
+        // Draw title
+        int titleWidth = Raylib.MeasureText(title, 40);
+        Raylib.DrawText(title, ScreenWidth/2 - titleWidth/2, 50, 40, Color.White);
+
+        // Draw cards in a grid layout
+        const int cardWidth = 168;
+        const int cardHeight = 251;
+        const int cardsPerRow = 5;
+        const int cardSpacing = 20;
+        const int rowSpacing = 30;
+
+        int startX = (ScreenWidth - (cardsPerRow * (cardWidth + cardSpacing))) / 2;
+        int startY = 120;
+
+        for (int i = 0; i < cards.Count; i++)
+        {
+            int row = i / cardsPerRow;
+            int col = i % cardsPerRow;
+
+            Vector2 position = new Vector2(
+                startX + col * (cardWidth + cardSpacing),
+                startY + row * (cardHeight + rowSpacing)
+            );
+
+            // Draw the card texture
+            Raylib.DrawTexturePro(
+                cardTexture,
+                new Rectangle(0, 0, cardTexture.Width, cardTexture.Height),
+                new Rectangle(position.X, position.Y, cardWidth, cardHeight),
+                new Vector2(0, 0),
+                0,
+                Color.White
+            );
+
+            // Draw cost box
+            const int padding = 10;
+            const int costBoxSize = 28;
+            Raylib.DrawRectangle(
+                (int)position.X + padding,
+                (int)position.Y + padding,
+                costBoxSize,
+                costBoxSize,
+                Color.Red
+            );
+
+            // Draw cost number
+            string costText = cards[i].CardCost.ToString();
+            Vector2 costTextSize = Raylib.MeasureTextEx(descriptionFont, costText, 19, 1);
+            Raylib.DrawTextPro(
+                descriptionFont,
+                costText,
+                new Vector2(
+                    position.X + padding + (costBoxSize - costTextSize.X) / 2,
+                    position.Y + padding + (costBoxSize - costTextSize.Y) / 2
+                ),
+                new Vector2(0, 0),
+                0,
+                19,
+                1,
+                Color.White
+            );
+
+            // Draw card name
+            Raylib.DrawTextPro(
+                cardNameFont,
+                cards[i].Name,
+                new Vector2(position.X + costBoxSize + padding * 2 - 30, position.Y + padding + 30),
+                new Vector2(0, 0),
+                0,
+                20,
+                1,
+                Color.Black
+            );
+
+            // Draw description
+            string[] words = cards[i].Description.Split(' ');
+            string currentLine = "";
+            int lineY = (int)position.Y + 46 + 30;
+            int maxWidth = cardWidth - (padding * 2);
+
+            foreach (string word in words)
+            {
+                string testLine = currentLine + word + " ";
+                int textWidth = (int)Raylib.MeasureTextEx(descriptionFont, testLine, 20, 1).X;
+                
+                if (textWidth > maxWidth)
+                {
+                    Raylib.DrawTextPro(
+                        descriptionFont,
+                        currentLine,
+                        new Vector2(position.X + padding, lineY),
+                        new Vector2(0, 0),
+                        0,
+                        20,
+                        1,
+                        Color.Black
+                    );
+                    currentLine = word + " ";
+                    lineY += 18;
+                }
+                else
+                {
+                    currentLine = testLine;
+                }
+            }
+            
+            // Draw the last line
+            Raylib.DrawTextPro(
+                descriptionFont,
+                currentLine,
+                new Vector2(position.X + padding, lineY),
+                new Vector2(0, 0),
+                0,
+                20,
+                1,
+                Color.Black
+            );
+        }
+
+        // Draw instruction text
+        string instructionText = "Click anywhere to close";
+        int instructionWidth = Raylib.MeasureText(instructionText, 20);
+        Raylib.DrawText(instructionText, ScreenWidth/2 - instructionWidth/2, ScreenHeight - 50, 20, Color.White);
+
+        // Check for click to close overlay
+        float currentTime = (float)Raylib.GetTime();
+        if ((Raylib.IsMouseButtonPressed(MouseButton.Left) || Raylib.IsKeyPressed(KeyboardKey.D)) && 
+            currentTime - lastClickTime > CLICK_DELAY)
+        {
+            showDrawPileOverlay = false;
+            showDiscardPileOverlay = false;
+            lastClickTime = currentTime;
         }
     }
 
