@@ -53,6 +53,7 @@ public class GameRenderer
     private static Texture2D geniusIdeaTexture;    // Add genius idea charm texture
     private static Texture2D eventBackground;    // Add event background texture
     private static Texture2D restBackground;    // Add rest background texture
+    private static Texture2D mainMenuBackground;
     // Animation properties
     private static Dictionary<int, CardAnimation> cardAnimations = new Dictionary<int, CardAnimation>();
     private const float ANIMATION_DURATION = 0.5f; // Duration in seconds
@@ -116,7 +117,7 @@ public class GameRenderer
     public static void InitializeGame(Game gameInstance)
     {
         game = gameInstance;
-
+        
         // Load the description font
         descriptionFont = Raylib.LoadFont("resources/fonts/alagard.png");
         
@@ -125,7 +126,8 @@ public class GameRenderer
         
         // Load the card texture
         cardTexture = Raylib.LoadTexture("resources/cards/cards.png");
-
+        // Load the Main Menu Background
+        mainMenuBackground = Raylib.LoadTexture("resources/background/mainmenu.png");
         // Load the enemy texture
         enemyTexture = Raylib.LoadTexture("resources/enemy/BukuAddmath.png");
 
@@ -2948,6 +2950,59 @@ public class GameRenderer
 
                 choiceY += buttonHeight + buttonSpacing;
             }
+        }
+    }
+
+    public static void DrawTitleScreen()
+    {
+        // Draw main menu background
+        Raylib.DrawTexture(mainMenuBackground, 0, 0, Color.White);
+
+        // Draw title text
+        string titleText = "Study Quest";
+        int titleWidth = Raylib.MeasureText(titleText, 80);
+        Raylib.DrawText(
+            titleText,
+            ScreenWidth/2 - titleWidth/2,
+            200,
+            80,
+            Color.White
+        );
+
+        // Draw start button
+        const int buttonWidth = 200;
+        const int buttonHeight = 50;
+        Rectangle startButton = new Rectangle(
+            ScreenWidth/2 - buttonWidth/2,
+            400,
+            buttonWidth,
+            buttonHeight
+        );
+
+        // Check if mouse is hovering over start button
+        Vector2 mousePos = Raylib.GetMousePosition();
+        bool isHovering = Raylib.CheckCollisionPointRec(mousePos, startButton);
+
+        // Draw button background
+        Color buttonColor = isHovering ? new Color(200, 200, 200, 255) : Color.White;
+        Raylib.DrawRectangleRec(startButton, buttonColor);
+        Raylib.DrawRectangleLinesEx(startButton, 2, Color.DarkGray);
+
+        // Draw button text
+        string buttonText = "Start Game";
+        int textWidth = Raylib.MeasureText(buttonText, 20);
+        Raylib.DrawText(
+            buttonText,
+            (int)(startButton.X + (buttonWidth - textWidth) / 2),
+            (int)(startButton.Y + (buttonHeight - 20) / 2),
+            20,
+            Color.Black
+        );
+
+        // Handle button click
+        if (isHovering && Raylib.IsMouseButtonPressed(MouseButton.Left))
+        {
+            Program.currentScreen = Program.GameScreen.CharmSelection;
         }
     }
 }
