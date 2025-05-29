@@ -171,14 +171,14 @@ public class Card : Item
                     
                     // Apply dexterity effect
                     var dexterityEffect = GameRenderer.game.Map.Player.Effects.FirstOrDefault(e => e.EffectType == EffectType.DexterityUp);
-                    if (dexterityEffect != null && dexterityEffect.Stack > 0)
+                    if (dexterityEffect != null )
                     {
                         block += dexterityEffect.Stack;
                     }
 
                     // Apply frail effect
                     var frailEffect = GameRenderer.game.Map.Player.Effects.FirstOrDefault(e => e.EffectType == EffectType.Frail);
-                    if (frailEffect != null && frailEffect.Stack > 0)
+                    if (frailEffect != null)
                     {
                         block = (int)(block * 0.75f); // 25% less block
                     }

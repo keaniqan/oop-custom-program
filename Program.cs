@@ -144,7 +144,7 @@ internal class Program
         var starterDeck = CreateStarterDeck();
         
         // Create player
-        player = new Player("Player", 100, 100, 0, 3, new List<Effect>(), 0, new List<Charm>(), starterDeck, 0.0);
+        player = new Player("Player", 100, 100, 0, 3, new List<Effect>(), 100, new List<Charm>(), starterDeck, 0.0);
         
         // Create game instance
         game = new Game(DateTime.Now.Millisecond, player);
@@ -216,7 +216,7 @@ internal class Program
             new Card("Study Group", "Gain 1 Strength. Draw 1 card.", 71, new List<Action> { addStrength, drawCards }, CardLocation.DrawPile, 1, AffinityType.None, true),
             new Card("Coffee Break", "Gain 1 Energy. Draw 1 card.", 100, new List<Action> { gainEnergy, drawCards }, CardLocation.DrawPile, 0, AffinityType.None, true),
             new Card("All-Nighter", "Gain 2 Strength. Gain 2 Dexterity.", 82, new List<Action> { addStrength, addStrength, addDexterity, addDexterity }, CardLocation.DrawPile, 2, AffinityType.None, true),
-            new Card("New Lesson", "Gain 1 Strength.", 2, new List<Action> {addStrength}, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("New Lesson", "Gain 1 Strength.", 82, new List<Action> {addStrength}, CardLocation.DrawPile, 1, AffinityType.None, false),
 
 
             // Utility Cards
@@ -295,7 +295,7 @@ internal class Program
         enemyTemplates.Remove(firstRoomTemplate); // Optional: remove to avoid duplicate
 
         // Remove boss from shuffle pool if present
-        var bossTemplate = new EnemyTemplate("Final Exam", 150, 150, EnemyType.Boss);
+        var bossTemplate = new EnemyTemplate("Final Exam", 300, 300, EnemyType.Boss);
 
         // Create a list for the rest of the rooms (excluding the first and boss)
         var shufflePool = enemyTemplates.ToList();
@@ -335,28 +335,36 @@ internal class Program
                     "Study Guide",
                     "Start each combat with 1 extra energy",
                     CharmType.StudyGuide,
-                    new List<Action> { new Action(ActionType.Energy, 1, null, true) }
+                    new List<Action> { new Action(ActionType.Energy, 1, null, true) },
+                    0,
+                    100
                 );
             case 1:
                 return new Charm(
                     "Coffee Mug",
                     "Start each combat with 1 extra card draw",
                     CharmType.CoffeeMug,
-                    new List<Action> { new Action(ActionType.Draw, 1, null, true) }
+                    new List<Action> { new Action(ActionType.Draw, 1, null, true) },
+                    0,
+                    100
                 );
             case 2:
                 return new Charm(
                     "Lucky Pen",
                     "10% chance to draw an extra card when you draw cards",
                     CharmType.LuckyPen,
-                    new List<Action> { new Action(ActionType.Draw, 1, null, true) }
+                    new List<Action> { new Action(ActionType.Draw, 1, null, true) },
+                    0,
+                    100
                 );
             default:
                 return new Charm(
                     "Study Guide",
                     "Start each combat with 1 extra energy",
                     CharmType.StudyGuide,
-                    new List<Action> { new Action(ActionType.Energy, 1, null, true) }
+                    new List<Action> { new Action(ActionType.Energy, 1, null, true) },
+                    0,
+                    100
                 );
         }
     }
@@ -370,28 +378,27 @@ internal class Program
             "Bookmark",
             "Draw 1 extra card at the start of your turn",
             CharmType.Bookmark,
-            new List<Action> { new Action(ActionType.Draw, 1, null, true) }
-        ));
-
-        charmPool.Add(new Charm(
-            "Calculator",
-            "Gain 1 energy at the start of your turn",
-            CharmType.Calculator,
-            new List<Action> { new Action(ActionType.Energy, 1, null, true) }
+            new List<Action> { new Action(ActionType.Draw, 1, null, true) },
+            0,
+            100
         ));
 
         charmPool.Add(new Charm(
             "Highlighter",
             "Cards that cost 0 deal 2 more damage",
             CharmType.Highlighter,
-            new List<Action> { new Action(ActionType.Effect, 2, EffectType.StrengthUp, true) }
+            new List<Action> { new Action(ActionType.Effect, 2, EffectType.StrengthUp, true) },
+            0,
+            100
         ));
 
         charmPool.Add(new Charm(
             "Sticky Notes",
             "When you play a card, gain 1 block",
             CharmType.StickyNotes,
-            new List<Action> { new Action(ActionType.Block, 1, null, true) }
+            new List<Action> { new Action(ActionType.Block, 1, null, true) },
+            0,
+            100
         ));
 
         // Uncommon Charms
@@ -399,28 +406,36 @@ internal class Program
             "Study Timer",
             "Every 3 turns, gain 1 energy",
             CharmType.StudyTimer,
-            new List<Action> { new Action(ActionType.Energy, 1, null, true) }
+            new List<Action> { new Action(ActionType.Energy, 1, null, true) },
+            0,
+            100
         ));
 
         charmPool.Add(new Charm(
             "Flash Cards",
             "When you shuffle your draw pile, draw 1 card",
             CharmType.FlashCards,
-            new List<Action> { new Action(ActionType.Draw, 1, null, true) }
+            new List<Action> { new Action(ActionType.Draw, 1, null, true) },
+            0,
+            100
         ));
 
         charmPool.Add(new Charm(
             "Text Book",
             "Start each combat with 2 Strength",
             CharmType.TextBook,
-            new List<Action> { new Action(ActionType.Effect, 2, EffectType.StrengthUp, true) }
+            new List<Action> { new Action(ActionType.Effect, 2, EffectType.StrengthUp, true) },
+            0,
+            100
         ));
 
         charmPool.Add(new Charm(
             "Notebook",
             "Start each combat with 2 Dexterity",
             CharmType.Notebook,
-            new List<Action> { new Action(ActionType.Effect, 2, EffectType.DexterityUp, true) }
+            new List<Action> { new Action(ActionType.Effect, 2, EffectType.DexterityUp, true) },
+            0,
+            100
         ));
 
         // Rare Charms
@@ -431,28 +446,36 @@ internal class Program
             new List<Action> { 
                 new Action(ActionType.Energy, 1, null, true),
                 new Action(ActionType.Draw, 1, null, true)
-            }
+            },
+            0,
+            100
         ));
 
         charmPool.Add(new Charm(
             "Study Group",
             "Your first card each turn costs 0",
             CharmType.StudyGroup,
-            new List<Action> { new Action(ActionType.Effect, 1, EffectType.Buffer, true) }
+            new List<Action> { new Action(ActionType.Effect, 1, EffectType.Buffer, true) },
+            0,
+            100
         ));
 
         charmPool.Add(new Charm(
             "All-Nighter",
             "Start each combat with 2 extra energy",
             CharmType.AllNighter,
-            new List<Action> { new Action(ActionType.Energy, 2, null, true) }
+            new List<Action> { new Action(ActionType.Energy, 2, null, true) },
+            0,
+            100
         ));
 
         charmPool.Add(new Charm(
             "Genius Idea",
             "When you play a card, there's a 25% chance to play it again",
             CharmType.GeniusIdea,
-            new List<Action> { new Action(ActionType.Effect, 1, EffectType.Buffer, true) }
+            new List<Action> { new Action(ActionType.Effect, 1, EffectType.Buffer, true) },
+            0,
+            100
         ));
 
         return charmPool;

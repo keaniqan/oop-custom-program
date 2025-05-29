@@ -65,6 +65,12 @@ public class Combat: Room
         set { _turnCount = value; }
     }
 
+    public int GoldReward
+    {
+        get { return _goldReward; }
+        set { _goldReward = value; }
+    }
+
     private int GetAttackValue()
     {
         switch (_enemyType)

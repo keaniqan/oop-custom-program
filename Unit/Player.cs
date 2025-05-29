@@ -18,7 +18,7 @@ public class Player: Unit
     public Player(string name, int health, int maxHealth, int block, int maxEnergy, List<Effect> effects, int gold, List<Charm> charms, List<Card> cards, double shopDiscount) : base(name, health, maxHealth, block, effects)
     {
         _maxEnergy = maxEnergy;
-        _gold = 100;
+        _gold = gold;
         _charms = charms;
         _cards = cards;
         _shopDiscount = shopDiscount;
@@ -72,6 +72,12 @@ public class Player: Unit
     {
         get { return _charms; }
         set { _charms = value; }
+    }
+
+    public int Gold
+    {
+        get { return _gold; }
+        set { _gold = value; }
     }
 
     public void AddCharm(Charm charm){
@@ -177,10 +183,7 @@ public class Player: Unit
     {
         foreach (var charm in _charms)
         {
-            if (charm.IsActive)
-            {
-                charm.ExecuteActions(this);
-            }
+            charm.ExecuteActions(this);
         }
     }
 
@@ -188,10 +191,7 @@ public class Player: Unit
     {
         foreach (var charm in _charms)
         {
-            if (charm.IsActive)
-            {
-                charm.ExecuteActions(this);
-            }
+            charm.ExecuteActions(this);
         }
     }
 
@@ -199,10 +199,7 @@ public class Player: Unit
     {
         foreach (var charm in _charms)
         {
-            if (charm.IsActive)
-            {
-                charm.ExecuteActions(this);
-            }
+            charm.ExecuteActions(this);
         }
     }
 
@@ -210,10 +207,7 @@ public class Player: Unit
     {
         foreach (var charm in _charms)
         {
-            if (charm.IsActive)
-            {
-                charm.ExecuteActions(this);
-            }
+            charm.ExecuteActions(this);
         }
     }
 
@@ -221,10 +215,7 @@ public class Player: Unit
     {
         foreach (var charm in _charms)
         {
-            if (charm.IsActive)
-            {
-                charm.ExecuteActions(this);
-            }
+            charm.ExecuteActions(this);
         }
     }
 
@@ -232,10 +223,7 @@ public class Player: Unit
     {
         foreach (var charm in _charms)
         {
-            if (charm.IsActive)
-            {
-                charm.ExecuteActions(this);
-            }
+            charm.ExecuteActions(this);
         }
     }
 

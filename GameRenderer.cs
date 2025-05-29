@@ -106,7 +106,6 @@ public class GameRenderer
     private static List<Card> shopCards = new List<Card>();
     private static List<Charm> shopCharms = new List<Charm>();
     private static bool shopCardsGenerated = false;
-    private static int playerGold = 100; // Starting gold
 
     public static void InitializeGame(Game gameInstance)
     {
@@ -1647,6 +1646,11 @@ public class GameRenderer
             }
         }
 
+        //Draw Gold Reward
+        string goldRewardText = $"Gold Reward: {((Combat)game.Map.CurrentRoom).GoldReward}";
+        int goldRewardWidth = Raylib.MeasureText(goldRewardText, 30);
+        Raylib.DrawText(goldRewardText, ScreenWidth/2 - goldRewardWidth/2, ScreenHeight - 200, 30, Color.Gold);
+
         // Draw instruction text
         string instructionText = "Click a card to add it to your deck";
         int instructionWidth = Raylib.MeasureText(instructionText, 20);
@@ -1747,8 +1751,8 @@ public class GameRenderer
         int titleWidth = Raylib.MeasureText(titleText, 40);
         Raylib.DrawText(titleText, ScreenWidth/2 - titleWidth/2, 50, 40, Color.White);
 
-        // Draw gold amount
-        string goldText = $"Gold: {playerGold}";
+        // Draw gold amount using player's gold
+        string goldText = $"Gold: {game?.Map?.Player?.Gold ?? 0}";
         Raylib.DrawText(goldText, 50, 50, 30, Color.Gold);
 
         // Generate shop items if not already done
@@ -1888,7 +1892,7 @@ public class GameRenderer
             );
 
             // Draw price
-            int price = 100; // Fixed price for cards
+            int price = card.Price; 
             string priceText = $"{price} Gold";
             Vector2 priceTextSize = Raylib.MeasureTextEx(descriptionFont, priceText, 24, 1);
             Raylib.DrawTextPro(
@@ -1896,7 +1900,7 @@ public class GameRenderer
                 priceText,
                 new Vector2(
                     position.X + (cardWidth - priceTextSize.X) / 2,
-                    position.Y + cardHeight - 40
+                    position.Y + cardHeight + 15
                 ),
                 new Vector2(0, 0),
                 0,
@@ -1908,13 +1912,13 @@ public class GameRenderer
             // Handle card purchase
             if (isHovering && Raylib.IsMouseButtonPressed(MouseButton.Left))
             {
-                if (playerGold >= price)
+                if (game?.Map?.Player?.Gold >= price)
                 {
                     // Purchase card
                     if (game?.Map?.Player != null)
                     {
                         game.Map.Player.AddCard(card);
-                        playerGold -= price;
+                        game.Map.Player.RemoveGold(price);
                         shopCards.RemoveAt(i);
                     }
                 }
@@ -2054,13 +2058,13 @@ public class GameRenderer
             // Handle charm purchase
             if (isHovering && Raylib.IsMouseButtonPressed(MouseButton.Left))
             {
-                if (playerGold >= price)
+                if (game?.Map?.Player?.Gold >= price)
                 {
                     // Purchase charm
                     if (game?.Map?.Player != null)
                     {
                         game.Map.Player.AddCharm(charm);
-                        playerGold -= price;
+                        game.Map.Player.RemoveGold(price);
                         shopCharms.RemoveAt(i);
                     }
                 }

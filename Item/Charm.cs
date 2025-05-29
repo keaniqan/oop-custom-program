@@ -5,49 +5,23 @@ using Raylib_cs;
 #nullable disable
 namespace MyApp;
 
-public class Charm
+public class Charm: Item
 {
-    private string _name;
-    private string _description;
     private CharmType _charmType;
-    private bool _isActive;
     private int _charges;
     private int _maxCharges;
-    private List<Action> _actions;
 
-    public Charm(string name, string description, CharmType charmType, List<Action> actions, int maxCharges = 0)
+    public Charm(string name, string description, CharmType charmType, List<Action> actions, int maxCharges, int price) : base(name, description, price, actions)
     {
-        _name = name;
-        _description = description;
         _charmType = charmType;
-        _isActive = true;
         _maxCharges = maxCharges;
         _charges = maxCharges;
-        _actions = actions;
-    }
-
-    public string Name
-    {
-        get { return _name; }
-        set { _name = value; }
-    }
-
-    public string Description
-    {
-        get { return _description; }
-        set { _description = value; }
     }
 
     public CharmType CharmType
     {
         get { return _charmType; }
         set { _charmType = value; }
-    }
-
-    public bool IsActive
-    {
-        get { return _isActive; }
-        set { _isActive = value; }
     }
 
     public int Charges
@@ -62,17 +36,9 @@ public class Charm
         set { _maxCharges = value; }
     }
 
-    public List<Action> Actions
-    {
-        get { return _actions; }
-        set { _actions = value; }
-    }
-
     public void ExecuteActions(Player player)
     {
-        if (!_isActive) return;
-
-        foreach (var action in _actions)
+        foreach (var action in Actions)
         {
             if (action.ActionType == ActionType.Draw)
             {
