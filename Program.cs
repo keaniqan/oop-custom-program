@@ -19,7 +19,8 @@ internal class Program
         Gameplay,
         Reward,
         Shop,
-        Event
+        Event,
+        Rest
     }
     
     private static Game game;
@@ -91,6 +92,10 @@ internal class Program
                         {
                             currentScreen = GameScreen.Event;
                         }
+                        if (game.CurrentRoom is Rest)
+                        {
+                            currentScreen = GameScreen.Rest;
+                        }
                     }
                     break;
             }
@@ -121,6 +126,9 @@ internal class Program
                     break;
                 case GameScreen.Event:
                     GameRenderer.DrawEventScreen(game);
+                    break;
+                case GameScreen.Rest:
+                    GameRenderer.DrawRestScreen();
                     break;
             }
             

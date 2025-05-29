@@ -52,6 +52,7 @@ public class GameRenderer
     private static Texture2D allNighterTexture;    // Add all-nighter charm texture
     private static Texture2D geniusIdeaTexture;    // Add genius idea charm texture
     private static Texture2D eventBackground;    // Add event background texture
+    private static Texture2D restBackground;    // Add rest background texture
     // Animation properties
     private static Dictionary<int, CardAnimation> cardAnimations = new Dictionary<int, CardAnimation>();
     private const float ANIMATION_DURATION = 0.5f; // Duration in seconds
@@ -157,6 +158,9 @@ public class GameRenderer
 
         // Load the button texture
         buttonTexture = Raylib.LoadTexture("resources/background/button.png");
+
+        // Load the rest background texture
+        restBackground = Raylib.LoadTexture("resources/background/rest.png");
 
         // Load effect textures
         vulnerableTexture = Raylib.LoadTexture("resources/effects/vulnerable.png");
@@ -1666,6 +1670,10 @@ public class GameRenderer
                     {
                         roomType = "Event";
                     }
+                    else if (game.Rooms[roomIndex] is Rest)
+                    {
+                        roomType = "Rest";
+                    }
                     else
                     {
                         roomType = "Start";
@@ -2853,5 +2861,93 @@ public class GameRenderer
         }
 
         return -1; // No charm selected
+    }
+
+    public static void DrawRestScreen()
+    {
+        if (game?.CurrentRoom is Rest restRoom)
+        {
+            // Draw rest background
+            Raylib.DrawTexturePro(
+                restBackground,
+                new Rectangle(0, 0, restBackground.Width, restBackground.Height),
+                new Rectangle(0, 0, ScreenWidth, ScreenHeight),
+                new Vector2(0, 0),
+                0,
+                Color.White
+            );
+
+            // Draw dialog box
+            int dialogBoxWidth = 1200;
+            int dialogBoxHeight = 400;
+            int dialogBoxX = (ScreenWidth - dialogBoxWidth) / 2;
+            int dialogBoxY = (ScreenHeight - dialogBoxHeight) / 2;
+
+            // Draw dialog box background
+            Raylib.DrawRectangle(dialogBoxX, dialogBoxY, dialogBoxWidth, dialogBoxHeight, new Color(255, 255, 255, 150));
+            Raylib.DrawRectangleLinesEx(
+                new Rectangle(dialogBoxX, dialogBoxY, dialogBoxWidth, dialogBoxHeight),
+                2,
+                Color.DarkGray
+            );
+
+            // Draw dialog text
+            string dialogText = restRoom.Dialog;
+            int dialogWidth = Raylib.MeasureText(dialogText, 30);
+            Raylib.DrawText(
+                dialogText,
+                ScreenWidth/2 - dialogWidth/2,
+                dialogBoxY + 50,
+                30,
+                Color.Black
+            );
+
+            // Draw choices
+            Vector2 mousePos = Raylib.GetMousePosition();
+            int choiceY = dialogBoxY + 150;
+
+            foreach (var choice in restRoom.Choices)
+            {
+                // Calculate button dimensions
+                const int buttonWidth = 550;
+                const int buttonHeight = 60;
+                const int buttonSpacing = 20;
+                
+                // Create button rectangle
+                Rectangle buttonRect = new Rectangle(
+                    ScreenWidth/2 - buttonWidth/2,
+                    choiceY,
+                    buttonWidth,
+                    buttonHeight
+                );
+
+                // Check if mouse is hovering over button
+                bool isHovering = Raylib.CheckCollisionPointRec(mousePos, buttonRect);
+
+                // Draw button background
+                Color buttonColor = isHovering ? new Color(200, 200, 200, 255) : Color.White;
+                Raylib.DrawRectangleRec(buttonRect, buttonColor);
+                Raylib.DrawRectangleLinesEx(buttonRect, 2, Color.DarkGray);
+
+                // Draw choice text
+                string choiceText = choice.Text;
+                int choiceWidth = Raylib.MeasureText(choiceText, 20);
+                Raylib.DrawText(
+                    choiceText,
+                    (int)(buttonRect.X + (buttonWidth - choiceWidth) / 2),
+                    (int)(buttonRect.Y + (buttonHeight - 20) / 2),
+                    20,
+                    Color.Black
+                );
+
+                // Handle button click
+                if (isHovering && Raylib.IsMouseButtonPressed(MouseButton.Left))
+                {
+                    restRoom.MakeChoice(choice);
+                }
+
+                choiceY += buttonHeight + buttonSpacing;
+            }
+        }
     }
 }

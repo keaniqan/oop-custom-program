@@ -356,8 +356,14 @@ public class Game
         var shufflePool = new List<RoomTemplate>();
         var rng = new Random();
         
+        // Add rest rooms
+        for (int i = 0; i < 2; i++)
+        {
+            shufflePool.Add(new RestRoomTemplate());
+        }
+        
         // Add basic enemies
-        for (int i = 0; i < 15; i++)
+        for (int i = 0; i < 13; i++)
         {
             // Randomly select a basic enemy template
             int templateIndex = rng.Next(basicEnemyTemplates.Count);
@@ -436,6 +442,16 @@ public class Game
         public override Room CreateRoom()
         {
             return new Event(false, true, true, _eventTemplate.Dialog, _eventTemplate.Choices);
+        }
+    }
+
+    // Rest rooms
+    
+    private class RestRoomTemplate : RoomTemplate
+    {
+        public override Room CreateRoom()
+        {
+            return new Rest(false, true, true);
         }
     }
 
