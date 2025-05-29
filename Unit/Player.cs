@@ -99,8 +99,8 @@ public class Player: Unit
         _shopDiscount += shopDiscount;
     }
     public void PlayCard(Card card){
-        if (GameRenderer.game?.Map?.Rooms?.Count > 0 && 
-            GameRenderer.game.Map.Rooms[0] is Combat combatRoom)
+        if (GameRenderer.game?.Rooms?.Count > 0 && 
+            GameRenderer.game.Rooms[0] is Combat combatRoom)
         {
             if (combatRoom.CurrentEnergy >= card.CardCost)
             {

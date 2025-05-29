@@ -46,7 +46,7 @@ public class Charm: Item
             }
             else if (action.ActionType == ActionType.Energy)
             {
-                if (GameRenderer.game?.Map?.CurrentRoom is Combat combatRoom)
+                if (GameRenderer.game?.CurrentRoom is Combat combatRoom)
                 {
                     combatRoom.AddEnergy(action.Value);
                 }

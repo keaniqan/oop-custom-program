@@ -51,6 +51,7 @@ public class GameRenderer
     private static Texture2D studyGroupTexture;    // Add study group charm texture
     private static Texture2D allNighterTexture;    // Add all-nighter charm texture
     private static Texture2D geniusIdeaTexture;    // Add genius idea charm texture
+    private static Texture2D eventBackground;    // Add event background texture
     // Animation properties
     private static Dictionary<int, CardAnimation> cardAnimations = new Dictionary<int, CardAnimation>();
     private const float ANIMATION_DURATION = 0.5f; // Duration in seconds
@@ -85,6 +86,7 @@ public class GameRenderer
         public int X, Y;
         public bool IsAvailable = false;
         public bool IsCurrent = false;
+        public bool IsCleared = false;  // Add IsCleared property
     }
     internal class MapGraph
     {
@@ -107,6 +109,9 @@ public class GameRenderer
     private static List<Charm> shopCharms = new List<Charm>();
     private static bool shopCardsGenerated = false;
 
+    private static bool showEventRewardScreen = false;
+    private static EventChoice lastEventChoice = null;
+
     public static void InitializeGame(Game gameInstance)
     {
         game = gameInstance;
@@ -125,6 +130,9 @@ public class GameRenderer
 
         // Load the scroll texture
         scrollTexture = Raylib.LoadTexture("resources/background/scroll.png");
+
+        // Load the event background texture
+        eventBackground = Raylib.LoadTexture("resources/background/event.png");
 
         // Load the discardpile texture
         discardPileTexture = Raylib.LoadTexture("resources/cards/discardpile.png");
@@ -246,9 +254,9 @@ public class GameRenderer
         const int charmPadding = 20;
         
         // Draw the appropriate charm icon based on the player's charm
-        if (game?.Map?.Player?.Charms != null && game.Map.Player.Charms.Count > 0)
+        if (game?.Player?.Charms != null && game.Player.Charms.Count > 0)
         {
-            var charm = game.Map.Player.Charms[0]; // Get the first charm
+            var charm = game.Player.Charms[0]; // Get the first charm
             
             switch (charm.CharmType)
             {
@@ -358,17 +366,20 @@ public class GameRenderer
             Color.DarkBrown
         );
 
-        // Draw HP bars
-        if (game.Map.Rooms.Count > 0 && game.Map.Rooms[0] is Combat combatRoom)
+        // Draw the current room
+        if (game.Rooms.Count > 0)
         {
-            DrawEnemy(combatRoom);
-            DrawHPBar(combatRoom.Enemy, new Vector2(ScreenWidth - 700, ScreenHeight / 2 + 100), false);
-            DrawEnergyCounter(game.Map.Player.MaxEnergy, combatRoom.CurrentEnergy);
-            DrawEndTurnButton(combatRoom);
+            if (game.Rooms[0] is Combat combatRoom)
+            {
+                DrawEnemy(combatRoom);
+                DrawHPBar(combatRoom.Enemy, new Vector2(ScreenWidth - 700, ScreenHeight / 2 + 100), false);
+                DrawEnergyCounter(game.Player.MaxEnergy, combatRoom.CurrentEnergy);
+                DrawEndTurnButton(combatRoom);
+            }
         }
         
         // Draw player HP bar above the player
-        DrawHPBar(game.Map.Player, new Vector2(playerPosition.X - 100, playerPosition.Y - 380), true);
+        DrawHPBar(game.Player, new Vector2(playerPosition.X - 100, playerPosition.Y - 380), true);
 
         // Add Scroll Image behind the cards
         Raylib.DrawTexturePro(
@@ -426,7 +437,7 @@ public class GameRenderer
         );
 
         // Draw discard pile count
-        int discardCount = game.Map.Player.Cards.Count(c => c.CardLocation == CardLocation.DiscardPile);
+        int discardCount = game.Player.Cards.Count(c => c.CardLocation == CardLocation.DiscardPile);
         string discardText = discardCount.ToString();
         Vector2 discardTextSize = Raylib.MeasureTextEx(descriptionFont, discardText, 30, 1);
         
@@ -467,7 +478,7 @@ public class GameRenderer
         );
 
         // Draw draw pile count
-        int drawCount = game.Map.Player.Cards.Count(c => c.CardLocation == CardLocation.DrawPile);
+        int drawCount = game.Player.Cards.Count(c => c.CardLocation == CardLocation.DrawPile);
         string drawText = drawCount.ToString();
         Vector2 drawTextSize = Raylib.MeasureTextEx(descriptionFont, drawText, 30, 1);
         
@@ -515,7 +526,7 @@ public class GameRenderer
         }
 
         // Draw cards in player's hand
-        var cardsInHand = game.Map.Player.Cards.Where(c => c.CardLocation == CardLocation.Hand).ToList();
+        var cardsInHand = game.Player.Cards.Where(c => c.CardLocation == CardLocation.Hand).ToList();
         for (int i = 0; i < cardsInHand.Count; i++)
         {
             var card = cardsInHand[i];
@@ -535,11 +546,347 @@ public class GameRenderer
         // Draw overlays if active
         if (showDrawPileOverlay)
         {
-            DrawPileOverlay(game.Map.Player.Cards.Where(c => c.CardLocation == CardLocation.DrawPile).ToList(), "Draw Pile");
+            DrawPileOverlay(game.Player.Cards.Where(c => c.CardLocation == CardLocation.DrawPile).ToList(), "Draw Pile");
         }
         else if (showDiscardPileOverlay)
         {
-            DrawPileOverlay(game.Map.Player.Cards.Where(c => c.CardLocation == CardLocation.DiscardPile).ToList(), "Discard Pile");
+            DrawPileOverlay(game.Player.Cards.Where(c => c.CardLocation == CardLocation.DiscardPile).ToList(), "Discard Pile");
+        }
+    }
+
+    public static void DrawEventScreen(Game game)
+    {
+        if (!(game.CurrentRoom is Event eventRoom)) return;
+
+        // If showing reward screen, only draw that
+        if (showEventRewardScreen)
+        {
+            DrawEventRewardScreen();
+            return;
+        }
+
+        // Draw event background
+        Raylib.DrawTexturePro(
+            eventBackground,
+            new Rectangle(0, 0, eventBackground.Width, eventBackground.Height),
+            new Rectangle(0, 0, ScreenWidth, ScreenHeight),
+            new Vector2(0, 0),
+            0,
+            Color.White
+        );
+
+        // Draw Transparent Background
+        Raylib.DrawRectangle(0, 0, ScreenWidth, ScreenHeight, new Color(0, 0, 0, 100));
+
+        // Draw event dialog box
+        int dialogBoxWidth = 1200;
+        int dialogBoxHeight = 600;
+        int dialogBoxX = (ScreenWidth - dialogBoxWidth) / 2;
+        int dialogBoxY = (ScreenHeight - dialogBoxHeight) / 2;
+
+        // Draw dialog box background with a parchment-like texture
+        Raylib.DrawTexturePro(
+            scrollTexture,
+            new Rectangle(0, 0, scrollTexture.Width, scrollTexture.Height),
+            new Rectangle(dialogBoxX, dialogBoxY, dialogBoxWidth, dialogBoxHeight),
+            new Vector2(0, 0),
+            0,
+            new Color(255, 255, 255, 230)
+        );
+
+        // Draw dialog text
+        string[] words = eventRoom.Dialog.Split(' ');
+        string currentLine = "";
+        int lineY = dialogBoxY + 50;
+        int maxWidth = dialogBoxWidth - 100;
+        int lineHeight = 30;
+
+        foreach (string word in words)
+        {
+            string testLine = currentLine + word + " ";
+            int textWidth = (int)Raylib.MeasureTextEx(descriptionFont, testLine, 24, 1).X;
+            
+            if (textWidth > maxWidth)
+            {
+                Raylib.DrawTextPro(
+                    descriptionFont,
+                    currentLine,
+                    new Vector2(dialogBoxX + 50, lineY),
+                    new Vector2(0, 0),
+                    0,
+                    24,
+                    1,
+                    Color.Black
+                );
+                currentLine = word + " ";
+                lineY += lineHeight;
+            }
+            else
+            {
+                currentLine = testLine;
+            }
+        }
+        
+        // Draw the last line
+        Raylib.DrawTextPro(
+            descriptionFont,
+            currentLine,
+            new Vector2(dialogBoxX + 150, lineY + 50),
+            new Vector2(0, 0),
+            0,
+            24,
+            1,
+            Color.Black
+        );
+
+        // Draw choices
+        int choiceY = dialogBoxY + 200;
+        int choiceHeight = 60;
+        int choiceSpacing = 20;
+        Vector2 mousePos = Raylib.GetMousePosition() + new Vector2(0, 30);
+
+        for (int i = 0; i < eventRoom.Choices.Count; i++)
+        {
+            var choice = eventRoom.Choices[i];
+            int choiceBoxY = choiceY + (i * (choiceHeight + choiceSpacing));
+            
+            // Draw choice box
+            Rectangle choiceBox = new Rectangle(
+                dialogBoxX + 150,
+                choiceBoxY,
+                dialogBoxWidth - 300,
+                choiceHeight
+            );
+
+            // Check if mouse is hovering over choice
+            bool isHovering = Raylib.CheckCollisionPointRec(mousePos, choiceBox);
+
+            // Draw choice background with hover effect
+            Color boxColor = isHovering ? new Color(200, 200, 200, 200) : new Color(180, 180, 180, 200);
+            Raylib.DrawRectangleRec(choiceBox, boxColor);
+            Raylib.DrawRectangleLinesEx(choiceBox, 2, Color.DarkGray);
+
+            // Draw choice text
+            Raylib.DrawTextPro(
+                descriptionFont,
+                choice.Text,
+                new Vector2(choiceBox.X + 20, choiceBox.Y + 20),
+                new Vector2(0, 0),
+                0,
+                20,
+                1,
+                Color.Black
+            );
+
+            // Handle choice click
+            if (isHovering && Raylib.IsMouseButtonPressed(MouseButton.Left))
+            {
+                lastEventChoice = choice;
+                eventRoom.MakeChoice(choice);
+                showEventRewardScreen = true;
+                return; // Exit immediately after making choice
+            }
+        }
+    }
+
+    private static void DrawEventRewardScreen()
+    {
+        if (lastEventChoice == null) return;
+
+        // Draw semi-transparent background
+        Raylib.DrawRectangle(0, 0, ScreenWidth, ScreenHeight, new Color(0, 0, 0, 180));
+
+        // Draw reward box
+        int boxWidth = 800;
+        int boxHeight = 600;
+        int boxX = (ScreenWidth - boxWidth) / 2;
+        int boxY = (ScreenHeight - boxHeight) / 2;
+
+        // Draw box background
+        Raylib.DrawTexturePro(
+            scrollTexture,
+            new Rectangle(0, 0, scrollTexture.Width, scrollTexture.Height),
+            new Rectangle(boxX, boxY, boxWidth, boxHeight),
+            new Vector2(0, 0),
+            0,
+            new Color(255, 255, 255, 230)
+        );
+
+        // Draw title
+        string titleText = "Event Result";
+        int titleWidth = Raylib.MeasureText(titleText, 40);
+        Raylib.DrawText(titleText, ScreenWidth/2 - titleWidth/2, boxY + 50, 40, Color.Black);
+
+        // Draw rewards
+        int currentY = boxY + 150;
+        int spacing = 60;
+
+        // Draw gold reward if any
+        if (lastEventChoice.GoldReward != 0)
+        {
+            string goldText = $"Gold: {(lastEventChoice.GoldReward > 0 ? "+" : "")}{lastEventChoice.GoldReward}";
+            Raylib.DrawText(goldText, boxX + 100, currentY, 30, Color.Gold);
+            currentY += spacing;
+        }
+
+        // Draw health reward if any
+        if (lastEventChoice.HealthChange != 0)
+        {
+            string healthText = $"Health: {(lastEventChoice.HealthChange > 0 ? "+" : "")}{lastEventChoice.HealthChange}";
+            Raylib.DrawText(healthText, boxX + 100, currentY, 30, Color.Red);
+            currentY += spacing;
+        }
+
+        // Draw card reward if any
+        if (lastEventChoice.CardReward != null)
+        {
+            string cardText = $"New Card: {lastEventChoice.CardReward.Name}";
+            Raylib.DrawText(cardText, boxX + 100, currentY, 30, Color.Blue);
+            currentY += spacing;
+
+            // Draw card description
+            string[] words = lastEventChoice.CardReward.Description.Split(' ');
+            string currentLine = "";
+            int maxWidth = boxWidth - 200;
+
+            foreach (string word in words)
+            {
+                string testLine = currentLine + word + " ";
+                int lineWidth = (int)Raylib.MeasureTextEx(descriptionFont, testLine, 20, 1).X;
+                
+                if (lineWidth > maxWidth)
+                {
+                    Raylib.DrawTextPro(
+                        descriptionFont,
+                        currentLine,
+                        new Vector2(boxX + 100, currentY),
+                        new Vector2(0, 0),
+                        0,
+                        20,
+                        1,
+                        Color.Black
+                    );
+                    currentLine = word + " ";
+                    currentY += 25;
+                }
+                else
+                {
+                    currentLine = testLine;
+                }
+            }
+            
+            // Draw the last line
+            Raylib.DrawTextPro(
+                descriptionFont,
+                currentLine,
+                new Vector2(boxX + 100, currentY),
+                new Vector2(0, 0),
+                0,
+                20,
+                1,
+                Color.Black
+            );
+            currentY += spacing;
+        }
+
+        // Draw charm reward if any
+        if (lastEventChoice.CharmReward != null)
+        {
+            string charmText = $"New Charm: {lastEventChoice.CharmReward.Name}";
+            Raylib.DrawText(charmText, boxX + 100, currentY, 30, Color.Purple);
+            currentY += spacing;
+
+            // Draw charm description
+            string[] words = lastEventChoice.CharmReward.Description.Split(' ');
+            string currentLine = "";
+            int maxWidth = boxWidth - 200;
+
+            foreach (string word in words)
+            {
+                string testLine = currentLine + word + " ";
+                int lineWidth = (int)Raylib.MeasureTextEx(descriptionFont, testLine, 20, 1).X;
+                
+                if (lineWidth > maxWidth)
+                {
+                    Raylib.DrawTextPro(
+                        descriptionFont,
+                        currentLine,
+                        new Vector2(boxX + 100, currentY),
+                        new Vector2(0, 0),
+                        0,
+                        20,
+                        1,
+                        Color.Black
+                    );
+                    currentLine = word + " ";
+                    currentY += 25;
+                }
+                else
+                {
+                    currentLine = testLine;
+                }
+            }
+            
+            // Draw the last line
+            Raylib.DrawTextPro(
+                descriptionFont,
+                currentLine,
+                new Vector2(boxX + 100, currentY),
+                new Vector2(0, 0),
+                0,
+                20,
+                1,
+                Color.Black
+            );
+        }
+
+        // Draw continue button
+        const int buttonWidth = 200;
+        const int buttonHeight = 50;
+        Rectangle buttonRect = new Rectangle(
+            ScreenWidth/2 - buttonWidth/2,
+            boxY + boxHeight - 100,
+            buttonWidth,
+            buttonHeight
+        );
+
+        // Check if mouse is hovering over button
+        Vector2 mousePos = Raylib.GetMousePosition();
+        bool isHovering = Raylib.CheckCollisionPointRec(mousePos, buttonRect);
+
+        // Draw button
+        Color buttonColor = isHovering ? new Color(200, 200, 200, 255) : Color.White;
+        Raylib.DrawRectangleRec(buttonRect, buttonColor);
+        Raylib.DrawRectangleLinesEx(buttonRect, 2, Color.DarkGray);
+
+        // Draw button text
+        string buttonText = "Continue";
+        int buttonTextWidth = Raylib.MeasureText(buttonText, 20);
+        Raylib.DrawText(
+            buttonText,
+            (int)(buttonRect.X + (buttonWidth - buttonTextWidth) / 2),
+            (int)(buttonRect.Y + (buttonHeight - 20) / 2),
+            20,
+            Color.Black
+        );
+
+        // Handle button click
+        if (isHovering && Raylib.IsMouseButtonPressed(MouseButton.Left))
+        {
+            // Update current node and make next nodes available
+            var currentNode = mapGraph.Layers[playerLayer][playerIndex];
+            currentNode.IsCurrent = false;
+            currentNode.IsCleared = true;  // Mark the node as cleared
+            
+            // Make only directly connected nodes available
+            foreach (var nextNode in currentNode.Connections)
+            {
+                nextNode.IsAvailable = true;
+            }
+            
+            showEventRewardScreen = false;
+            lastEventChoice = null;
+            Program.currentScreen = Program.GameScreen.MapSelection;
         }
     }
 
@@ -614,7 +961,7 @@ public class GameRenderer
         const int costBoxSize = 28;
 
         // Check if this card was just drawn (moved from draw pile to hand)
-        var cardsInHand = game.Map.Player.Cards.Where(c => c.CardLocation == CardLocation.Hand).ToList();
+        var cardsInHand = game.Player.Cards.Where(c => c.CardLocation == CardLocation.Hand).ToList();
         if (cardIndex < cardsInHand.Count)
         {
             var card = cardsInHand[cardIndex];
@@ -662,7 +1009,7 @@ public class GameRenderer
                 if (mousePos.Y < ScreenHeight / 2)
                 {
                     // Start play animation
-                    var handCards = game.Map.Player.Cards.Where(c => c.CardLocation == CardLocation.Hand).ToList();
+                    var handCards = game.Player.Cards.Where(c => c.CardLocation == CardLocation.Hand).ToList();
                     if (cardIndex < handCards.Count)
                     {
                         // Create animation
@@ -678,7 +1025,7 @@ public class GameRenderer
                         cardAnimations[cardIndex] = animation;
 
                         // Play the card after animation
-                        game.Map.Player.PlayCard(handCards[cardIndex]);
+                        game.Player.PlayCard(handCards[cardIndex]);
                     }
                 }
                 draggedCardIndex = -1;
@@ -1185,7 +1532,7 @@ public class GameRenderer
 
     private static void DrawEndTurnButton(Combat combatRoom)
     {
-        if (game?.Map?.Player == null || combatRoom == null) return; // Safety check
+        if (game?.Player == null || combatRoom == null) return; // Safety check
 
         const int buttonWidth = 150;
         const int buttonHeight = 50;
@@ -1226,7 +1573,7 @@ public class GameRenderer
             try
             {
                 // Get all cards in hand
-                var cardsInHand = game.Map.Player.Cards.Where(c => c.CardLocation == CardLocation.Hand).ToList();
+                var cardsInHand = game.Player.Cards.Where(c => c.CardLocation == CardLocation.Hand).ToList();
                 
                 // Create animations for each card
                 for (int i = 0; i < cardsInHand.Count; i++)
@@ -1245,10 +1592,10 @@ public class GameRenderer
                 }
 
                 // End turn after starting animations
-                game.Map.Player.EndTurn();
+                game.Player.EndTurn();
                 combatRoom.StartEnemyTurn();
                 combatRoom.EndEnemyTurn();
-                combatRoom.CurrentEnergy = game.Map.Player.MaxEnergy;
+                combatRoom.CurrentEnergy = game.Player.MaxEnergy;
             }
             catch (Exception e)
             {
@@ -1295,9 +1642,9 @@ public class GameRenderer
                 roomIndex += n;
 
                 // Check if we have a room at this index
-                if (game?.Map?.Rooms != null && roomIndex < game.Map.Rooms.Count)
+                if (game?.Rooms != null && roomIndex < game.Rooms.Count)
                 {
-                    if (game.Map.Rooms[roomIndex] is Combat combatRoom)
+                    if (game.Rooms[roomIndex] is Combat combatRoom)
                     {
                         switch (combatRoom.Enemy.EnemyType)
                         {
@@ -1315,6 +1662,10 @@ public class GameRenderer
                                 break;
                         }
                     }
+                    else if (game.Rooms[roomIndex] is Event)
+                    {
+                        roomType = "Event";
+                    }
                     else
                     {
                         roomType = "Start";
@@ -1329,6 +1680,8 @@ public class GameRenderer
                         roomType = "Boss";
                     else if (layer % 3 == 0 && n == nodes - 1)
                         roomType = "Elite";
+                    else if (layer % 4 == 0 && n == nodes - 2)
+                        roomType = "Event";
                     else
                         roomType = "Enemy";
                 }
@@ -1411,7 +1764,7 @@ public class GameRenderer
             for (int i = 0; i < currentLayer.Count; i++)
             {
                 var node = currentLayer[i];
-                if (node.IsAvailable)
+                if (node.IsAvailable && !node.IsCleared)  // Only allow selecting available and uncleared nodes
                 {
                     float dx = mouse.X - node.X;
                     float dy = mouse.Y - node.Y;
@@ -1419,6 +1772,18 @@ public class GameRenderer
                     {
                         if (Raylib.IsMouseButtonPressed(MouseButton.Left))
                         {
+                            // Reset availability of all nodes except the current one and its connections
+                            foreach (var layerList in mapGraph.Layers)
+                            {
+                                foreach (var n in layerList)
+                                {
+                                    if (n != node && !node.Connections.Contains(n))
+                                    {
+                                        n.IsAvailable = false;
+                                    }
+                                }
+                            }
+
                             // Update current node
                             var oldCurrentNode = mapGraph.Layers[playerLayer][playerIndex];
                             oldCurrentNode.IsCurrent = false;
@@ -1466,10 +1831,54 @@ public class GameRenderer
         {
             foreach (var node in mapGraph.Layers[layer])
             {
-                Color fill = node.IsCurrent ? Color.Yellow : node.IsAvailable ? Color.LightGray : new Color(80,80,80,255);
+                Color fill;
+                if (node.IsCurrent)
+                    fill = Color.Yellow;
+                else if (node.IsCleared)
+                    fill = new Color(100, 100, 100, 255);  // Gray out cleared nodes
+                else if (node.IsAvailable)
+                    fill = Color.LightGray;
+                else
+                    fill = new Color(80, 80, 80, 255);
+
                 Raylib.DrawCircle(node.X, node.Y, nodeRadius, fill);
                 Raylib.DrawCircleLines(node.X, node.Y, nodeRadius, Color.DarkGray);
                 Raylib.DrawText(node.RoomType, node.X-24, node.Y-10, 18, Color.Black);
+
+                // Draw X on cleared nodes
+                if (node.IsCleared)
+                {
+                    int xSize = 20;  // Size of the X
+                    int lineThickness = 3;  // Thickness of the X lines
+                    
+                    // Draw X with two crossed thick lines
+                    for (int offset = -lineThickness/2; offset <= lineThickness/2; offset++)
+                    {
+                        // First diagonal line
+                        Raylib.DrawLine(
+                            node.X - xSize + offset, node.Y - xSize,
+                            node.X + xSize + offset, node.Y + xSize,
+                            Color.Red
+                        );
+                        Raylib.DrawLine(
+                            node.X - xSize, node.Y - xSize + offset,
+                            node.X + xSize, node.Y + xSize + offset,
+                            Color.Red
+                        );
+
+                        // Second diagonal line
+                        Raylib.DrawLine(
+                            node.X + xSize + offset, node.Y - xSize,
+                            node.X - xSize + offset, node.Y + xSize,
+                            Color.Red
+                        );
+                        Raylib.DrawLine(
+                            node.X + xSize, node.Y - xSize + offset,
+                            node.X - xSize, node.Y + xSize + offset,
+                            Color.Red
+                        );
+                    }
+                }
             }
         }
         // Draw close instruction
@@ -1494,7 +1903,7 @@ public class GameRenderer
         // Generate reward cards if not already done
         if (!rewardCardsGenerated)
         {
-            rewardCards = Program.GenerateRewardCards();
+            rewardCards = Game.GenerateRewardCards();
             rewardCardsGenerated = true;
         }
 
@@ -1634,9 +2043,9 @@ public class GameRenderer
             if (isHovering && Raylib.IsMouseButtonPressed(MouseButton.Left))
             {
                 // Add selected card to player's deck
-                if (game?.Map?.Player != null)
+                if (game?.Player != null)
                 {
-                    game.Map.Player.AddCard(card);
+                    game.Player.AddCard(card);
                     // Reset reward screen state
                     rewardCardsGenerated = false;
                     rewardCards.Clear();
@@ -1647,7 +2056,7 @@ public class GameRenderer
         }
 
         //Draw Gold Reward
-        string goldRewardText = $"Gold Reward: {((Combat)game.Map.CurrentRoom).GoldReward}";
+        string goldRewardText = $"Gold Reward: {((Combat)game.CurrentRoom).GoldReward}";
         int goldRewardWidth = Raylib.MeasureText(goldRewardText, 30);
         Raylib.DrawText(goldRewardText, ScreenWidth/2 - goldRewardWidth/2, ScreenHeight - 200, 30, Color.Gold);
 
@@ -1752,14 +2161,14 @@ public class GameRenderer
         Raylib.DrawText(titleText, ScreenWidth/2 - titleWidth/2, 50, 40, Color.White);
 
         // Draw gold amount using player's gold
-        string goldText = $"Gold: {game?.Map?.Player?.Gold ?? 0}";
+        string goldText = $"Gold: {game?.Player?.Gold ?? 0}";
         Raylib.DrawText(goldText, 50, 50, 30, Color.Gold);
 
         // Generate shop items if not already done
         if (!shopCardsGenerated)
         {
-            shopCards = Program.GenerateRewardCards();
-            shopCharms = Program.GenerateShopCharms();
+            shopCards = Game.GenerateRewardCards();
+            shopCharms = Game.GenerateShopCharms();
             shopCardsGenerated = true;
         }
 
@@ -1912,13 +2321,13 @@ public class GameRenderer
             // Handle card purchase
             if (isHovering && Raylib.IsMouseButtonPressed(MouseButton.Left))
             {
-                if (game?.Map?.Player?.Gold >= price)
+                if (game?.Player?.Gold >= price)
                 {
                     // Purchase card
-                    if (game?.Map?.Player != null)
+                    if (game?.Player != null)
                     {
-                        game.Map.Player.AddCard(card);
-                        game.Map.Player.RemoveGold(price);
+                        game.Player.AddCard(card);
+                        game.Player.RemoveGold(price);
                         shopCards.RemoveAt(i);
                     }
                 }
@@ -2058,13 +2467,13 @@ public class GameRenderer
             // Handle charm purchase
             if (isHovering && Raylib.IsMouseButtonPressed(MouseButton.Left))
             {
-                if (game?.Map?.Player?.Gold >= price)
+                if (game?.Player?.Gold >= price)
                 {
                     // Purchase charm
-                    if (game?.Map?.Player != null)
+                    if (game?.Player != null)
                     {
-                        game.Map.Player.AddCharm(charm);
-                        game.Map.Player.RemoveGold(price);
+                        game.Player.AddCharm(charm);
+                        game.Player.RemoveGold(price);
                         shopCharms.RemoveAt(i);
                     }
                 }

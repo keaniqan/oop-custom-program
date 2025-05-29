@@ -79,29 +79,11 @@ public class Enemy: Unit
 
     public override void TakeDamage(int damage)
     {
-        // First reduce damage by block
-        if (Block > 0)
-        {
-            if (Block >= damage)
-            {
-                Block -= damage;
-                damage = 0;
-            }
-            else
-            {
-                damage -= Block;
-                Block = 0;
-            }
-        }
-
-        // Then apply remaining damage to health
-        if (damage > 0)
+        if (GameRenderer.game?.Rooms?.Count > 0 && 
+            GameRenderer.game.Rooms[0] is Combat combatRoom)
         {
             Health = Math.Max(0, Health - damage);
-            
-            // Check if enemy is defeated
-            if (Health <= 0 && GameRenderer.game?.Map?.Rooms?.Count > 0 && 
-                GameRenderer.game.Map.Rooms[0] is Combat combatRoom)
+            if (Health <= 0)
             {
                 combatRoom.EndCombat();
             }

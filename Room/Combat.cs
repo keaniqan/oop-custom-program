@@ -26,16 +26,16 @@ public class Combat: Room
         _game = GameRenderer.game;
 
         // Ensure all cards are in draw pile first
-        if (_game?.Map?.Player != null)
+        if (_game?.Player != null)
         {
-            foreach (var card in _game.Map.Player.Cards)
+            foreach (var card in _game.Player.Cards)
             {
                 card.CardLocation = CardLocation.DrawPile;
             }
             // Shuffle the deck
-            _game.Map.Player.ShuffleDeck();
+            _game.Player.ShuffleDeck();
             // Draw initial hand
-            _game.Map.Player.DrawCards(5);
+            _game.Player.DrawCards(5);
         }
 
         SetEnemyIntent();
@@ -171,11 +171,11 @@ public class Combat: Room
         _turnPhase = TurnPhase.EnemyStart;
         
         // Execute current intent first
-        if (_game?.Map?.Player == null) return; // Safety check
+        if (_game?.Player == null) return; // Safety check
         
         if (_enemy.Intent._attack)
         {
-            _game.Map.Player.TakeDamage(_enemy.Intent._attackValue);
+            _game.Player.TakeDamage(_enemy.Intent._attackValue);
         }
         else if (_enemy.Intent._block)
         {
@@ -187,18 +187,18 @@ public class Combat: Room
         }
         else if (_enemy.Intent._debuff)
         {
-            _game.Map.Player.AddEffect(new Effect(_enemy.Intent._debuffType, "Debuff", _enemy.Intent._debuffValue, false));
+            _game.Player.AddEffect(new Effect(_enemy.Intent._debuffType, "Debuff", _enemy.Intent._debuffValue, false));
         }
     }
 
     public void EndEnemyTurn()
     {
-        if (_game?.Map?.Player == null) return; // Safety check
+        if (_game?.Player == null) return; // Safety check
 
         _turnPhase = TurnPhase.EnemyEnd;
         
         // Reset both player and enemy block at end of turn
-        _game.Map.Player.Block = 0;
+        _game.Player.Block = 0;
         
         // Reduce enemy effect stacks
         _enemy.EndTurn();
@@ -209,7 +209,7 @@ public class Combat: Room
         // Set turn phase back to player's turn
         _turnPhase = TurnPhase.PlayerStart;
         // Draw 5 cards at the start of player's turn
-        _game.Map.Player.DrawCards(5);
+        _game.Player.DrawCards(5);
     }
 
     public override void Reward()
@@ -226,7 +226,7 @@ public class Combat: Room
         {
             _goldReward = _random.Next(225, 325);
         }
-        _game.Map.Player.AddGold(_goldReward);
+        _game.Player.AddGold(_goldReward);
         Program.currentScreen = Program.GameScreen.Reward;
     }
 
@@ -238,8 +238,9 @@ public class Combat: Room
             // Update current node and make next nodes available
             var currentNode = GameRenderer.mapGraph.Layers[GameRenderer.playerLayer][GameRenderer.playerIndex];
             currentNode.IsCurrent = false;
+            currentNode.IsCleared = true;  // Mark the node as cleared
             
-            // Make all connected nodes available
+            // Make only directly connected nodes available
             foreach (var nextNode in currentNode.Connections)
             {
                 nextNode.IsAvailable = true;
@@ -261,22 +262,22 @@ public class Combat: Room
         
         // Reset turn count and energy first
         _turnCount = 0;
-        _currentEnergy = _game?.Map?.Player?.MaxEnergy ?? 3;
+        _currentEnergy = _game?.Player?.MaxEnergy ?? 3;
         
         // Ensure all cards are in draw pile first
-        if (_game?.Map?.Player != null)
+        if (_game?.Player != null)
         {
-            foreach (var card in _game.Map.Player.Cards)
+            foreach (var card in _game.Player.Cards)
             {
                 card.CardLocation = CardLocation.DrawPile;
             }
             // Shuffle the deck
-            _game.Map.Player.ShuffleDeck();
+            _game.Player.ShuffleDeck();
             // Draw initial hand
-            _game.Map.Player.DrawCards(5);
+            _game.Player.DrawCards(5);
 
             // Trigger start of combat effects for charms
-            _game.Map.Player.TriggerStartOfCombat();
+            _game.Player.TriggerStartOfCombat();
         }
         
         // Set initial enemy intent
