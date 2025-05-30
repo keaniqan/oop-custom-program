@@ -17,7 +17,7 @@ public class Game
         _rooms = new List<Room>();
         _player = player;
         _currentRoom = _rooms.Count > 0 ? _rooms[0] : null;
-        //CreateMap();
+        CreateMap();
     }
 
     public List<Room> Rooms

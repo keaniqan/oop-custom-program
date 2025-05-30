@@ -153,6 +153,6 @@ internal class Program
         // Initialize game renderer
         GameRenderer.InitializeGame(game);
 
-        game.CreateMap();
+        //game.CreateMap();
     }
 }
