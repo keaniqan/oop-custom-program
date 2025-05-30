@@ -7,9 +7,11 @@ public class Enemy: Unit
     private Intent _intent;
     private AffinityType _affinityType;
     private EnemyType _enemyType;
-    public Enemy(string name, int health, int maxHealth, int block, List<Effect> effects, EnemyType enemyType) : base(name, health, maxHealth, block, effects)
+    private int _textureIndex;
+    public Enemy(string name, int health, int maxHealth, int block, List<Effect> effects, EnemyType enemyType, int textureIndex) : base(name, health, maxHealth, block, effects)
     {
         _enemyType = enemyType;
+        _textureIndex = textureIndex;
         // Initialize all possible effects with 0 stacks except for Buffer, Logos, Momentos, and Literas
         foreach (EffectType effectType in Enum.GetValues(typeof(EffectType)))
         {
@@ -36,6 +38,11 @@ public class Enemy: Unit
     {
         get { return _enemyType; }
         set { _enemyType = value; }
+    }
+    public int TextureIndex
+    {
+        get { return _textureIndex; }
+        set { _textureIndex = value; }
     }
 
     public void Attack(Player player, int damage)
@@ -74,19 +81,6 @@ public class Enemy: Unit
         if (weakEffect != null && weakEffect.Stack > 0)
         {
             weakEffect.Stack--;
-        }
-    }
-
-    public override void TakeDamage(int damage)
-    {
-        if (GameRenderer.game?.Rooms?.Count > 0 && 
-            GameRenderer.game.Rooms[0] is Combat combatRoom)
-        {
-            Health = Math.Max(0, Health - damage);
-            if (Health <= 0)
-            {
-                combatRoom.EndCombat();
-            }
         }
     }
 }

@@ -13,6 +13,13 @@ public class GameRenderer
     private static Font cardNameFont;  // Add new font field for card names
     private static Texture2D cardTexture;
     private static Texture2D enemyTexture;
+    private static Texture2D enemyTexture1;
+    private static Texture2D enemyTexture2;
+    private static Texture2D enemyTexture3;
+    private static Texture2D enemyTexture4;
+    private static Texture2D enemyTexture5;
+    private static Texture2D enemyTexture6;
+    private static Texture2D enemyTexture7;
     private static int draggedCardIndex = -1; // -1 means no card is being dragged
     private static Vector2 dragOffset; // Offset from mouse position to card position
     public static Game game; // Reference to the game instance
@@ -54,6 +61,9 @@ public class GameRenderer
     private static Texture2D eventBackground;    // Add event background texture
     private static Texture2D restBackground;    // Add rest background texture
     private static Texture2D mainMenuBackground;
+    private static Texture2D charmBackground;
+    private static Texture2D mapScrollTexture;
+    private static Texture2D mapBackground;
     // Animation properties
     private static Dictionary<int, CardAnimation> cardAnimations = new Dictionary<int, CardAnimation>();
     private const float ANIMATION_DURATION = 0.5f; // Duration in seconds
@@ -129,7 +139,14 @@ public class GameRenderer
         // Load the Main Menu Background
         mainMenuBackground = Raylib.LoadTexture("resources/background/mainmenu.png");
         // Load the enemy texture
-        enemyTexture = Raylib.LoadTexture("resources/enemy/BukuAddmath.png");
+        enemyTexture1 = Raylib.LoadTexture("resources/enemy/book1.png");
+        enemyTexture2 = Raylib.LoadTexture("resources/enemy/book2.png");
+        enemyTexture3 = Raylib.LoadTexture("resources/enemy/book3.png");
+        enemyTexture4 = Raylib.LoadTexture("resources/enemy/book4.png");
+        enemyTexture5 = Raylib.LoadTexture("resources/enemy/book5.png");
+        enemyTexture6 = Raylib.LoadTexture("resources/enemy/book6.png");
+        enemyTexture7 = Raylib.LoadTexture("resources/enemy/book7.png");
+
 
         // Load the scroll texture
         scrollTexture = Raylib.LoadTexture("resources/background/scroll.png");
@@ -144,7 +161,7 @@ public class GameRenderer
         drawPileTexture = Raylib.LoadTexture("resources/cards/drawpile.png");
 
         // Load the player texture
-        playerTexture = Raylib.LoadTexture("resources/player/player.png");
+        playerTexture = Raylib.LoadTexture("resources/player/player8.png");
 
         // Load the energy texture
         energyTexture = Raylib.LoadTexture("resources/background/energy.png");
@@ -163,6 +180,15 @@ public class GameRenderer
 
         // Load the rest background texture
         restBackground = Raylib.LoadTexture("resources/background/rest.png");
+
+        // Load the charm background texture
+        charmBackground = Raylib.LoadTexture("resources/background/charm.png");
+
+        // Load the map scroll texture
+        mapScrollTexture = Raylib.LoadTexture("resources/background/mapscroll.png");
+
+        // Load the map background texture
+        mapBackground = Raylib.LoadTexture("resources/background/map.png");
 
         // Load effect textures
         vulnerableTexture = Raylib.LoadTexture("resources/effects/vulnerable.png");
@@ -225,7 +251,7 @@ public class GameRenderer
         Raylib.DrawTexturePro(
             playerTexture,
             new Rectangle(0, 0, playerTexture.Width, playerTexture.Height),
-            new Rectangle(playerPosition.X - 280, playerPosition.Y - 400, 800, 750),
+            new Rectangle(playerPosition.X - 150, playerPosition.Y - 350, 350, 750),
             new Vector2(0, 0),
             0,
             Color.White
@@ -1189,88 +1215,44 @@ public class GameRenderer
 
     public static void DrawEnemy(Combat combatRoom)
     {
-        const int bookWidth = 220;
+        const int bookWidth = 330;
         const int bookHeight = 300;
-        const int bookThickness = 40;
-        Vector2 bookPos = new Vector2(ScreenWidth - 600, ScreenHeight / 2 - 100);
+        Vector2 enemyPos = new Vector2(ScreenWidth - 600, ScreenHeight / 2 - 100);
 
-        // Draw book shadow
-        Raylib.DrawRectangle(
-            (int)bookPos.X - bookWidth/2 - bookThickness + 10,
-            (int)bookPos.Y - bookHeight/2 + 10,
-            bookWidth + bookThickness,
-            bookHeight,
-            new Color((byte)0, (byte)0, (byte)0, (byte)50)
-        );
-
-        // Draw book spine (back) with gradient
-        for (int i = 0; i < bookThickness; i++)
+        int textureIndex = combatRoom.Enemy.TextureIndex;
+        switch (textureIndex)
         {
-            byte shade = (byte)(100 + (i * 55 / bookThickness));
-            Raylib.DrawRectangle(
-                (int)bookPos.X - bookWidth/2 - bookThickness + i,
-                (int)bookPos.Y - bookHeight/2,
-                1,
-                bookHeight,
-                new Color(shade, shade, shade, (byte)255)
-            );
+            case 1:
+                enemyTexture = enemyTexture1;
+                break;
+            case 2:
+                enemyTexture = enemyTexture2;
+                break;
+            case 3:
+                enemyTexture = enemyTexture3;
+                break;
+            case 4:
+                enemyTexture = enemyTexture4;
+                break;
+            case 5:
+                enemyTexture = enemyTexture5;
+                break;
+            case 6:
+                enemyTexture = enemyTexture6;
+                break;
+            case 7:
+                enemyTexture = enemyTexture7;
+                break;
         }
-
-        // Draw book cover (front) with slight tilt
+        // Draw enemy sprite
         Raylib.DrawTexturePro(
             enemyTexture,
             new Rectangle(0, 0, enemyTexture.Width, enemyTexture.Height),
-            new Rectangle(bookPos.X - bookWidth/2, bookPos.Y - bookHeight/2, bookWidth, bookHeight),
+            new Rectangle(enemyPos.X - bookWidth/2, enemyPos.Y - bookHeight/2, bookWidth, bookHeight),
             new Vector2(0, 0),
             0,
             Color.White
         );
-
-        // Draw book edges with 3D effect
-        // Top edge
-        Raylib.DrawRectangle(
-            (int)bookPos.X - bookWidth/2,
-            (int)bookPos.Y - bookHeight/2,
-            bookWidth,
-            2,
-            new Color(200, 200, 200, 255)
-        );
-        // Bottom edge
-        Raylib.DrawRectangle(
-            (int)bookPos.X - bookWidth/2,
-            (int)bookPos.Y + bookHeight/2 - 2,
-            bookWidth,
-            2,
-            new Color(50, 50, 50, 255)
-        );
-        // Right edge
-        Raylib.DrawRectangle(
-            (int)bookPos.X + bookWidth/2 - 2,
-            (int)bookPos.Y - bookHeight/2,
-            2,
-            bookHeight,
-            new Color(50, 50, 50, 255)
-        );
-
-        // Draw book spine edge
-        Raylib.DrawRectangleLinesEx(
-            new Rectangle(bookPos.X - bookWidth/2 - bookThickness, bookPos.Y - bookHeight/2, bookThickness, bookHeight),
-            2,
-            Color.Black
-        );
-
-        // Draw book pages edge with gradient
-        for (int i = 0; i < 4; i++)
-        {
-            byte shade = (byte)(200 - (i * 40));
-            Raylib.DrawRectangle(
-                (int)bookPos.X - bookWidth/2 + i,
-                (int)bookPos.Y - bookHeight/2,
-                1,
-                bookHeight,
-                new Color(shade, shade, shade, (byte)255)
-            );
-        }
 
         // Draw damage numbers
         float currentTime = (float)Raylib.GetTime();
@@ -1335,8 +1317,8 @@ public class GameRenderer
             // Draw intent background
             int textWidth = Raylib.MeasureText(intentText, 20);
             Raylib.DrawRectangle(
-                (int)bookPos.X - textWidth/2 - 10,
-                (int)bookPos.Y + bookHeight/2 - 340,
+                (int)enemyPos.X - textWidth/2 - 10,
+                (int)enemyPos.Y - bookHeight/2 - 40,
                 textWidth + 20,
                 30,
                 new Color(0, 0, 0, 150)
@@ -1345,8 +1327,8 @@ public class GameRenderer
             // Draw intent text
             Raylib.DrawText(
                 intentText,
-                (int)bookPos.X - textWidth/2,
-                (int)bookPos.Y + bookHeight/2 - 330,
+                (int)enemyPos.X - textWidth/2,
+                (int)enemyPos.Y - bookHeight/2 - 35,
                 20,
                 Color.White
             );
@@ -1420,8 +1402,17 @@ public class GameRenderer
             Color.White
         );
 
-        // Draw effect stacks
-        DrawEffectStacks(unit, new Vector2(position.X, position.Y + barHeight + 10));
+        // Draw effect stacks with adjusted position
+        if (!isPlayer)
+        {
+            // For enemy, position effects below HP bar with more space
+            DrawEffectStacks(unit, new Vector2(position.X, position.Y + barHeight + 10));
+        }
+        else
+        {
+            // For player, keep original position
+            DrawEffectStacks(unit, new Vector2(position.X, position.Y + barHeight + 10));
+        }
     }
 
     private static void DrawEffectStacks(Unit unit, Vector2 startPosition)
@@ -1761,6 +1752,20 @@ public class GameRenderer
     public static int DrawMapSelectionScreen()
     {
         if (mapGraph == null) GenerateMapGraph();
+        Raylib.DrawTexture(mapBackground, 0, 0, Color.White);
+
+        // Draw player stats
+        if (game?.Player != null)
+        {
+            // Draw HP
+            string hpText = $"HP: {game.Player.Health}/{game.Player.MaxHealth}";
+            Raylib.DrawText(hpText, 50, 50, 30, Color.Red);
+
+            // Draw Gold
+            string goldText = $"Gold: {game.Player.Gold}";
+            Raylib.DrawText(goldText, 50, 90, 30, Color.Gold);
+        }
+
         DrawMapOverlay();
         
         // Check all layers for available nodes
@@ -1823,7 +1828,14 @@ public class GameRenderer
     public static void DrawMapOverlay()
     {
         if (mapGraph == null) GenerateMapGraph();
-        Raylib.DrawRectangle(0, 0, ScreenWidth, ScreenHeight, new Color(0, 0, 0, 180));
+        Raylib.DrawRectangle(0, 0, ScreenWidth, ScreenHeight, new Color(0, 0, 0, 60));
+        Raylib.DrawTexturePro(
+            mapScrollTexture, 
+            new Rectangle(0, 0, mapScrollTexture.Width, mapScrollTexture.Height), 
+            new Rectangle(700, 0, 500, 1050), 
+            new Vector2(0, 0), 
+            0, 
+            Color.White);
         int nodeRadius = 30;
         // Draw connections
         for (int layer = 0; layer < mapGraph.Layers.Count-1; layer++)
@@ -2760,7 +2772,10 @@ public class GameRenderer
         const int padding = 50;
         const int titleHeight = 100;
         const int iconSize = 100;  // Size for charm icons
-        
+        // Draw background
+        Raylib.DrawTexture(charmBackground, 0, 0, Color.White);
+        Raylib.DrawRectangle(0, 0, ScreenWidth, ScreenHeight, new Color(0, 0, 0, 50));
+
         // Draw title
         string title = "Choose Your Starting Charm";
         Raylib.DrawText(
@@ -2805,7 +2820,7 @@ public class GameRenderer
             bool isHovered = Raylib.CheckCollisionPointRec(mousePoint, charmRec);
             
             // Draw charm box
-            Color boxColor = isHovered ? new Color(200, 200, 255, 255) : Color.White;
+            Color boxColor = isHovered ? new Color(200, 200, 255, 150) : new Color(255, 255, 255, 150);
             Raylib.DrawRectangleRec(charmRec, boxColor);
             Raylib.DrawRectangleLinesEx(charmRec, 2, Color.DarkBlue);
 
@@ -2957,21 +2972,25 @@ public class GameRenderer
     {
         // Draw main menu background
         Raylib.DrawTexture(mainMenuBackground, 0, 0, Color.White);
+        Raylib.DrawRectangle(0, 0, ScreenWidth, ScreenHeight, new Color(0, 0, 0, 50));
 
         // Draw title text
-        string titleText = "Study Quest";
+        string titleText = "      12 Hours Before Final";
         int titleWidth = Raylib.MeasureText(titleText, 80);
-        Raylib.DrawText(
+        Raylib.DrawTextPro(
+            descriptionFont,
             titleText,
-            ScreenWidth/2 - titleWidth/2,
-            200,
+            new Vector2(ScreenWidth/2 - titleWidth/2, 150),
+            new Vector2(0, 0),
+            0,
             80,
-            Color.White
+            1,
+            Color.Black
         );
 
         // Draw start button
-        const int buttonWidth = 200;
-        const int buttonHeight = 50;
+        const int buttonWidth = 800;
+        const int buttonHeight = 300;
         Rectangle startButton = new Rectangle(
             ScreenWidth/2 - buttonWidth/2,
             400,
@@ -2984,18 +3003,21 @@ public class GameRenderer
         bool isHovering = Raylib.CheckCollisionPointRec(mousePos, startButton);
 
         // Draw button background
-        Color buttonColor = isHovering ? new Color(200, 200, 200, 255) : Color.White;
+        Color buttonColor = isHovering ? new Color(200, 200, 200, 150) : new Color(255, 255, 255, 150);
         Raylib.DrawRectangleRec(startButton, buttonColor);
         Raylib.DrawRectangleLinesEx(startButton, 2, Color.DarkGray);
 
         // Draw button text
-        string buttonText = "Start Game";
+        string buttonText = "Start Study       ";
         int textWidth = Raylib.MeasureText(buttonText, 20);
-        Raylib.DrawText(
+        Raylib.DrawTextPro(
+            descriptionFont,
             buttonText,
-            (int)(startButton.X + (buttonWidth - textWidth) / 2),
-            (int)(startButton.Y + (buttonHeight - 20) / 2),
-            20,
+            new Vector2(startButton.X + (buttonWidth - textWidth) / 2 - 120, startButton.Y + (buttonHeight - 20) / 2 - 30),
+            new Vector2(0, 0),
+            0,
+            90,
+            1,
             Color.Black
         );
 

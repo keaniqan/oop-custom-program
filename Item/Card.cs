@@ -6,6 +6,8 @@ namespace MyApp;
 
 public class Card : Item
 {
+    private const int ScreenWidth = 1920;
+    private const int ScreenHeight = 1080;
     private CardLocation _cardLocation;
     private int _cardCost;
     private AffinityType _cardAffinity;
@@ -94,11 +96,18 @@ public class Card : Item
                         {
                             GameRenderer.game.Player.TakeDamage(thornEffect.Stack);
                         }
-                        if (vulnerableEffect != null)
+                        if (vulnerableEffect != null && vulnerableEffect.Stack > 0)
                         {
                             damage = (int)(damage * 1.5);
                         }
                         combatRoom.Enemy.TakeDamage(damage);
+                        //Check if enemy is dead
+                        if (combatRoom.Enemy.Health <= 0)
+                        {
+                            combatRoom.EndCombat();
+                        }
+                        // Create damage number animation at enemy position
+                        GameRenderer.CreateDamageNumber(damage, new Vector2(ScreenWidth - 600, ScreenHeight / 2 - 100));
                     }
                     else if (action.ActionType == ActionType.Block)
                     {
@@ -115,7 +124,7 @@ public class Card : Item
                     }
                     else if (action.ActionType == ActionType.Effect)
                     {
-                        GameRenderer.game.Player.AddEffectStack(action.EffectType.Value, action.Value);
+                        combatRoom.Enemy.AddEffectStack(action.EffectType.Value, action.Value);
                     }
                 }
             }
@@ -124,14 +133,6 @@ public class Card : Item
                 if (action.ActionType == ActionType.Attack)
                 {
                     int damage = action.Value;
-                    
-                    // Apply vulnerable effect
-                    var vulnerableEffect = GameRenderer.game.Player.Effects.FirstOrDefault(e => e.EffectType == EffectType.Vulnerable);
-                    if (vulnerableEffect != null && vulnerableEffect.Stack > 0)
-                    {
-                        damage = (int)(damage * 1.5f); // 50% more damage
-                    }
-                    
                     GameRenderer.game.Player.TakeDamage(damage);
                 }
                 else if (action.ActionType == ActionType.Block)

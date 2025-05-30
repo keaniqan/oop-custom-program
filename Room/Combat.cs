@@ -1,11 +1,14 @@
 using Raylib_cs;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 #nullable disable  
 namespace MyApp;
 
 public class Combat: Room
 {
+    private const int ScreenWidth = 1920;
+    private const int ScreenHeight = 1080;
     private Enemy _enemy;
     private EnemyType _enemyType;
     private TurnPhase _turnPhase;
@@ -176,6 +179,8 @@ public class Combat: Room
         if (_enemy.Intent._attack)
         {
             _game.Player.TakeDamage(_enemy.Intent._attackValue);
+            // Create damage number animation at player position
+            GameRenderer.CreateDamageNumber(_enemy.Intent._attackValue, new Vector2(ScreenWidth / 2 - 350, ScreenHeight - 350));
         }
         else if (_enemy.Intent._block)
         {

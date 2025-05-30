@@ -10,6 +10,7 @@ internal class Program
     private const int ScreenWidth = 1920;
     private const int ScreenHeight = 1080;
     private const string GameTitle = "12 Hours Before Final";
+
     
     public enum GameScreen
     {
@@ -107,7 +108,7 @@ internal class Program
             switch (currentScreen)
             {
                 case GameScreen.TitleScreen:
-                    DrawTitleScreen(startButtonRec, startButtonHover);
+                    GameRenderer.DrawTitleScreen();
                     break;
                 case GameScreen.CharmSelection:
                     GameRenderer.DrawCharmSelectionScreen();
@@ -153,28 +154,5 @@ internal class Program
         GameRenderer.InitializeGame(game);
 
         game.CreateMap();
-    }
-
-    private static void DrawTitleScreen(Rectangle startButtonRec, bool startButtonHover)
-    {
-        // Draw title
-        string titleText = "12 Hours Before Final";
-        int titleWidth = Raylib.MeasureText(titleText, 60);
-        Raylib.DrawText(titleText, ScreenWidth/2 - titleWidth/2, ScreenHeight/4, 60, Color.Black);
-        
-        // Draw start button
-        Color buttonColor = startButtonHover ? Color.Gray : Color.LightGray;
-        Raylib.DrawRectangleRec(startButtonRec, buttonColor);
-        Raylib.DrawRectangleLinesEx(startButtonRec, 2, Color.Black);
-        
-        string buttonText = "Start Game";
-        int buttonTextWidth = Raylib.MeasureText(buttonText, 20);
-        Raylib.DrawText(
-            buttonText,
-            (int)(startButtonRec.X + (startButtonRec.Width - buttonTextWidth) / 2),
-            (int)(startButtonRec.Y + (startButtonRec.Height - 20) / 2),
-            20,
-            Color.Black
-        );
     }
 }

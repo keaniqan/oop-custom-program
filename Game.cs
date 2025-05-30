@@ -8,7 +8,6 @@ namespace MyApp;
 
 public class Game
 {
-    private GameState _gameState;
     private List<Room> _rooms;
     private Player _player;
     private Room _currentRoom;
@@ -41,7 +40,7 @@ public class Game
 
     public static List<Card> CreateStarterDeck()
     {
-        Action strikeAction = new(ActionType.Attack, 100, null, false);
+        Action strikeAction = new(ActionType.Attack, 6, null, false);
         Action bashAttack = new(ActionType.Attack, 8, null, false);
         Action addVulnerable = new(ActionType.Effect, 1, EffectType.Vulnerable, false);
         Action addWeak = new(ActionType.Effect, 1, EffectType.Weak, false);
@@ -60,8 +59,8 @@ public class Game
             new Card("Memory", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
             new Card("Memory", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
             new Card("Memory", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
-            new Card("Coffee Break", "Gain 1 Energy. Draw 1 card.", 100, new List<Action> { gainEnergy, drawCards }, CardLocation.DrawPile, 0, AffinityType.None, true),
-            new Card("Study Guide", "Draw 2 cards. Gain 1 Energy.", 80, new List<Action> { drawCards, gainEnergy }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Unthinking", "Apply 2 Weak.", 80, new List<Action> {addWeak, addWeak}, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("New Lesson", "Gain 1 Strength.", 82, new List<Action> {addStrength}, CardLocation.DrawPile, 1, AffinityType.None, false),
             new Card("Crit Thinking", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action> {bashAttack, addVulnerable, addVulnerable}, CardLocation.DrawPile, 2, AffinityType.None, false),     
         };
     }
@@ -301,15 +300,21 @@ public class Game
         // Create enemy templates
         var basicEnemyTemplates = new List<EnemyTemplate>
         {
-            new EnemyTemplate("Pre-Algebra", 25, 25, EnemyType.Basic),
-            new EnemyTemplate("English Notes", 30, 30, EnemyType.Basic),
-            new EnemyTemplate("Biology Lab", 35, 35, EnemyType.Basic),
-            new EnemyTemplate("Chemistry Test", 30, 30, EnemyType.Basic)
+            new EnemyTemplate("Pre-Algebra", 35, 35, EnemyType.Basic, 4),
+            new EnemyTemplate("English Notes", 40, 40, EnemyType.Basic, 4),
+            new EnemyTemplate("Biology Lab", 45, 45, EnemyType.Basic, 2),
+            new EnemyTemplate("Chemistry Test", 40, 40, EnemyType.Basic, 2)
         };
-        
-        var eliteEnemyTemplate = new EnemyTemplate("Elite Enemy", 50, 50, EnemyType.Elite);
-        var bossTemplate = new EnemyTemplate("Boss Enemy", 75, 75, EnemyType.Boss);
-        var firstRoomTemplate = new EnemyTemplate("First Room", 20, 20, EnemyType.Basic);
+        var eliteEnemyTemplates = new List<EnemyTemplate>
+        {
+            new EnemyTemplate("Intro Calculus", 50, 50, EnemyType.Elite, 1),
+            new EnemyTemplate("1000 Words Essay", 50, 50, EnemyType.Elite, 1),
+            new EnemyTemplate("Plant Anatomy", 50, 50, EnemyType.Elite, 6),
+            new EnemyTemplate("World History", 50, 50, EnemyType.Elite, 7),
+        };
+        var eliteEnemyTemplate = new EnemyTemplate("Elite Enemy", 50, 50, EnemyType.Elite, 5);
+        var bossTemplate = new EnemyTemplate("Boss Enemy", 75, 75, EnemyType.Boss, 3);
+        var firstRoomTemplate = new EnemyTemplate("Intro Math", 30, 30, EnemyType.Basic, 4);
 
         // Create event templates
         var eventTemplates = new List<EventTemplate>
@@ -372,8 +377,9 @@ public class Game
         
         // Add elite enemies
         for (int i = 0; i < 4; i++)
-        {
-            shufflePool.Add(new EnemyRoomTemplate(eliteEnemyTemplate));
+        {       
+            int templateIndex = rng.Next(eliteEnemyTemplates.Count);
+            shufflePool.Add(new EnemyRoomTemplate(eliteEnemyTemplates[templateIndex]));
         }
 
         // Add events
@@ -475,18 +481,19 @@ public class Game
         public int Health { get; set; }
         public int MaxHealth { get; set; }
         public EnemyType Type { get; set; }
-
-        public EnemyTemplate(string name, int health, int maxHealth, EnemyType type)
+        public int TextureIndex { get; set; }
+        public EnemyTemplate(string name, int health, int maxHealth, EnemyType type, int textureIndex)
         {
             Name = name;
             Health = health;
             MaxHealth = maxHealth;
             Type = type;
+            TextureIndex = textureIndex;
         }
 
         public Enemy CreateEnemy()
         {
-            return new Enemy(Name, Health, MaxHealth, 0, new List<Effect>(), Type);
+            return new Enemy(Name, Health, MaxHealth, 0, new List<Effect>(), Type, TextureIndex);
         }
     }
 }
