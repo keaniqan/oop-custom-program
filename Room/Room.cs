@@ -43,6 +43,10 @@ public abstract class Room
     {
         _isAvailable = true;
     }
+    public void SetUnavailable()
+    {
+        _isAvailable = false;
+    }
     
     public virtual void EnterRoom()
     {
@@ -59,5 +63,17 @@ public abstract class Room
         return GameRenderer.game;
     }
     
+    public void SetAvailabileRoom(Game game)
+    {
+        if (game.Rooms[0].IsCurrent)
+        {
+            //set all rooms after index 1 to available
+            game.Rooms[1].SetAvailable();
+            game.Rooms[2].SetAvailable();
+            game.Rooms[3].SetAvailable();
+            //set all rooms before index 1 and the current room to unavailable
+            game.Rooms[0].SetUnavailable();
+        }
+    }
     public abstract void Reward();
 }

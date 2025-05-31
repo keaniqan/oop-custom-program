@@ -226,13 +226,15 @@ public class Combat: Room
         {
             // Update current node and make next nodes available
             var currentNode = GameRenderer.mapGraph.Layers[GameRenderer.playerLayer][GameRenderer.playerIndex];
+            currentNode.IsCleared = true;  // Update node state
             currentNode.IsCurrent = false;
-            currentNode.IsCleared = true;  // Mark the node as cleared
+            currentNode.SyncWithRoom();  // Sync changes to Room
             
             // Make only directly connected nodes available
             foreach (var nextNode in currentNode.Connections)
             {
                 nextNode.IsAvailable = true;
+                nextNode.SyncWithRoom();  // Sync changes to Room
             }
             
             // Show reward screen first

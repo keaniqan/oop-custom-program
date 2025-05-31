@@ -99,6 +99,28 @@ public class GameRenderer
         public bool IsAvailable = false;
         public bool IsCurrent = false;
         public bool IsCleared = false;  // Add IsCleared property
+        public Room Room; // Reference to the corresponding Room
+
+        public void SetRoom(Room room)
+        {
+            Room = room;
+            if (room != null)
+            {
+                IsAvailable = room.IsAvailable;
+                IsCurrent = room.IsCurrent;
+                IsCleared = room.IsCleared;
+            }
+        }
+
+        public void SyncWithRoom()
+        {
+            if (Room != null)
+            {
+                Room.IsAvailable = IsAvailable;
+                Room.IsCurrent = IsCurrent;
+                Room.IsCleared = IsCleared;
+            }
+        }
     }
     internal class MapGraph
     {
@@ -1751,6 +1773,7 @@ public class GameRenderer
 
     public static int DrawMapSelectionScreen()
     {
+
         if (mapGraph == null) GenerateMapGraph();
         Raylib.DrawTexture(mapBackground, 0, 0, Color.White);
 
@@ -1964,7 +1987,7 @@ public class GameRenderer
             // Apply hover effect
             if (isHovering)
             {
-                position.Y -= 20; // Lift card on hover
+                position.Y -= 20;
             }
 
             // Draw the card texture
@@ -2071,16 +2094,30 @@ public class GameRenderer
                     // Reset reward screen state
                     rewardCardsGenerated = false;
                     rewardCards.Clear();
+                    // Update node states
+                    var currentNode = mapGraph.Layers[playerLayer][playerIndex];
+                    currentNode.IsCleared = true;
+                    currentNode.IsCurrent = false;
+                    currentNode.SyncWithRoom();
+                    
+                    foreach (var nextNode in currentNode.Connections)
+                    {
+                        nextNode.IsAvailable = true;
+                        nextNode.SyncWithRoom();
+                    }
                     // Return to map selection
                     Program.currentScreen = Program.GameScreen.MapSelection;
                 }
             }
         }
 
-        //Draw Gold Reward
-        string goldRewardText = $"Gold Reward: {((Combat)game.CurrentRoom).GoldReward}";
-        int goldRewardWidth = Raylib.MeasureText(goldRewardText, 30);
-        Raylib.DrawText(goldRewardText, ScreenWidth/2 - goldRewardWidth/2, ScreenHeight - 200, 30, Color.Gold);
+        // Draw Gold Reward if current room is Combat
+        if (game?.CurrentRoom is Combat combatRoom)
+        {
+            string goldRewardText = $"Gold Reward: {combatRoom.GoldReward}";
+            int goldRewardWidth = Raylib.MeasureText(goldRewardText, 30);
+            Raylib.DrawText(goldRewardText, ScreenWidth/2 - goldRewardWidth/2, ScreenHeight - 200, 30, Color.Gold);
+        }
 
         // Draw instruction text
         string instructionText = "Click a card to add it to your deck";
@@ -2157,6 +2194,17 @@ public class GameRenderer
             // Reset reward screen state
             rewardCardsGenerated = false;
             rewardCards.Clear();
+            // Update node states
+            var currentNode = mapGraph.Layers[playerLayer][playerIndex];
+            currentNode.IsCleared = true;
+            currentNode.IsCurrent = false;
+            currentNode.SyncWithRoom();
+            
+            foreach (var nextNode in currentNode.Connections)
+            {
+                nextNode.IsAvailable = true;
+                nextNode.SyncWithRoom();
+            }
             // Return to map selection
             Program.currentScreen = Program.GameScreen.MapSelection;
         }

@@ -83,7 +83,7 @@ internal class Program
                             game.Rooms.RemoveAt(selectedNode);
                             game.Rooms.Insert(0, selectedRoom);
                             game.CurrentRoom = selectedRoom;
-                            game.Rooms[0].EnterRoom();
+                            selectedRoom.EnterRoom(); // This will set IsCurrent to true
                         }
                         if (game.CurrentRoom is Combat)
                         {
@@ -150,9 +150,10 @@ internal class Program
         // Create game instance
         game = new Game(player);
         
+        // Create the map before initializing the renderer
+        game.CreateMap();
+        
         // Initialize game renderer
         GameRenderer.InitializeGame(game);
-
-        //game.CreateMap();
     }
 }

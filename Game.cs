@@ -11,7 +11,6 @@ public class Game
     private List<Room> _rooms;
     private Player _player;
     private Room _currentRoom;
-
     public Game(Player player)
     {
         _rooms = new List<Room>();
@@ -409,7 +408,8 @@ public class Game
         var rooms = new List<Room>();
         foreach (var template in shufflePool)
         {
-            rooms.Add(template.CreateRoom());
+            var newRoom = template.CreateRoom();
+            rooms.Add(newRoom);
         }
 
         // Set the rooms in the game's map

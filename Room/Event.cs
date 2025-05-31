@@ -50,16 +50,19 @@ public class Event : Room
         {
             // Update current node and make next nodes available
             var currentNode = GameRenderer.mapGraph.Layers[GameRenderer.playerLayer][GameRenderer.playerIndex];
+            currentNode.IsCleared = true;  // Update node state
             currentNode.IsCurrent = false;
+            currentNode.SyncWithRoom();  // Sync changes to Room
             
             // Make all connected nodes available
             foreach (var nextNode in currentNode.Connections)
             {
                 nextNode.IsAvailable = true;
+                nextNode.SyncWithRoom();  // Sync changes to Room
             }
             
-            // Return to map selection
-            Program.currentScreen = Program.GameScreen.MapSelection;
+            // Show the event screen
+            Program.currentScreen = Program.GameScreen.Event;
         }
     }
 
@@ -97,17 +100,19 @@ public class Event : Room
             {
                 // Update current node and make next nodes available
                 var currentNode = GameRenderer.mapGraph.Layers[GameRenderer.playerLayer][GameRenderer.playerIndex];
+                currentNode.IsCleared = true;  // Update node state
                 currentNode.IsCurrent = false;
-                currentNode.IsCleared = true;
+                currentNode.SyncWithRoom();  // Sync changes to Room
                 
                 // Make all connected nodes available
                 foreach (var nextNode in currentNode.Connections)
                 {
                     nextNode.IsAvailable = true;
+                    nextNode.SyncWithRoom();  // Sync changes to Room
                 }
                 
-                // Return to map selection
-                Program.currentScreen = Program.GameScreen.MapSelection;
+                // Show the event screen (which will show the reward screen)
+                Program.currentScreen = Program.GameScreen.Event;
             }
         }
     }
