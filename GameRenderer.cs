@@ -2894,6 +2894,13 @@ public class GameRenderer
                 Color.White
             );
 
+            // If choice is made, return to map
+            if (restRoom.IsChoiceMade)
+            {
+                Program.currentScreen = Program.GameScreen.MapSelection;
+                return;
+            }
+
             // Draw dialog box
             int dialogBoxWidth = 1200;
             int dialogBoxHeight = 400;
@@ -2961,6 +2968,7 @@ public class GameRenderer
                 if (isHovering && Raylib.IsMouseButtonPressed(MouseButton.Left))
                 {
                     restRoom.MakeChoice(choice);
+                    return; // Exit immediately after making choice
                 }
 
                 choiceY += buttonHeight + buttonSpacing;

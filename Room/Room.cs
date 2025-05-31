@@ -15,7 +15,7 @@ public abstract class Room
         _isAvailable = isAvailable;
         _isCurrent = isCurrent;
     }
-    
+
     public bool IsCleared
     {
         get { return _isCleared; }
@@ -52,6 +52,11 @@ public abstract class Room
     public void ExitRoom()
     {
         _isCurrent = false;
+    }
+
+    protected Game GetGame()
+    {
+        return GameRenderer.game;
     }
     
     public abstract void Reward();

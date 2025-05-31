@@ -40,7 +40,7 @@ public class Game
 
     public static List<Card> CreateStarterDeck()
     {
-        Action strikeAction = new(ActionType.Attack, 6, null, false);
+        Action strikeAction = new(ActionType.Attack, 30, null, false);
         Action bashAttack = new(ActionType.Attack, 8, null, false);
         Action addVulnerable = new(ActionType.Effect, 1, EffectType.Vulnerable, false);
         Action addWeak = new(ActionType.Effect, 1, EffectType.Weak, false);
