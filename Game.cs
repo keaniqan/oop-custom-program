@@ -69,7 +69,7 @@ public class Game
             new Card("Memory", "Gain 5 block.", 1, new List<ActionCommand> { new BlockCommand(5) }, CardLocation.DrawPile, 1),
             new Card("Unthinking", "Apply 2 Weak.", 80, new List<ActionCommand> { new ApplyEffectCommand(EffectType.Weak, 2, EffectTarget.Enemy) }, CardLocation.DrawPile, 1),
             new Card("New Lesson", "Gain 1 Strength.", 82, new List<ActionCommand> {new ApplyEffectCommand(EffectType.StrengthUp, 1, EffectTarget.Player)}, CardLocation.DrawPile, 1),
-            new Card("Crit Thinking", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<ActionCommand> {new AttackCommand(8), new ApplyEffectCommand(EffectType.Vulnerable, 2, EffectTarget.Enemy), new ApplyEffectCommand(EffectType.Vulnerable, 2, EffectTarget.Enemy)}, CardLocation.DrawPile, 2),     
+            new Card("Crit Thinking", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<ActionCommand> {new AttackCommand(8), new ApplyEffectCommand(EffectType.Vulnerable, 2, EffectTarget.Enemy)}, CardLocation.DrawPile, 2),     
         };
     }
 
@@ -156,7 +156,7 @@ public class Game
             case 2:
                 return new Charm(
                     "Lucky Pen",
-                    "10% chance to draw an extra card when you draw cards",
+                    "5% chance to draw an extra card when you draw cards",
                     CharmType.LuckyPen,
                     new List<ActionCommand> { new DrawCommand(1) },
                     0,

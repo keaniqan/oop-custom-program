@@ -63,28 +63,7 @@ public class Combat: Room
     {
         _enemy.Block = 0;
         _turnPhase = TurnPhase.EnemyStart;
-        
-        // Execute current intent first
-        if (_game?.Player == null) return; // Safety check
-        
-        if (_enemy.Intent._attack)
-        {
-            _enemy.Attack(_game.Player, _enemy.Intent._attackValue);
-            // Create damage number animation at player position
-            GameRenderer.CreateDamageNumber(_enemy.Intent._attackValue, new Vector2(ScreenWidth / 2 - 350, ScreenHeight - 350));
-        }
-        else if (_enemy.Intent._block)
-        {
-            _enemy.AddBlock(_enemy.Intent._blockValue);
-        }
-        else if (_enemy.Intent._applyBuff)
-        {
-            _enemy.AddEffect(new Effect(_enemy.Intent._buffType, "Buff", _enemy.Intent._buffValue, true));
-        }
-        else if (_enemy.Intent._debuff)
-        {
-            _game.Player.AddEffect(new Effect(_enemy.Intent._debuffType, "Debuff", _enemy.Intent._debuffValue, false));
-        }
+        _enemy.ExecuteIntent(_game.Player);
     }
 
     public void EndEnemyTurn()

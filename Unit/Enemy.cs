@@ -1,4 +1,5 @@
 using Raylib_cs;
+using System.Numerics;
 #nullable disable
 namespace MyApp;
 
@@ -178,5 +179,34 @@ public class Enemy: Unit
         {
             weakEffect.Stacks--;
         }
+    }
+
+    public void ExecuteIntent(Player player)
+    {
+        // Execute current intent first
+        if (GameRenderer.game?.Player == null) return; // Safety check
+        
+        if (Intent._attack)
+        {
+            Attack(player, Intent._attackValue);
+        }
+        else if (Intent._block)
+        {
+            AddBlock(Intent._blockValue);
+        }
+        else if (Intent._applyBuff)
+        {
+            AddEffect(new Effect(Intent._buffType, "Buff", Intent._buffValue, true));
+        }
+        else if (Intent._debuff)
+        {
+            player.AddEffect(new Effect(Intent._debuffType, "Debuff", Intent._debuffValue, false));
+        }
+    }
+
+    public override void TakeDamage(int damage)
+    {
+        base.TakeDamage(damage);
+        GameRenderer.CreateDamageNumber(damage, new Vector2(ScreenWidth / 2 + 400, ScreenHeight - 650));
     }
 }

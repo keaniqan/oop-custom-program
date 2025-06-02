@@ -285,7 +285,12 @@ public class Player: Unit
         _effects.Add(effect);
     }
     
-    
+    public override void TakeDamage(int damage)
+    {
+        base.TakeDamage(damage);
+        TriggerDamageTaken(damage);
+        GameRenderer.CreateDamageNumber(damage, new Vector2(ScreenWidth / 2 - 350, ScreenHeight - 650));
+    }
 }
 
 
