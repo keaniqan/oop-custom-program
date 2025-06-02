@@ -56,12 +56,12 @@ public class Rest : Room
         {
             // Update current node and make next nodes available
             var currentNode = GameRenderer.mapGraph.Layers[GameRenderer.playerLayer][GameRenderer.playerIndex];
-            currentNode.Room.IsCurrent = false;
+            currentNode.IsCurrent = false;
             
             // Make all connected nodes available
             foreach (var nextNode in currentNode.Connections)
             {
-                nextNode.Room.IsAvailable = true;
+                nextNode.IsAvailable = true;
             }
             
             // Return to map selection
@@ -97,13 +97,11 @@ public class Rest : Room
                 var currentNode = GameRenderer.mapGraph.Layers[GameRenderer.playerLayer][GameRenderer.playerIndex];
                 currentNode.IsCleared = true;  // Update node state
                 currentNode.IsCurrent = false;
-                currentNode.SyncWithRoom();  // Sync changes to Room
                 
                 // Make all connected nodes available
                 foreach (var nextNode in currentNode.Connections)
                 {
                     nextNode.IsAvailable = true;
-                    nextNode.SyncWithRoom();  // Sync changes to Room
                 }
                 
                 // Return to map selection

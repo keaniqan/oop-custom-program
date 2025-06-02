@@ -5,15 +5,20 @@ namespace MyApp;
 
 public abstract class Room
 {
-    private bool _isCleared;
-    private bool _isAvailable;
-    private bool _isCurrent;
-    
+    public int Layer;
+    public int Index;
+    public string RoomType;
+    public List<Room> Connections = new List<Room>();
+    public int X, Y;
+    public bool _isAvailable = false;
+    public bool _isCurrent = false;
+    public bool _isCleared = false;  // Add IsCleared property
+
     public Room(bool isCleared, bool isAvailable, bool isCurrent)
     {
-        _isCleared = isCleared;
-        _isAvailable = isAvailable;
-        _isCurrent = isCurrent;
+        _isCleared = false;
+        _isAvailable = false;
+        _isCurrent = false;
     }
 
     public bool IsCleared
@@ -62,18 +67,6 @@ public abstract class Room
     {
         return GameRenderer.game;
     }
-    
-    public void SetAvailabileRoom(Game game)
-    {
-        if (game.Rooms[0].IsCurrent)
-        {
-            //set all rooms after index 1 to available
-            game.Rooms[1].SetAvailable();
-            game.Rooms[2].SetAvailable();
-            game.Rooms[3].SetAvailable();
-            //set all rooms before index 1 and the current room to unavailable
-            game.Rooms[0].SetUnavailable();
-        }
-    }
+
     public abstract void Reward();
 }

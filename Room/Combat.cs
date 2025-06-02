@@ -228,17 +228,20 @@ public class Combat: Room
             var currentNode = GameRenderer.mapGraph.Layers[GameRenderer.playerLayer][GameRenderer.playerIndex];
             currentNode.IsCleared = true;  // Update node state
             currentNode.IsCurrent = false;
-            currentNode.SyncWithRoom();  // Sync changes to Room
-            
+
             // Make only directly connected nodes available
             foreach (var nextNode in currentNode.Connections)
             {
                 nextNode.IsAvailable = true;
-                nextNode.SyncWithRoom();  // Sync changes to Room
             }
             
             // Show reward screen first
             Reward();
+        }
+        if (GameRenderer.game != null)
+        {
+            //GameRenderer.game.CurrentRoom.ExitRoom();
+            //GameRenderer.game.CurrentRoom.SetAvailableRoom(GameRenderer.game);
         }
     }
 

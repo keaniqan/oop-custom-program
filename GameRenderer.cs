@@ -87,44 +87,9 @@ public class GameRenderer
         public float TargetScale;
         public bool IsPlaying;
     }
-
-    // Map node and graph structures
-    internal class MapNode
+    public class MapGraph
     {
-        public int Layer;
-        public int Index;
-        public string RoomType;
-        public List<MapNode> Connections = new List<MapNode>();
-        public int X, Y;
-        public bool IsAvailable = false;
-        public bool IsCurrent = false;
-        public bool IsCleared = false;  // Add IsCleared property
-        public Room Room; // Reference to the corresponding Room
-
-        public void SetRoom(Room room)
-        {
-            Room = room;
-            if (room != null)
-            {
-                IsAvailable = room.IsAvailable;
-                IsCurrent = room.IsCurrent;
-                IsCleared = room.IsCleared;
-            }
-        }
-
-        public void SyncWithRoom()
-        {
-            if (Room != null)
-            {
-                Room.IsAvailable = IsAvailable;
-                Room.IsCurrent = IsCurrent;
-                Room.IsCleared = IsCleared;
-            }
-        }
-    }
-    internal class MapGraph
-    {
-        public List<List<MapNode>> Layers = new List<List<MapNode>>();
+        public List<List<Room>> Layers = new List<List<Room>>();
     }
     internal static MapGraph mapGraph = null;
     internal static int playerLayer = 0;
@@ -927,15 +892,15 @@ public class GameRenderer
         // Handle button click
         if (isHovering && Raylib.IsMouseButtonPressed(MouseButton.Left))
         {
-            // Update current node and make next nodes available
-            var currentNode = mapGraph.Layers[playerLayer][playerIndex];
-            currentNode.IsCurrent = false;
-            currentNode.IsCleared = true;  // Mark the node as cleared
+            // Update current room and make next rooms available
+            var currentRoom = mapGraph.Layers[playerLayer][playerIndex];
+            currentRoom.IsCurrent = false;
+            currentRoom.IsCleared = true;  // Mark the room as cleared
             
-            // Make only directly connected nodes available
-            foreach (var nextNode in currentNode.Connections)
+            // Make only directly connected rooms available
+            foreach (var nextRoom in currentRoom.Connections)
             {
-                nextNode.IsAvailable = true;
+                nextRoom.IsAvailable = true;
             }
             
             showEventRewardScreen = false;
@@ -1626,13 +1591,13 @@ public class GameRenderer
     private static void GenerateMapGraph()
     {
         int totalLayers = 12;
-        int[] nodesPerLayer = new int[totalLayers];
+        int[] roomsPerLayer = new int[totalLayers];
         for (int i = 0; i < totalLayers; i++)
         {
-            nodesPerLayer[i] = (i % 2 == 0) ? 2 : 3; // alternate 2,3,2,3...
+            roomsPerLayer[i] = (i % 2 == 0) ? 2 : 3; // alternate 2,3,2,3...
         }
-        nodesPerLayer[0] = 1; // Start with 1 node
-        nodesPerLayer[totalLayers-1] = 1; // End with 1 node (boss)
+        roomsPerLayer[0] = 1; // Start with 1 room
+        roomsPerLayer[totalLayers-1] = 1; // End with 1 room (boss)
 
         mapGraph = new MapGraph();
         int verticalSpacing = 70;
@@ -1640,14 +1605,14 @@ public class GameRenderer
         int startY = 120;
         int centerX = ScreenWidth / 2;
 
-        // Create nodes
+        // Create rooms
         for (int layer = 0; layer < totalLayers; layer++)
         {
-            int nodes = nodesPerLayer[layer];
+            int rooms = roomsPerLayer[layer];
             int y = startY + layer * verticalSpacing;
-            int totalWidth = (nodes - 1) * horizontalSpacing;
-            var layerNodes = new List<MapNode>();
-            for (int n = 0; n < nodes; n++)
+            int totalWidth = (rooms - 1) * horizontalSpacing;
+            var layerRooms = new List<Room>();
+            for (int n = 0; n < rooms; n++)
             {
                 int x = centerX - totalWidth / 2 + n * horizontalSpacing;
                 string roomType;
@@ -1701,19 +1666,37 @@ public class GameRenderer
                         roomType = "Start";
                     else if (layer == totalLayers-1)
                         roomType = "Boss";
-                    else if (layer % 3 == 0 && n == nodes - 1)
+                    else if (layer % 3 == 0 && n == rooms - 1)
                         roomType = "Elite";
-                    else if (layer % 4 == 0 && n == nodes - 2)
+                    else if (layer % 4 == 0 && n == rooms - 2)
                         roomType = "Event";
                     else
                         roomType = "Enemy";
                 }
-                
-                layerNodes.Add(new MapNode { Layer = layer, Index = n, RoomType = roomType, X = x, Y = y });
+                if (roomType == "Enemy")
+                {
+                    layerRooms.Add(new Combat(false, false, false, null, EnemyType.Basic, TurnPhase.PlayerStart, 3) { Layer = layer, Index = n, RoomType = roomType, X = x, Y = y });
+                }
+                else if (roomType == "Boss")
+                {
+                    layerRooms.Add(new Combat(false, false, false, null, EnemyType.Boss, TurnPhase.PlayerStart, 3) { Layer = layer, Index = n, RoomType = roomType, X = x, Y = y });
+                }
+                else if (roomType == "Elite")
+                {
+                    layerRooms.Add(new Combat(false, false, false, null, EnemyType.Elite, TurnPhase.PlayerStart, 3) { Layer = layer, Index = n, RoomType = roomType, X = x, Y = y });
+                }
+                else if (roomType == "Event")
+                {
+                    layerRooms.Add(new Event(false, false, false, "A mysterious event awaits...", new List<EventChoice>()) { Layer = layer, Index = n, RoomType = roomType, X = x, Y = y });
+                }
+                else if (roomType == "Rest")
+                {
+                    layerRooms.Add(new Rest(false, false, false) { Layer = layer, Index = n, RoomType = roomType, X = x, Y = y });
+                }
             }
-            mapGraph.Layers.Add(layerNodes);
+            mapGraph.Layers.Add(layerRooms);
         }
-        // Connect nodes with improved branching logic
+        // Connect rooms with improved branching logic
         for (int layer = 1; layer < totalLayers; layer++)
         {
             var prevLayer = mapGraph.Layers[layer-1];
@@ -1724,10 +1707,10 @@ public class GameRenderer
             // Special handling for 2-to-3 and 3-to-2 transitions
             if (prevCount == 2 && currCount == 3)
             {
-                // Left node connects to left and center
+                // Left room connects to left and center
                 prevLayer[0].Connections.Add(currLayer[0]);
                 prevLayer[0].Connections.Add(currLayer[1]);
-                // Right node connects to center and right
+                // Right room connects to center and right
                 prevLayer[1].Connections.Add(currLayer[1]);
                 prevLayer[1].Connections.Add(currLayer[2]);
             }
@@ -1743,7 +1726,7 @@ public class GameRenderer
             }
             else
             {
-                // For each node in prevLayer, connect to its two nearest neighbors in currLayer
+                // For each room in prevLayer, connect to its two nearest neighbors in currLayer
                 for (int p = 0; p < prevCount; p++)
                 {
                     float proportional = (float)p / (prevCount - 1) * (currCount - 1);
@@ -1753,18 +1736,19 @@ public class GameRenderer
                     if (right != left) prevLayer[p].Connections.Add(currLayer[right]);
                 }
             }
-            // Ensure every node in currLayer has at least one incoming connection
-            foreach (var node in currLayer)
+            // Ensure every room in currLayer has at least one incoming connection
+            foreach (var room in currLayer)
             {
-                bool hasIncoming = prevLayer.Any(prev => prev.Connections.Contains(node));
+                bool hasIncoming = prevLayer.Any(prev => prev.Connections.Contains(room));
                 if (!hasIncoming)
                 {
-                    var closest = prevLayer.OrderBy(prev => Math.Abs(prev.X - node.X)).First();
-                    closest.Connections.Add(node);
+                    var closest = prevLayer.OrderBy(prev => Math.Abs(prev.X - room.X)).First();
+                    closest.Connections.Add(room);
                 }
             }
         }
-        // Set starting node as available/current
+        // Set starting room as available/current
+        game.Rooms[0].SetAvailable();
         mapGraph.Layers[0][0].IsAvailable = true;
         mapGraph.Layers[0][0].IsCurrent = true;
         playerLayer = 0;
@@ -1791,9 +1775,9 @@ public class GameRenderer
 
         DrawMapOverlay();
         
-        // Check all layers for available nodes
+        // Check all layers for available rooms
         Vector2 mouse = Raylib.GetMousePosition();
-        int nodeRadius = 30;
+        int roomRadius = 30;
         
         // Check each layer
         for (int layer = 0; layer < mapGraph.Layers.Count; layer++)
@@ -1801,33 +1785,33 @@ public class GameRenderer
             var currentLayer = mapGraph.Layers[layer];
             for (int i = 0; i < currentLayer.Count; i++)
             {
-                var node = currentLayer[i];
-                if (node.IsAvailable && !node.IsCleared)  // Only allow selecting available and uncleared nodes
+                var room = currentLayer[i];
+                if (room.IsAvailable && !room.IsCleared)  // Only allow selecting available and uncleared rooms
                 {
-                    float dx = mouse.X - node.X;
-                    float dy = mouse.Y - node.Y;
-                    if (dx * dx + dy * dy <= nodeRadius * nodeRadius)
+                    float dx = mouse.X - room.X;
+                    float dy = mouse.Y - room.Y;
+                    if (dx * dx + dy * dy <= roomRadius * roomRadius)
                     {
                         if (Raylib.IsMouseButtonPressed(MouseButton.Left))
                         {
-                            // Reset availability of all nodes except the current one and its connections
+                            // Reset availability of all rooms except the current one and its connections
                             foreach (var layerList in mapGraph.Layers)
                             {
-                                foreach (var n in layerList)
+                                foreach (var r in layerList)
                                 {
-                                    if (n != node && !node.Connections.Contains(n))
+                                    if (r != room && !room.Connections.Contains(r))
                                     {
-                                        n.IsAvailable = false;
+                                        r.IsAvailable = false;
                                     }
                                 }
                             }
 
-                            // Update current node
-                            var oldCurrentNode = mapGraph.Layers[playerLayer][playerIndex];
-                            oldCurrentNode.IsCurrent = false;
+                            // Update current room
+                            var oldCurrentRoom = mapGraph.Layers[playerLayer][playerIndex];
+                            oldCurrentRoom.IsCurrent = false;
                             
-                            // Set new current node
-                            node.IsCurrent = true;
+                            // Set new current room
+                            room.IsCurrent = true;
                             playerLayer = layer;
                             playerIndex = i;
                             
@@ -1859,39 +1843,39 @@ public class GameRenderer
             new Vector2(0, 0), 
             0, 
             Color.White);
-        int nodeRadius = 30;
+        int roomRadius = 30;
         // Draw connections
         for (int layer = 0; layer < mapGraph.Layers.Count-1; layer++)
         {
-            foreach (var node in mapGraph.Layers[layer])
+            foreach (var room in mapGraph.Layers[layer])
             {
-                foreach (var next in node.Connections)
+                foreach (var next in room.Connections)
                 {
-                    Raylib.DrawLine(node.X, node.Y, next.X, next.Y, Color.Gray);
+                    Raylib.DrawLine(room.X, room.Y, next.X, next.Y, Color.Gray);
                 }
             }
         }
-        // Draw nodes
+        // Draw rooms
         for (int layer = 0; layer < mapGraph.Layers.Count; layer++)
         {
-            foreach (var node in mapGraph.Layers[layer])
+            foreach (var room in mapGraph.Layers[layer])
             {
                 Color fill;
-                if (node.IsCurrent)
+                if (room.IsCurrent)
                     fill = Color.Yellow;
-                else if (node.IsCleared)
-                    fill = new Color(100, 100, 100, 255);  // Gray out cleared nodes
-                else if (node.IsAvailable)
+                else if (room.IsCleared)
+                    fill = new Color(100, 100, 100, 255);  // Gray out cleared rooms
+                else if (room.IsAvailable)
                     fill = Color.LightGray;
                 else
                     fill = new Color(80, 80, 80, 255);
 
-                Raylib.DrawCircle(node.X, node.Y, nodeRadius, fill);
-                Raylib.DrawCircleLines(node.X, node.Y, nodeRadius, Color.DarkGray);
-                Raylib.DrawText(node.RoomType, node.X-24, node.Y-10, 18, Color.Black);
+                Raylib.DrawCircle(room.X, room.Y, roomRadius, fill);
+                Raylib.DrawCircleLines(room.X, room.Y, roomRadius, Color.DarkGray);
+                Raylib.DrawText(room.RoomType, room.X-24, room.Y-10, 18, Color.Black);
 
-                // Draw X on cleared nodes
-                if (node.IsCleared)
+                // Draw X on cleared rooms
+                if (room.IsCleared)
                 {
                     int xSize = 20;  // Size of the X
                     int lineThickness = 3;  // Thickness of the X lines
@@ -1901,25 +1885,25 @@ public class GameRenderer
                     {
                         // First diagonal line
                         Raylib.DrawLine(
-                            node.X - xSize + offset, node.Y - xSize,
-                            node.X + xSize + offset, node.Y + xSize,
+                            room.X - xSize + offset, room.Y - xSize,
+                            room.X + xSize + offset, room.Y + xSize,
                             Color.Red
                         );
                         Raylib.DrawLine(
-                            node.X - xSize, node.Y - xSize + offset,
-                            node.X + xSize, node.Y + xSize + offset,
+                            room.X - xSize, room.Y - xSize + offset,
+                            room.X + xSize, room.Y + xSize + offset,
                             Color.Red
                         );
 
                         // Second diagonal line
                         Raylib.DrawLine(
-                            node.X + xSize + offset, node.Y - xSize,
-                            node.X - xSize + offset, node.Y + xSize,
+                            room.X + xSize + offset, room.Y - xSize,
+                            room.X - xSize + offset, room.Y + xSize,
                             Color.Red
                         );
                         Raylib.DrawLine(
-                            node.X + xSize, node.Y - xSize + offset,
-                            node.X - xSize, node.Y + xSize + offset,
+                            room.X + xSize, room.Y - xSize + offset,
+                            room.X - xSize, room.Y + xSize + offset,
                             Color.Red
                         );
                     }
@@ -1927,7 +1911,7 @@ public class GameRenderer
             }
         }
         // Draw close instruction
-        string closeText = "Click a node to start";
+        string closeText = "Click a room to start";
         int textWidth = Raylib.MeasureText(closeText, 24);
         Raylib.DrawText(closeText, ScreenWidth/2 - textWidth/2, ScreenHeight - 60, 24, Color.White);
     }
@@ -2094,16 +2078,14 @@ public class GameRenderer
                     // Reset reward screen state
                     rewardCardsGenerated = false;
                     rewardCards.Clear();
-                    // Update node states
-                    var currentNode = mapGraph.Layers[playerLayer][playerIndex];
-                    currentNode.IsCleared = true;
-                    currentNode.IsCurrent = false;
-                    currentNode.SyncWithRoom();
+                    // Update room states
+                    var currentRoom = mapGraph.Layers[playerLayer][playerIndex];
+                    currentRoom.IsCleared = true;
+                    currentRoom.IsCurrent = false;
                     
-                    foreach (var nextNode in currentNode.Connections)
+                    foreach (var nextRoom in currentRoom.Connections)
                     {
-                        nextNode.IsAvailable = true;
-                        nextNode.SyncWithRoom();
+                        nextRoom.IsAvailable = true;
                     }
                     // Return to map selection
                     Program.currentScreen = Program.GameScreen.MapSelection;
@@ -2194,16 +2176,14 @@ public class GameRenderer
             // Reset reward screen state
             rewardCardsGenerated = false;
             rewardCards.Clear();
-            // Update node states
-            var currentNode = mapGraph.Layers[playerLayer][playerIndex];
-            currentNode.IsCleared = true;
-            currentNode.IsCurrent = false;
-            currentNode.SyncWithRoom();
+            // Update room states
+            var currentRoom = mapGraph.Layers[playerLayer][playerIndex];
+            currentRoom.IsCleared = true;
+            currentRoom.IsCurrent = false;
             
-            foreach (var nextNode in currentNode.Connections)
+            foreach (var nextRoom in currentRoom.Connections)
             {
-                nextNode.IsAvailable = true;
-                nextNode.SyncWithRoom();
+                nextRoom.IsAvailable = true;
             }
             // Return to map selection
             Program.currentScreen = Program.GameScreen.MapSelection;

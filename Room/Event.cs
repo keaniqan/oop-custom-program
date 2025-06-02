@@ -52,13 +52,12 @@ public class Event : Room
             var currentNode = GameRenderer.mapGraph.Layers[GameRenderer.playerLayer][GameRenderer.playerIndex];
             currentNode.IsCleared = true;  // Update node state
             currentNode.IsCurrent = false;
-            currentNode.SyncWithRoom();  // Sync changes to Room
+                
             
             // Make all connected nodes available
             foreach (var nextNode in currentNode.Connections)
             {
                 nextNode.IsAvailable = true;
-                nextNode.SyncWithRoom();  // Sync changes to Room
             }
             
             // Show the event screen
@@ -102,13 +101,11 @@ public class Event : Room
                 var currentNode = GameRenderer.mapGraph.Layers[GameRenderer.playerLayer][GameRenderer.playerIndex];
                 currentNode.IsCleared = true;  // Update node state
                 currentNode.IsCurrent = false;
-                currentNode.SyncWithRoom();  // Sync changes to Room
-                
+
                 // Make all connected nodes available
                 foreach (var nextNode in currentNode.Connections)
                 {
                     nextNode.IsAvailable = true;
-                    nextNode.SyncWithRoom();  // Sync changes to Room
                 }
                 
                 // Show the event screen (which will show the reward screen)
