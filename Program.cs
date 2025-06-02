@@ -155,5 +155,8 @@ internal class Program
         
         // Initialize game renderer
         GameRenderer.InitializeGame(game);
+        
+        // Create the map after renderer is initialized
+        GameRenderer.GenerateMapGraph();
     }
 }

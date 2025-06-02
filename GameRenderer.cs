@@ -87,11 +87,10 @@ public class GameRenderer
         public float TargetScale;
         public bool IsPlaying;
     }
-    public class MapGraph
-    {
-        public List<List<Room>> Layers = new List<List<Room>>();
-    }
-    internal static MapGraph mapGraph = null;
+    // public class MapGraph
+    // {
+    //     public List<List<Room>> Layers = new List<List<Room>>();
+    // }
     internal static int playerLayer = 0;
     internal static int playerIndex = 0;
 
@@ -893,7 +892,7 @@ public class GameRenderer
         if (isHovering && Raylib.IsMouseButtonPressed(MouseButton.Left))
         {
             // Update current room and make next rooms available
-            var currentRoom = mapGraph.Layers[playerLayer][playerIndex];
+            var currentRoom = game.Layers[playerLayer][playerIndex];
             currentRoom.IsCurrent = false;
             currentRoom.IsCleared = true;  // Mark the room as cleared
             
@@ -1588,8 +1587,10 @@ public class GameRenderer
         }
     }
 
-    private static void GenerateMapGraph()
+    public static void GenerateMapGraph()
     {
+        if (game == null) return;  // Safety check
+
         int totalLayers = 12;
         int[] roomsPerLayer = new int[totalLayers];
         for (int i = 0; i < totalLayers; i++)
@@ -1599,7 +1600,7 @@ public class GameRenderer
         roomsPerLayer[0] = 1; // Start with 1 room
         roomsPerLayer[totalLayers-1] = 1; // End with 1 room (boss)
 
-        mapGraph = new MapGraph();
+        game.Layers = new List<List<Room>>();  // Ensure layers is initialized
         int verticalSpacing = 70;
         int horizontalSpacing = 120;
         int startY = 120;
@@ -1612,6 +1613,10 @@ public class GameRenderer
             int y = startY + layer * verticalSpacing;
             int totalWidth = (rooms - 1) * horizontalSpacing;
             var layerRooms = new List<Room>();
+            
+            // Add the layer list before adding rooms to it
+            game.Layers.Add(layerRooms);
+
             for (int n = 0; n < rooms; n++)
             {
                 int x = centerX - totalWidth / 2 + n * horizontalSpacing;
@@ -1621,7 +1626,7 @@ public class GameRenderer
                 int roomIndex = 0;
                 for (int l = 0; l < layer; l++)
                 {
-                    roomIndex += mapGraph.Layers[l].Count;
+                    roomIndex += game.Layers[l].Count;
                 }
                 roomIndex += n;
 
@@ -1694,13 +1699,13 @@ public class GameRenderer
                     layerRooms.Add(new Rest(false, false, false) { Layer = layer, Index = n, RoomType = roomType, X = x, Y = y });
                 }
             }
-            mapGraph.Layers.Add(layerRooms);
+            game.Layers.Add(layerRooms);
         }
         // Connect rooms with improved branching logic
         for (int layer = 1; layer < totalLayers; layer++)
         {
-            var prevLayer = mapGraph.Layers[layer-1];
-            var currLayer = mapGraph.Layers[layer];
+            var prevLayer = game.Layers[layer-1];
+            var currLayer = game.Layers[layer];
             int prevCount = prevLayer.Count;
             int currCount = currLayer.Count;
 
@@ -1749,8 +1754,8 @@ public class GameRenderer
         }
         // Set starting room as available/current
         game.Rooms[0].SetAvailable();
-        mapGraph.Layers[0][0].IsAvailable = true;
-        mapGraph.Layers[0][0].IsCurrent = true;
+        game.Layers[0][0].IsAvailable = true;
+        game.Layers[0][0].IsCurrent = true;
         playerLayer = 0;
         playerIndex = 0;
     }
@@ -1758,7 +1763,7 @@ public class GameRenderer
     public static int DrawMapSelectionScreen()
     {
 
-        if (mapGraph == null) GenerateMapGraph();
+        if (game.Layers == null) GenerateMapGraph();
         Raylib.DrawTexture(mapBackground, 0, 0, Color.White);
 
         // Draw player stats
@@ -1780,9 +1785,9 @@ public class GameRenderer
         int roomRadius = 30;
         
         // Check each layer
-        for (int layer = 0; layer < mapGraph.Layers.Count; layer++)
+        for (int layer = 0; layer < game.Layers.Count; layer++)
         {
-            var currentLayer = mapGraph.Layers[layer];
+            var currentLayer = game.Layers[layer];
             for (int i = 0; i < currentLayer.Count; i++)
             {
                 var room = currentLayer[i];
@@ -1795,7 +1800,7 @@ public class GameRenderer
                         if (Raylib.IsMouseButtonPressed(MouseButton.Left))
                         {
                             // Reset availability of all rooms except the current one and its connections
-                            foreach (var layerList in mapGraph.Layers)
+                            foreach (var layerList in game.Layers)
                             {
                                 foreach (var r in layerList)
                                 {
@@ -1807,7 +1812,7 @@ public class GameRenderer
                             }
 
                             // Update current room
-                            var oldCurrentRoom = mapGraph.Layers[playerLayer][playerIndex];
+                            var oldCurrentRoom = game.Layers[playerLayer][playerIndex];
                             oldCurrentRoom.IsCurrent = false;
                             
                             // Set new current room
@@ -1819,7 +1824,7 @@ public class GameRenderer
                             int roomIndex = 0;
                             for (int l = 0; l < layer; l++)
                             {
-                                roomIndex += mapGraph.Layers[l].Count;
+                                roomIndex += game.Layers[l].Count;
                             }
                             roomIndex += i;
                             
@@ -1834,7 +1839,7 @@ public class GameRenderer
 
     public static void DrawMapOverlay()
     {
-        if (mapGraph == null) GenerateMapGraph();
+        if (game.Layers == null) GenerateMapGraph();
         Raylib.DrawRectangle(0, 0, ScreenWidth, ScreenHeight, new Color(0, 0, 0, 60));
         Raylib.DrawTexturePro(
             mapScrollTexture, 
@@ -1845,9 +1850,9 @@ public class GameRenderer
             Color.White);
         int roomRadius = 30;
         // Draw connections
-        for (int layer = 0; layer < mapGraph.Layers.Count-1; layer++)
+        for (int layer = 0; layer < game.Layers.Count-1; layer++)
         {
-            foreach (var room in mapGraph.Layers[layer])
+            foreach (var room in game.Layers[layer])
             {
                 foreach (var next in room.Connections)
                 {
@@ -1856,9 +1861,9 @@ public class GameRenderer
             }
         }
         // Draw rooms
-        for (int layer = 0; layer < mapGraph.Layers.Count; layer++)
+        for (int layer = 0; layer < game.Layers.Count; layer++)
         {
-            foreach (var room in mapGraph.Layers[layer])
+            foreach (var room in game.Layers[layer])
             {
                 Color fill;
                 if (room.IsCurrent)
@@ -2079,7 +2084,7 @@ public class GameRenderer
                     rewardCardsGenerated = false;
                     rewardCards.Clear();
                     // Update room states
-                    var currentRoom = mapGraph.Layers[playerLayer][playerIndex];
+                    var currentRoom = game.Layers[playerLayer][playerIndex];
                     currentRoom.IsCleared = true;
                     currentRoom.IsCurrent = false;
                     
@@ -2177,7 +2182,7 @@ public class GameRenderer
             rewardCardsGenerated = false;
             rewardCards.Clear();
             // Update room states
-            var currentRoom = mapGraph.Layers[playerLayer][playerIndex];
+            var currentRoom = game.Layers[playerLayer][playerIndex];
             currentRoom.IsCleared = true;
             currentRoom.IsCurrent = false;
             

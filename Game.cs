@@ -11,9 +11,12 @@ public class Game
     private List<Room> _rooms;
     private Player _player;
     private Room _currentRoom;
+
+    private List<List<Room>> _layers = new List<List<Room>>();
     public Game(Player player)
     {
         _rooms = new List<Room>();
+        _layers = new List<List<Room>>();  // Initialize layers once
         _player = player;
         _currentRoom = _rooms.Count > 0 ? _rooms[0] : null;
         CreateMap();
@@ -35,6 +38,12 @@ public class Game
     {
         get { return _currentRoom; }
         set { _currentRoom = value; }
+    }
+
+    public List<List<Room>> Layers
+    {
+        get { return _layers; }
+        set { _layers = value; }
     }
 
     public static List<Card> CreateStarterDeck()

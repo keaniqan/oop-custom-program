@@ -225,7 +225,7 @@ public class Combat: Room
         if (GameRenderer.game != null)
         {
             // Update current node and make next nodes available
-            var currentNode = GameRenderer.mapGraph.Layers[GameRenderer.playerLayer][GameRenderer.playerIndex];
+            var currentNode = GameRenderer.game.Layers[GameRenderer.playerLayer][GameRenderer.playerIndex];
             currentNode.IsCleared = true;  // Update node state
             currentNode.IsCurrent = false;
 
