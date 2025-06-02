@@ -9,8 +9,5 @@ namespace MyApp
         Frail,
         Vulnerable,
         Buffer,
-        Logos,
-        Momentos,
-        Literas,
     }
 }

@@ -5,14 +5,15 @@ namespace MyApp;
 
 public abstract class Room
 {
-    public int Layer;
-    public int Index;
-    public string RoomType;
-    public List<Room> Connections = new List<Room>();
-    public int X, Y;
-    public bool _isAvailable = false;
-    public bool _isCurrent = false;
-    public bool _isCleared = false;  // Add IsCleared property
+    private int _layer;
+    private int _index;
+    private string _roomType;
+    private List<Room> _connections = new List<Room>();
+    private int _x;
+    private int _y;
+    private bool _isAvailable = false;
+    private bool _isCurrent = false;
+    private bool _isCleared = false;  // Add IsCleared property
 
     public Room(bool isCleared, bool isAvailable, bool isCurrent)
     {
@@ -39,30 +40,59 @@ public abstract class Room
         set { _isCurrent = value; }
     }
 
-    public void ClearRoom()
+    public int Layer
     {
-        _isCleared = true;
+        get { return _layer; }
+        set { _layer = value; }
     }
 
-    public void SetAvailable()
+    public int Index
     {
-        _isAvailable = true;
+        get { return _index; }
+        set { _index = value; }
     }
-    public void SetUnavailable()
+
+    public string RoomType
     {
-        _isAvailable = false;
+        get { return _roomType; }
+        set { _roomType = value; }
+    }
+
+    public List<Room> Connections
+    {
+        get { return _connections; }
+        set { _connections = value; }
+    }
+
+    public int X
+    {
+        get { return _x; }
+        set { _x = value; }
+    }
+
+    public int Y
+    {
+        get { return _y; }
+        set { _y = value; }
     }
     
+    public virtual void SetAvailable(bool isAvailable)
+    {
+        _isAvailable = isAvailable;
+    }
+    public virtual void SetCurrent(bool isCurrent)
+    {
+        _isCurrent = isCurrent;
+    }
+    public virtual void SetCleared(bool isCleared)
+    {
+        _isCleared = isCleared;
+    }
     public virtual void EnterRoom()
     {
         _isCurrent = true;
     }
     
-    public void ExitRoom()
-    {
-        _isCurrent = false;
-    }
-
     protected Game GetGame()
     {
         return GameRenderer.game;

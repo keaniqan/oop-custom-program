@@ -893,13 +893,13 @@ public class GameRenderer
         {
             // Update current room and make next rooms available
             var currentRoom = game.Layers[playerLayer][playerIndex];
-            currentRoom.IsCurrent = false;
-            currentRoom.IsCleared = true;  // Mark the room as cleared
+            currentRoom.SetCurrent(false);
+            currentRoom.SetCleared(true);  // Mark the room as cleared
             
             // Make only directly connected rooms available
             foreach (var nextRoom in currentRoom.Connections)
             {
-                nextRoom.IsAvailable = true;
+                nextRoom.SetAvailable(true);
             }
             
             showEventRewardScreen = false;
@@ -1407,6 +1407,10 @@ public class GameRenderer
         const int effectSpacing = 35;
         int currentX = (int)startPosition.X;
 
+        Vector2 mousePos = Raylib.GetMousePosition();
+        string hoveredDescription = null;
+        int hoveredX = 0, hoveredY = 0;
+
         // Draw each effect that has stacks
         foreach (var effect in unit.Effects)
         {
@@ -1444,13 +1448,23 @@ public class GameRenderer
                         break;
                 }
 
+                Rectangle iconRect = new Rectangle(currentX - effectSize / 2, (int)startPosition.Y - effectSize / 2, effectSize, effectSize);
+
+                // Check for hover
+                if (shouldDraw && Raylib.CheckCollisionPointRec(mousePos, iconRect))
+                {
+                    hoveredDescription = effect.EffectDescription; // <-- Make sure EffectDescription is public
+                    hoveredX = currentX;
+                    hoveredY = (int)startPosition.Y - effectSize / 2;
+                }
+
                 if (shouldDraw)
                 {
                     // Draw effect texture
                     Raylib.DrawTexturePro(
                         effectTexture,
                         new Rectangle(0, 0, effectTexture.Width, effectTexture.Height),
-                        new Rectangle(currentX - effectSize/2, (int)startPosition.Y - effectSize/2, effectSize, effectSize),
+                        iconRect,
                         new Vector2(0, 0),
                         0,
                         Color.White
@@ -1461,7 +1475,7 @@ public class GameRenderer
                     Raylib.DrawTextPro(
                         descriptionFont,
                         stackText,
-                        new Vector2(currentX - textSize.X/2, (int)startPosition.Y - textSize.Y/2),
+                        new Vector2(currentX - textSize.X / 2, (int)startPosition.Y - textSize.Y / 2),
                         new Vector2(0, 0),
                         0,
                         16,
@@ -1471,6 +1485,30 @@ public class GameRenderer
                 }
                 currentX += effectSpacing;
             }
+        }
+
+        // Draw overlay if hovering
+        if (!string.IsNullOrEmpty(hoveredDescription))
+        {
+            int overlayWidth = 360;
+            int overlayHeight = 60;
+            int overlayX = hoveredX - overlayWidth / 2;
+            int overlayY = hoveredY - overlayHeight - 10;
+
+            Raylib.DrawRectangle(overlayX, overlayY, overlayWidth, overlayHeight, new Color(30, 30, 30, 220));
+            Raylib.DrawRectangleLines(overlayX, overlayY, overlayWidth, overlayHeight, Color.Gold);
+
+            Vector2 descSize = Raylib.MeasureTextEx(descriptionFont, hoveredDescription, 18, 1);
+            Raylib.DrawTextPro(
+                descriptionFont,
+                hoveredDescription,
+                new Vector2(overlayX + (overlayWidth - descSize.X) / 2, overlayY + (overlayHeight - descSize.Y) / 2),
+                new Vector2(0, 0),
+                0,
+                18,
+                1,
+                Color.White
+            );
         }
     }
 
@@ -1699,7 +1737,6 @@ public class GameRenderer
                     layerRooms.Add(new Rest(false, false, false) { Layer = layer, Index = n, RoomType = roomType, X = x, Y = y });
                 }
             }
-            game.Layers.Add(layerRooms);
         }
         // Connect rooms with improved branching logic
         for (int layer = 1; layer < totalLayers; layer++)
@@ -1753,9 +1790,8 @@ public class GameRenderer
             }
         }
         // Set starting room as available/current
-        game.Rooms[0].SetAvailable();
-        game.Layers[0][0].IsAvailable = true;
-        game.Layers[0][0].IsCurrent = true;
+        game.Layers[0][0].SetAvailable(true);
+        game.Layers[0][0].SetCurrent(true);
         playerLayer = 0;
         playerIndex = 0;
     }
@@ -1806,17 +1842,17 @@ public class GameRenderer
                                 {
                                     if (r != room && !room.Connections.Contains(r))
                                     {
-                                        r.IsAvailable = false;
+                                        r.SetAvailable(false);
                                     }
                                 }
                             }
 
                             // Update current room
                             var oldCurrentRoom = game.Layers[playerLayer][playerIndex];
-                            oldCurrentRoom.IsCurrent = false;
+                            oldCurrentRoom.SetCurrent(false);
                             
                             // Set new current room
-                            room.IsCurrent = true;
+                            room.SetCurrent(true);
                             playerLayer = layer;
                             playerIndex = i;
                             
@@ -2085,12 +2121,12 @@ public class GameRenderer
                     rewardCards.Clear();
                     // Update room states
                     var currentRoom = game.Layers[playerLayer][playerIndex];
-                    currentRoom.IsCleared = true;
-                    currentRoom.IsCurrent = false;
+                    currentRoom.SetCleared(true);
+                    currentRoom.SetCurrent(false);
                     
                     foreach (var nextRoom in currentRoom.Connections)
                     {
-                        nextRoom.IsAvailable = true;
+                        nextRoom.SetAvailable(true);
                     }
                     // Return to map selection
                     Program.currentScreen = Program.GameScreen.MapSelection;
@@ -2183,12 +2219,12 @@ public class GameRenderer
             rewardCards.Clear();
             // Update room states
             var currentRoom = game.Layers[playerLayer][playerIndex];
-            currentRoom.IsCleared = true;
-            currentRoom.IsCurrent = false;
+            currentRoom.SetCleared(true);
+            currentRoom.SetCurrent(false);
             
             foreach (var nextRoom in currentRoom.Connections)
             {
-                nextRoom.IsAvailable = true;
+                nextRoom.SetAvailable(true);
             }
             // Return to map selection
             Program.currentScreen = Program.GameScreen.MapSelection;

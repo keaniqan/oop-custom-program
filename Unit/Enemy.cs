@@ -17,13 +17,18 @@ public class Enemy: Unit
         // Initialize all possible effects with 0 stacks except for Buffer, Logos, Momentos, and Literas
         foreach (EffectType effectType in Enum.GetValues(typeof(EffectType)))
         {
-            if (effectType != EffectType.Buffer && 
-                effectType != EffectType.Logos && 
-                effectType != EffectType.Momentos && 
-                effectType != EffectType.Literas)
+            string description = effectType switch
             {
-                _effects.Add(new Effect(effectType, effectType.ToString(), 0, true));
-            }
+                EffectType.StrengthUp => "Increases attack by Strength.",
+                EffectType.DexterityUp => "Increases block by Dexterity.",
+                EffectType.Weak => "Deal 25% less attack damage.",
+                EffectType.Thorn => "Deals Thorn damage back when hit.",
+                EffectType.Frail => "Gain 25% less block from cards.",
+                EffectType.Vulnerable => "Receive 50% more damage from attacks.",
+                EffectType.Buffer => "Negate the next damage instance.",
+                _ => effectType.ToString()
+            };
+            _effects.Add(new Effect(effectType, description, 0, true));
         }
     }
     public Intent Intent

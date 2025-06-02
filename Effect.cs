@@ -39,4 +39,10 @@ public class Effect
         get { return _stack; }
         set { _stack = value; }
     }
+
+    public string EffectDescription
+    {
+        get { return _effectDescription; }
+        set { _effectDescription = value; }
+    }
 }

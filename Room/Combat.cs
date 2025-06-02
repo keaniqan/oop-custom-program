@@ -256,7 +256,9 @@ public class Combat: Room
         
         // Update game reference
         _game = GameRenderer.game;
-        
+        //Set the player effects to 0
+        _game.Player.Effects.ForEach(effect => effect.Stack = 0);
+
         // Reset turn count and energy first
         _turnCount = 0;
         _currentEnergy = _game?.Player?.MaxEnergy ?? 3;
