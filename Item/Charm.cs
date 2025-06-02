@@ -4,32 +4,17 @@ namespace MyApp;
 public class Charm: Item
 {
     private CharmType _charmType;
-    private int _charges;
-    private int _maxCharges;
+
 
     public Charm(string name, string description, CharmType charmType, List<ActionCommand> commands, int maxCharges, int price) : base(name, description, price, commands)
     {
         _charmType = charmType;
-        _maxCharges = maxCharges;
-        _charges = maxCharges;
     }
 
     public CharmType CharmType
     {
         get { return _charmType; }
         set { _charmType = value; }
-    }
-
-    public int Charges
-    {
-        get { return _charges; }
-        set { _charges = value; }
-    }
-
-    public int MaxCharges
-    {
-        get { return _maxCharges; }
-        set { _maxCharges = value; }
     }
 
     public void OnCardDraw(Player player)

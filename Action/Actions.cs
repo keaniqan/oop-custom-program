@@ -1,5 +1,10 @@
 using MyApp;
 
+public enum EffectTarget
+{
+    Player,
+    Enemy
+}
 public abstract class ActionCommand
 {
     public abstract void Execute(Player player, Enemy enemy, Game game);
@@ -16,7 +21,42 @@ public class AttackCommand : ActionCommand
 
     public override void Execute(Player player, Enemy enemy, Game game)
     {
-        enemy.TakeDamage(damage);
+        var bufferEffect = player.Effects.FirstOrDefault(e => e.EffectType == EffectType.Buffer);
+        if (bufferEffect != null && bufferEffect.Stacks > 0)
+        {
+            bufferEffect.Stacks--;
+        }
+        else
+        {
+            var strengthEffect = player.Effects.FirstOrDefault(e => e.EffectType == EffectType.StrengthUp);
+            if (strengthEffect != null && strengthEffect.Stacks > 0)
+                {
+                damage += strengthEffect.Stacks;
+                }
+                var weakEffect = enemy.Effects.FirstOrDefault(e => e.EffectType == EffectType.Weak);
+                if (weakEffect != null && weakEffect.Stacks > 0)
+                {
+                    damage = (int)(damage * 0.75);
+                }
+                var vulnerableEffect = enemy.Effects.FirstOrDefault(e => e.EffectType == EffectType.Vulnerable);
+                if (vulnerableEffect != null && vulnerableEffect.Stacks > 0)
+                {
+                    damage = (int)(damage * 1.5);
+                }
+                var thornEffect = enemy.Effects.FirstOrDefault(e => e.EffectType == EffectType.Thorn);
+                if (thornEffect != null && thornEffect.Stacks > 0)
+                {
+                player.TakeDamage(thornEffect.Stacks);
+            }
+            enemy.TakeDamage(damage);
+            if (enemy.Health <= 0)
+            {
+                if (game.CurrentRoom is Combat combatRoom)
+                {
+                    combatRoom.EndCombat();
+                }
+            }
+        }
     }
 }
 
@@ -31,6 +71,16 @@ public class BlockCommand : ActionCommand
 
     public override void Execute(Player player, Enemy enemy, Game game)
     {
+        var dexterityEffect = player.Effects.FirstOrDefault(e => e.EffectType == EffectType.DexterityUp);
+        if (dexterityEffect != null && dexterityEffect.Stacks > 0)
+        {
+            amount += dexterityEffect.Stacks;
+        }
+        var frailEffect = player.Effects.FirstOrDefault(e => e.EffectType == EffectType.Frail);
+        if (frailEffect != null && frailEffect.Stacks > 0)
+        {
+            amount = (int)(amount * 0.75);
+        }
         player.AddBlock(amount);
     }
 }
@@ -39,18 +89,27 @@ public class ApplyEffectCommand : ActionCommand
 {
     private EffectType effectType;
     private int stacks;
+    private EffectTarget target;
 
-    public ApplyEffectCommand(EffectType effectType, int stacks)
+    public ApplyEffectCommand(EffectType effectType, int stacks, EffectTarget target)
     {
         this.effectType = effectType;
         this.stacks = stacks;
+        this.target = target;
     }
 
     public override void Execute(Player player, Enemy enemy, Game game)
     {
-        enemy.AddEffectStack(effectType, stacks);
+        if (target == EffectTarget.Player)
+        {
+            player.AddEffectStack(effectType, stacks);
+        }
+        else if (target == EffectTarget.Enemy)
+        {
+            enemy.AddEffectStack(effectType, stacks);
+        }
     }
-}   
+}
 
 
 public class DrawCommand : ActionCommand
@@ -98,5 +157,20 @@ public class HealCommand : ActionCommand
     public override void Execute(Player player, Enemy enemy, Game game)
     {
         player.AddHealth(amount);
+    }
+}
+
+public class SelfDamageCommand : ActionCommand
+{
+    private int amount;
+
+    public SelfDamageCommand(int amount)
+    {
+        this.amount = amount;
+    }
+
+    public override void Execute(Player player, Enemy enemy, Game game)
+    {
+        player.TakeDamage(amount);
     }
 }

@@ -7,6 +7,8 @@ using Raylib_cs;
 namespace MyApp;
 public abstract class Unit
 {
+    private const int ScreenWidth = 1920;
+    private const int ScreenHeight = 1080;
     private string _name;
     private int _health;
     private int _maxHealth;
@@ -99,6 +101,8 @@ public abstract class Unit
         {
             _health = Math.Max(0, _health - damage);
         }
+
+        GameRenderer.CreateDamageNumber(damage, new Vector2(ScreenWidth - 600, ScreenHeight / 2 - 100));
     }
 
     public void AddEffectStack(EffectType effectType, int amount)

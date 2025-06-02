@@ -10,15 +10,11 @@ public class Card : Item
     private const int ScreenHeight = 1080;
     private CardLocation _cardLocation;
     private int _cardCost;
-    private AffinityType _cardAffinity;
-    private bool _isPower;
     private bool _justDrawn;
-    public Card(string name, string description, int price, List<ActionCommand> commands, CardLocation cardLocation, int cardCost, AffinityType cardAffinity, bool isPower) : base(name, description, price, commands)
+    public Card(string name, string description, int price, List<ActionCommand> commands, CardLocation cardLocation, int cardCost) : base(name, description, price, commands)
     {
         _cardLocation = cardLocation;
         _cardCost = cardCost;
-        _cardAffinity = cardAffinity;
-        _isPower = isPower;
         _justDrawn = false;
     }
 
@@ -33,16 +29,7 @@ public class Card : Item
         get { return _cardCost; }
         set { _cardCost = value; }
     }
-    public AffinityType CardAffinity
-    {
-        get { return _cardAffinity; }
-        set { _cardAffinity = value; }
-    }
-    public bool IsPower
-    {
-        get { return _isPower; }
-        set { _isPower = value; }
-    }
+    
     public bool JustDrawn
     {
         get { return _justDrawn; }
