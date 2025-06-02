@@ -24,7 +24,7 @@ public class Charm: Item
         {
             case CharmType.LuckyPen:
                 // 10% chance to draw an extra card
-                if (Random.Shared.NextDouble() < 0.5)
+                if (Random.Shared.NextDouble() < 0.03)
                 {
                     player.DrawCards(1);
                 }

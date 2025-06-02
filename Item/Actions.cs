@@ -13,47 +13,90 @@ public abstract class ActionCommand
 public class AttackCommand : ActionCommand
 {
     private int damage;
-
-    public AttackCommand(int damage)
+    private EffectTarget target;
+    public AttackCommand(int damage, EffectTarget target)
     {
         this.damage = damage;
+        this.target = target;
     }
 
     public override void Execute(Player player, Enemy enemy, Game game)
     {
-        var bufferEffect = player.Effects.FirstOrDefault(e => e.EffectType == EffectType.Buffer);
-        if (bufferEffect != null && bufferEffect.Stacks > 0)
+        if (target == EffectTarget.Player)
         {
+            var bufferEffect = player.Effects.FirstOrDefault(e => e.EffectType == EffectType.Buffer);
+            if (bufferEffect != null && bufferEffect.Stacks > 0)
+            {
             bufferEffect.Stacks--;
-        }
-        else
-        {
-            var strengthEffect = player.Effects.FirstOrDefault(e => e.EffectType == EffectType.StrengthUp);
+            }
+            else
+            {
+                var strengthEffect = player.Effects.FirstOrDefault(e => e.EffectType == EffectType.StrengthUp);
             if (strengthEffect != null && strengthEffect.Stacks > 0)
                 {
-                damage += strengthEffect.Stacks;
+                    damage = strengthEffect.ApplyStrength(damage);
                 }
                 var weakEffect = enemy.Effects.FirstOrDefault(e => e.EffectType == EffectType.Weak);
                 if (weakEffect != null && weakEffect.Stacks > 0)
                 {
-                    damage = (int)(damage * 0.75);
+                    damage = weakEffect.ApplyWeak(damage);
                 }
                 var vulnerableEffect = enemy.Effects.FirstOrDefault(e => e.EffectType == EffectType.Vulnerable);
                 if (vulnerableEffect != null && vulnerableEffect.Stacks > 0)
                 {
-                    damage = (int)(damage * 1.5);
+                    damage = vulnerableEffect.ApplyVulnerable(damage);
                 }
                 var thornEffect = enemy.Effects.FirstOrDefault(e => e.EffectType == EffectType.Thorn);
                 if (thornEffect != null && thornEffect.Stacks > 0)
                 {
-                player.TakeDamage(thornEffect.Stacks);
-            }
-            enemy.TakeDamage(damage);
-            if (enemy.Health <= 0)
-            {
-                if (game.CurrentRoom is Combat combatRoom)
+                    player.TakeDamage(thornEffect.Stacks);
+                }
+                player.TakeDamage(damage);
+                if (player.Health <= 0)
                 {
-                    combatRoom.EndCombat();
+                    if (game.CurrentRoom is Combat combatRoom)
+                    {
+                        combatRoom.EndCombat();
+                    }
+                }
+            }
+        }
+        else if (target == EffectTarget.Enemy)
+        {
+            var bufferEffect = player.Effects.FirstOrDefault(e => e.EffectType == EffectType.Buffer);
+            if (bufferEffect != null && bufferEffect.Stacks > 0)
+            {
+                bufferEffect.Stacks--;
+            }
+            else
+            {
+                var strengthEffect = enemy.Effects.FirstOrDefault(e => e.EffectType == EffectType.StrengthUp);
+                if (strengthEffect != null && strengthEffect.Stacks > 0)
+                {
+                    damage = strengthEffect.ApplyStrength(damage);
+                }
+                var weakEffect = player.Effects.FirstOrDefault(e => e.EffectType == EffectType.Weak);
+                if (weakEffect != null && weakEffect.Stacks > 0)
+                {
+                    damage = weakEffect.ApplyWeak(damage);
+                }
+                var vulnerableEffect = player.Effects.FirstOrDefault(e => e.EffectType == EffectType.Vulnerable);
+                if (vulnerableEffect != null && vulnerableEffect.Stacks > 0)
+                {
+                    damage = vulnerableEffect.ApplyVulnerable(damage);
+                }
+                var thornEffect = player.Effects.FirstOrDefault(e => e.EffectType == EffectType.Thorn);
+                if (thornEffect != null && thornEffect.Stacks > 0)
+                {
+                    player.TakeDamage(thornEffect.Stacks);
+                }
+                enemy.TakeDamage(damage);
+                if (enemy.Health <= 0)
+                {
+                    if (game.CurrentRoom is Combat combatRoom)
+                    {
+                        combatRoom.EndCombat();
+                    }
                 }
             }
         }
@@ -174,3 +217,4 @@ public class SelfDamageCommand : ActionCommand
         player.TakeDamage(amount);
     }
 }
+

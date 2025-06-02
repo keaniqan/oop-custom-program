@@ -45,4 +45,17 @@ public class Effect
         get { return _effectDescription; }
         set { _effectDescription = value; }
     }
+        
+    public int ApplyStrength(int damage)
+    {
+        return damage + _stack;
+    }
+    public int ApplyVulnerable(int damage)
+    {
+        return (int)(damage * 1.5);
+    }
+    public int ApplyWeak(int damage)
+    {
+        return (int)(damage * 0.75);
+    }
 }
