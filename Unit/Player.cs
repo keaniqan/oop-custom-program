@@ -106,9 +106,7 @@ public class Player: Unit
     public void RemoveGold(int gold){
         _gold -= gold;
     }
-    public void AddShopDiscount(double shopDiscount){
-        _shopDiscount += shopDiscount;
-    }
+
     public void PlayCard(Card card){
         if (GameRenderer.game?.Rooms?.Count > 0 && 
             GameRenderer.game.Rooms[0] is Combat combatRoom)
@@ -144,6 +142,12 @@ public class Player: Unit
             {
                 card.DrawCard(card);
                 cardsDrawn++;
+                
+                // Trigger charm effects for each card drawn
+                foreach (var charm in _charms)
+                {
+                    charm.OnCardDraw(this);
+                }
             }
             else
             {
@@ -175,6 +179,12 @@ public class Player: Unit
             {
                 _cards[i] = drawPile[drawPileIndex++];
             }
+        }
+
+        // Trigger charm effects for deck shuffle
+        foreach (var charm in _charms)
+        {
+            charm.OnDeckShuffle(this);
         }
     }
     public void EmptyDiscardPiletoDrawPile(){

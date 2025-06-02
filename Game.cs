@@ -209,9 +209,9 @@ public class Game
         // Uncommon Charms
         charmPool.Add(new Charm(
             "Study Timer",
-            "Every 3 turns, gain 1 energy",
+            "Start each combat with enemy 2 weak 2 vulnerable",
             CharmType.StudyTimer,
-            new List<Action> { new Action(ActionType.Energy, 1, null, true) },
+            new List<Action> { new Action(ActionType.Effect, 2, EffectType.Weak, true), new Action(ActionType.Effect, 2, EffectType.Vulnerable, true) },
             0,
             100
         ));
@@ -258,7 +258,7 @@ public class Game
 
         charmPool.Add(new Charm(
             "Study Group",
-            "Your first card each turn costs 0",
+            "Start Combat with 1 buffer",
             CharmType.StudyGroup,
             new List<Action> { new Action(ActionType.Effect, 1, EffectType.Buffer, true) },
             0,
@@ -267,9 +267,9 @@ public class Game
 
         charmPool.Add(new Charm(
             "All-Nighter",
-            "Start each combat with 2 extra energy",
+            "Gain 1 energy each turn",
             CharmType.AllNighter,
-            new List<Action> { new Action(ActionType.Energy, 2, null, true) },
+            new List<Action> { new Action(ActionType.Energy, 1, null, true) },
             0,
             100
         ));
@@ -278,7 +278,7 @@ public class Game
             "Genius Idea",
             "When you play a card, there's a 25% chance to play it again",
             CharmType.GeniusIdea,
-            new List<Action> { new Action(ActionType.Effect, 1, EffectType.Buffer, true) },
+            new List<Action> { new Action(ActionType.Effect, 0, EffectType.Buffer, true) },
             0,
             100
         ));

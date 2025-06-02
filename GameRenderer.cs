@@ -110,6 +110,8 @@ public class GameRenderer
     private static bool showEventRewardScreen = false;
     private static EventChoice lastEventChoice = null;
 
+    private static bool shopVisitedThisReward = false;
+
     public static void InitializeGame(Game gameInstance)
     {
         game = gameInstance;
@@ -267,50 +269,7 @@ public class GameRenderer
             Raylib.DrawLine(0, y, ScreenWidth, y, patternColor);
         }
 
-        // Draw charm icon in top left corner
-        const int charmIconSize = 100;
-        const int charmPadding = 20;
-        
-        // Draw the appropriate charm icon based on the player's charm
-        if (game?.Player?.Charms != null && game.Player.Charms.Count > 0)
-        {
-            var charm = game.Player.Charms[0]; // Get the first charm
-            
-            switch (charm.CharmType)
-            {
-                case CharmType.StudyGuide:
-                    Raylib.DrawTexturePro(
-                        studyGuideTexture,
-                        new Rectangle(0, 0, studyGuideTexture.Width, studyGuideTexture.Height),
-                        new Rectangle(charmPadding + 10, charmPadding + 60, charmIconSize - 10, charmIconSize - 10),
-                        new Vector2(0, 0),
-                        0,
-                        Color.White
-                    );
-                    break;
-                case CharmType.CoffeeMug:
-                    Raylib.DrawTexturePro(
-                        coffeeMugTexture,
-                        new Rectangle(0, 0, coffeeMugTexture.Width, coffeeMugTexture.Height),
-                        new Rectangle(charmPadding + 10, charmPadding + 60, charmIconSize - 10, charmIconSize - 10),
-                        new Vector2(0, 0),
-                        0,
-                        Color.White
-                    );
-                    break;
-                case CharmType.LuckyPen:
-                    Raylib.DrawTexturePro(
-                        luckyPenTexture,
-                        new Rectangle(0, 0, luckyPenTexture.Width, luckyPenTexture.Height),
-                        new Rectangle(charmPadding + 5, charmPadding + 60, charmIconSize - 10, charmIconSize - 10),
-                        new Vector2(0, 0),
-                        0,
-                        Color.White
-                    );
-                    break;
-            }
-        }
-        
+
         // Draw new tiled floor using tileTexture, transformed to 45-degree angle
         int tileW = tileTexture.Width;
         int tileH = tileTexture.Height;
@@ -551,6 +510,64 @@ public class GameRenderer
             DrawCard(i, cardsInHand.Count, card.Name, card.Description, card.CardCost);
         }
 
+        // Draw charm icon in top left corner
+        const int charmIconSize = 100;
+        const int charmPadding = 20;
+        int charmStartY = charmPadding + 60;
+        int charmSpacing = 10;
+        
+        // Draw all charm icons the player has with hover tooltip
+        if (game?.Player?.Charms != null && game.Player.Charms.Count > 0)
+        {
+            Vector2 mousePosition = Raylib.GetMousePosition();
+            string hoveredCharmDesc = null;
+            int hoveredX = 0, hoveredY = 0;
+            for (int i = 0; i < game.Player.Charms.Count; i++)
+            {
+                var charm = game.Player.Charms[i];
+                Texture2D charmTexture = GetCharmTexture(charm.CharmType);
+                int iconX = charmPadding + 10;
+                int iconY = charmStartY + i * (charmIconSize + charmSpacing);
+                Rectangle iconRect = new Rectangle(iconX, iconY, charmIconSize - 10, charmIconSize - 10);
+                // Check for hover
+                if (Raylib.CheckCollisionPointRec(mousePosition, iconRect))
+                {
+                    hoveredCharmDesc = charm.Description;
+                    hoveredX = iconX + (charmIconSize - 10) / 2;
+                    hoveredY = iconY;
+                }
+                Raylib.DrawTexturePro(
+                    charmTexture,
+                    new Rectangle(0, 0, charmTexture.Width, charmTexture.Height),
+                    iconRect,
+                    new Vector2(0, 0),
+                    0,
+                    Color.White
+                );
+            }
+            // Draw overlay if hovering a charm
+            if (!string.IsNullOrEmpty(hoveredCharmDesc))
+            {
+                int overlayWidth = 520;
+                int overlayHeight = 60;
+                int overlayX = hoveredX - overlayWidth / 2 + 250;
+                int overlayY = hoveredY + charmIconSize - 10 + 8;
+                Raylib.DrawRectangle(overlayX, overlayY, overlayWidth, overlayHeight, new Color(30, 30, 30, 220));
+                Raylib.DrawRectangleLines(overlayX, overlayY, overlayWidth, overlayHeight, Color.Gold);
+                Vector2 descSize = Raylib.MeasureTextEx(descriptionFont, hoveredCharmDesc, 18, 1);
+                Raylib.DrawTextPro(
+                    descriptionFont,
+                    hoveredCharmDesc,
+                    new Vector2(overlayX + (overlayWidth - descSize.X) / 2, overlayY + (overlayHeight - descSize.Y) / 2),
+                    new Vector2(0, 0),
+                    0,
+                    18,
+                    1,
+                    Color.White
+                );
+            }
+        }
+        
         // Handle map overlay toggle
         if (Raylib.IsKeyPressed(KeyboardKey.M))
         {
@@ -1561,7 +1578,7 @@ public class GameRenderer
         const int buttonY = ScreenHeight - buttonHeight - 400;
 
         // Check if mouse is hovering over button
-        Vector2 mousePos = Raylib.GetMousePosition();
+        Vector2 mousePos = Raylib.GetMousePosition() + new Vector2(0, -20);
         bool isHovering = mousePos.X >= buttonX && 
                          mousePos.X <= buttonX + buttonWidth &&
                          mousePos.Y >= buttonY - 30 && 
@@ -1616,7 +1633,7 @@ public class GameRenderer
                 game.Player.EndTurn();
                 combatRoom.StartEnemyTurn();
                 combatRoom.EndEnemyTurn();
-                combatRoom.CurrentEnergy = game.Player.MaxEnergy;
+                
             }
             catch (Exception e)
             {
@@ -1959,6 +1976,9 @@ public class GameRenderer
 
     public static void DrawRewardScreen()
     {
+        // Always reset shop access flag when entering reward screen
+        shopVisitedThisReward = false;
+
         Raylib.DrawRectangle(0, 0, ScreenWidth, ScreenHeight, new Color(0, 0, 0, 180));
 
         Raylib.DrawTexturePro(
@@ -2161,7 +2181,7 @@ public class GameRenderer
         bool isShopHovering = Raylib.CheckCollisionPointRec(mousePos, shopButtonRect);
 
         // Draw shop button
-        Color shopButtonColor = isShopHovering ? new Color(200, 200, 200, 255) : Color.White;
+        Color shopButtonColor = shopVisitedThisReward ? new Color(120, 120, 120, 180) : (isShopHovering ? new Color(200, 200, 200, 255) : Color.White);
         Raylib.DrawRectangleRec(shopButtonRect, shopButtonColor);
         Raylib.DrawRectangleLinesEx(shopButtonRect, 2, Color.Gray);
 
@@ -2173,13 +2193,14 @@ public class GameRenderer
             (int)(shopButtonRect.X + (shopButtonWidth - shopTextWidth) / 2),
             (int)(shopButtonRect.Y + (shopButtonHeight - 20) / 2),
             20,
-            Color.Black
+            shopVisitedThisReward ? Color.Gray : Color.Black
         );
 
         // Handle shop button click
-        if (isShopHovering && Raylib.IsMouseButtonPressed(MouseButton.Left))
+        if (!shopVisitedThisReward && isShopHovering && Raylib.IsMouseButtonPressed(MouseButton.Left))
         {
             Program.currentScreen = Program.GameScreen.Shop;
+            shopVisitedThisReward = true;
         }
 
         // Draw skip button
@@ -2916,12 +2937,11 @@ public class GameRenderer
 
             // Draw charm description (wrapped)
             string description = charms[i].Description;
-            int maxWidth = charmWidth - (padding * 2);
-            int lineHeight = 25;
-            int currentY = iconY + iconSize + 60;
-            
             string[] words = description.Split(' ');
             string currentLine = "";
+            int lineY = iconY + iconSize + 60;
+            int maxWidth = charmWidth - (padding * 2);
+            int lineHeight = 25;
             
             foreach (string word in words)
             {
@@ -2932,12 +2952,12 @@ public class GameRenderer
                 }
                 else
                 {
-                    Raylib.DrawText(currentLine, x + padding, currentY, 20, Color.Black);
-                    currentY += lineHeight;
+                    Raylib.DrawText(currentLine, x + padding, lineY, 20, Color.Black);
+                    lineY += lineHeight;
                     currentLine = word;
                 }
             }
-            Raylib.DrawText(currentLine, x + padding, currentY, 20, Color.Black);
+            Raylib.DrawText(currentLine, x + padding, lineY, 20, Color.Black);
 
             // Check for click
             if (isHovered && Raylib.IsMouseButtonPressed(MouseButton.Left))

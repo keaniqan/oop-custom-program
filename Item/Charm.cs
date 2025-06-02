@@ -1,7 +1,3 @@
-using System;
-using System.Numerics;
-using System.Collections.Generic;
-using Raylib_cs;
 #nullable disable
 namespace MyApp;
 
@@ -34,6 +30,61 @@ public class Charm: Item
     {
         get { return _maxCharges; }
         set { _maxCharges = value; }
+    }
+
+    public void OnCardDraw(Player player)
+    {
+        // Handle card draw triggers based on charm type
+        switch (_charmType)
+        {
+            case CharmType.LuckyPen:
+                // 10% chance to draw an extra card
+                if (Random.Shared.NextDouble() < 0.10)
+                {
+                    player.DrawCards(1);
+                }
+                break;
+            case CharmType.FlashCards:
+                // This is handled separately in the shuffle event
+                break;
+            // Add more card draw related charm effects here
+        }
+    }
+
+    public void OnDeckShuffle(Player player)
+    {
+        // Handle shuffle triggers based on charm type
+        if (_charmType == CharmType.FlashCards)
+        {
+            player.DrawCards(1);
+        }
+    }
+
+    public void OnCardPlayed(Player player, Card card)
+{
+    if (_charmType == CharmType.GeniusIdea)
+    {
+        if (Random.Shared.NextDouble() < 0.25)
+        {
+            // Play the card effect without triggering OnCardPlayed again
+                player.PlayCard(card);
+            }
+        }
+        if (_charmType == CharmType.StickyNotes)
+        {
+            player.AddBlock(1); // Actually give the player block
+        }
+    }
+
+    public void OnTurnStart(Player player)
+    {
+        if (_charmType == CharmType.AllNighter)
+        {
+            if (GameRenderer.game?.CurrentRoom is Combat combatRoom)
+            {
+                combatRoom.AddEnergy(1);
+            }
+        }
     }
 
     public void ExecuteActions(Player player)

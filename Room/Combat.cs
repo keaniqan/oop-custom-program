@@ -58,99 +58,7 @@ public class Combat: Room
         get { return _goldReward; }
         set { _goldReward = value; }
     }
-
-    // private int GetAttackValue()
-    // {
-    //     switch (_enemyType)
-    //     {
-    //         case EnemyType.Basic:
-    //             return _random.Next(5, 9); // 5-8 damage
-    //         case EnemyType.Elite:
-    //             return _random.Next(8, 13); // 8-12 damage
-    //         case EnemyType.Boss:
-    //             return _random.Next(12, 18); // 12-17 damage
-    //         default:
-    //             return 5;
-    //     }
-    // }
-
-    // private int GetBlockValue()
-    // {
-    //     switch (_enemyType)
-    //     {
-    //         case EnemyType.Basic:
-    //             return _random.Next(4, 7); // 4-6 block
-    //         case EnemyType.Elite:
-    //             return _random.Next(7, 11); // 7-10 block
-    //         case EnemyType.Boss:
-    //             return _random.Next(10, 15); // 10-14 block
-    //         default:
-    //             return 4;
-    //     }
-    // }
-
-    // private EffectType GetRandomEffectType()
-    // {
-    //     Array values = Enum.GetValues(typeof(EffectType));
-    //     return (EffectType)values.GetValue(_random.Next(values.Length));
-    // }
-
-    // public void SetEnemyIntent()
-    // {
-    //     // Pattern-based intents for different enemy types
-    //     switch (_enemyType)
-    //     {
-    //         case EnemyType.Basic:
-    //             // Basic enemies alternate between attack and block
-    //             bool shouldAttack = _turnCount % 2 == 1;
-    //             _enemy.Intent = new Intent
-    //             {
-    //                 _attack = shouldAttack,
-    //                 _block = !shouldAttack,
-    //                 _applyBuff = false,
-    //                 _debuff = false,
-    //                 _attackValue = shouldAttack ? GetAttackValue() : 0,
-    //                 _blockValue = !shouldAttack ? GetBlockValue() : 0
-    //             };
-    //             break;
-
-    //         case EnemyType.Elite:
-    //             // Elites follow a 3-turn pattern: Attack -> Block -> Buff
-    //             int pattern = _turnCount % 3;
-    //             _enemy.Intent = new Intent
-    //             {
-    //                 _attack = pattern == 0,
-    //                 _block = pattern == 1,
-    //                 _applyBuff = pattern == 2,
-    //                 _debuff = false,
-    //                 _attackValue = pattern == 0 ? GetAttackValue() : 0,
-    //                 _blockValue = pattern == 1 ? GetBlockValue() : 0,
-    //                 _buffType = pattern == 2 ? GetRandomEffectType() : EffectType.StrengthUp,
-    //                 _buffValue = pattern == 2 ? 2 : 0
-    //             };
-    //             break;
-
-    //         case EnemyType.Boss:
-    //             // Bosses follow a 4-turn pattern with increasing intensity
-    //             pattern = _turnCount % 4;
-    //             bool isIntenseTurn = _turnCount % 8 >= 4; // Every 4 turns, increase intensity
-    //             _enemy.Intent = new Intent
-    //             {
-    //                 _attack = pattern == 0,
-    //                 _block = pattern == 1,
-    //                 _applyBuff = pattern == 2,
-    //                 _debuff = pattern == 3,
-    //                 _attackValue = pattern == 0 ? GetAttackValue() + (isIntenseTurn ? 5 : 0) : 0,
-    //                 _blockValue = pattern == 1 ? GetBlockValue() + (isIntenseTurn ? 3 : 0) : 0,
-    //                 _buffType = pattern == 2 ? GetRandomEffectType() : EffectType.StrengthUp,
-    //                 _buffValue = pattern == 2 ? (isIntenseTurn ? 3 : 2) : 0,
-    //                 _debuffType = pattern == 3 ? GetRandomEffectType() : EffectType.Vulnerable,
-    //                 _debuffValue = pattern == 3 ? (isIntenseTurn ? 3 : 2) : 0
-    //             };
-    //             break;
-    //     }
-    // }
-
+    
     public void StartEnemyTurn()
     {
         _enemy.Block = 0;
@@ -199,6 +107,13 @@ public class Combat: Room
         _turnPhase = TurnPhase.PlayerStart;
         // Draw 5 cards at the start of player's turn
         _game.Player.DrawCards(5);
+
+        _currentEnergy = _game.Player.MaxEnergy;
+        // Trigger end of turn effects for charms
+        foreach (var charm in _game.Player.Charms)
+        {
+            charm.OnTurnStart(_game.Player);
+        }
     }
 
     public override void Reward()

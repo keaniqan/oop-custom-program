@@ -145,7 +145,7 @@ internal class Program
         var starterDeck = Game.CreateStarterDeck();
         
         // Create player
-        player = new Player("Player", 100, 100, 0, 3, new List<Effect>(), 100, new List<Charm>(), starterDeck, 0.0);
+        player = new Player("Player", 100, 100, 0, 3, new List<Effect>(), 1000, new List<Charm>(), starterDeck, 0.0);
         
         // Create game instance
         game = new Game(player);

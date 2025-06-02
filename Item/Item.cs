@@ -41,11 +41,4 @@ public abstract class Item
         get { return _actions; }
         set { _actions = value; }
     }
-    
-    public void BuyItem(){
-
-    }
-    public void SellItem(){
-
-    }
 }

@@ -51,6 +51,10 @@ public class Card : Item
     
     public void DealCard(Card card)
     {
+        foreach (var charm in GameRenderer.game.Player.Charms)
+        {
+            charm.OnCardPlayed(GameRenderer.game.Player, this);
+        }
         foreach (var action in card.Actions)
         {
             if (action.ActionType == ActionType.Draw)
