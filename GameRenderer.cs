@@ -1431,7 +1431,7 @@ public class GameRenderer
         // Draw each effect that has stacks
         foreach (var effect in unit.Effects)
         {
-            if (effect.Stack > 0)
+            if (effect.Stacks > 0)
             {
                 Texture2D effectTexture;
                 bool shouldDraw = true;
@@ -1487,7 +1487,7 @@ public class GameRenderer
                         Color.White
                     );
                     // Draw stack count
-                    string stackText = effect.Stack.ToString();
+                    string stackText = effect.Stacks.ToString();
                     Vector2 textSize = Raylib.MeasureTextEx(descriptionFont, stackText, 16, 1);
                     Raylib.DrawTextPro(
                         descriptionFont,

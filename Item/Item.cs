@@ -11,14 +11,14 @@ public abstract class Item
     private string _name;
     private string _description;
     private int _price;
-    private List<Action> _actions;
+    private List<ActionCommand> _commands;
 
-    public Item(string name, string description, int price, List<Action> actions)
+    public Item(string name, string description, int price, List<ActionCommand> commands)
     {
         _name = name;
         _description = description;
         _price = price;
-        _actions = actions;
+        _commands = commands;
     }
 
     public string Name
@@ -36,9 +36,9 @@ public abstract class Item
         get { return _price; }
         set { _price = value; }
     }
-    public List<Action> Actions
+    public List<ActionCommand> Commands
     {
-        get { return _actions; }
-        set { _actions = value; }
+        get { return _commands; }
+        set { _commands = value; }
     }
 }

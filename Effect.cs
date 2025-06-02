@@ -34,7 +34,7 @@ public class Effect
         set { _effectType = value; }
     }
 
-    public int Stack
+    public int Stacks
     {
         get { return _stack; }
         set { _stack = value; }

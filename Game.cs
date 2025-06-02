@@ -59,17 +59,17 @@ public class Game
 
         return new List<Card>
         {
-            new Card("Study", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),
-            new Card("Study", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),
-            new Card("Study", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),
-            new Card("Study", "Deal 6 damage.", 1, new List<Action> { strikeAction }, CardLocation.DrawPile, 1, AffinityType.None, false),
-            new Card("Memory", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
-            new Card("Memory", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
-            new Card("Memory", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
-            new Card("Memory", "Gain 5 block.", 1, new List<Action> {defendAction}, CardLocation.DrawPile, 1, AffinityType.None, false),
-            new Card("Unthinking", "Apply 2 Weak.", 80, new List<Action> {addWeak, addWeak}, CardLocation.DrawPile, 1, AffinityType.None, false),
-            new Card("New Lesson", "Gain 1 Strength.", 82, new List<Action> {addStrength}, CardLocation.DrawPile, 1, AffinityType.None, false),
-            new Card("Crit Thinking", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<Action> {bashAttack, addVulnerable, addVulnerable}, CardLocation.DrawPile, 2, AffinityType.None, false),     
+            new Card("Study", "Deal 6 damage.", 1, new List<ActionCommand> { new AttackCommand(6) }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Study", "Deal 6 damage.", 1, new List<ActionCommand> { new AttackCommand(6) }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Study", "Deal 6 damage.", 1, new List<ActionCommand> { new AttackCommand(6) }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Study", "Deal 6 damage.", 1, new List<ActionCommand> { new AttackCommand(6) }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Memory", "Gain 5 block.", 1, new List<ActionCommand> { new BlockCommand(5) }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Memory", "Gain 5 block.", 1, new List<ActionCommand> { new BlockCommand(5) }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Memory", "Gain 5 block.", 1, new List<ActionCommand> { new BlockCommand(5) }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Memory", "Gain 5 block.", 1, new List<ActionCommand> { new BlockCommand(5) }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Unthinking", "Apply 2 Weak.", 80, new List<ActionCommand> { new ApplyEffectCommand(EffectType.Weak, 2) }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("New Lesson", "Gain 1 Strength.", 82, new List<ActionCommand> {new ApplyEffectCommand(EffectType.StrengthUp, 1)}, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Crit Thinking", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<ActionCommand> {new AttackCommand(8), new ApplyEffectCommand(EffectType.Vulnerable, 2), new ApplyEffectCommand(EffectType.Vulnerable, 2)}, CardLocation.DrawPile, 2, AffinityType.None, false),     
         };
     }
 
@@ -91,26 +91,26 @@ public class Game
         return new List<Card>
         {
             // Attack Cards
-            new Card("Quick Study", "Deal 6 damage. Draw 1 card.", 70, new List<Action> { strikeAction, drawCards }, CardLocation.DrawPile, 1, AffinityType.None, false),
-            new Card("Deep Analysis", "Deal 8 damage. Apply 2 Vulnerable.", 70, new List<Action> { bashAttack, addVulnerable, addVulnerable }, CardLocation.DrawPile, 2, AffinityType.None, false),
-            new Card("Critical Review", "Deal 12 damage. Apply 1 Weak.", 85, new List<Action> { new Action(ActionType.Attack, 12, null, false), addWeak }, CardLocation.DrawPile, 2, AffinityType.None, false),
-            new Card("Unthinking", "Apply 2 Weak.", 80, new List<Action> {addWeak, addWeak}, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Quick Study", "Deal 6 damage. Draw 1 card.", 70, new List<ActionCommand> { new AttackCommand(6), new DrawCommand(1) }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Deep Analysis", "Deal 8 damage. Apply 2 Vulnerable.", 70, new List<ActionCommand> { new AttackCommand(8), new ApplyEffectCommand(EffectType.Vulnerable, 2), new ApplyEffectCommand(EffectType.Vulnerable, 2) }, CardLocation.DrawPile, 2, AffinityType.None, false),
+            new Card("Critical Review", "Deal 12 damage. Apply 1 Weak.", 85, new List<ActionCommand> { new AttackCommand(12), new ApplyEffectCommand(EffectType.Weak, 1) }, CardLocation.DrawPile, 2, AffinityType.None, false),
+            new Card("Unthinking", "Apply 2 Weak.", 80, new List<ActionCommand> {new ApplyEffectCommand(EffectType.Weak, 2), new ApplyEffectCommand(EffectType.Weak, 2)}, CardLocation.DrawPile, 1, AffinityType.None, false),
 
             // Defense Cards
-            new Card("Mental Block", "Gain 7 block. Gain 1 Dexterity.", 90, new List<Action> { new Action(ActionType.Block, 7, null, true), addDexterity }, CardLocation.DrawPile, 1, AffinityType.None, false),
-            new Card("Study Break", "Gain 8 block. Draw 1 card.", 90, new List<Action> { new Action(ActionType.Block, 8, null, true), drawCards }, CardLocation.DrawPile, 1, AffinityType.None, false),
-            new Card("Last Minute Cram", "Gain 12 block. Gain 1 Frail.", 77, new List<Action> { new Action(ActionType.Block, 12, null, true), new Action(ActionType.Effect, 1, EffectType.Frail, true) }, CardLocation.DrawPile, 2, AffinityType.None, false),
+            new Card("Mental Block", "Gain 7 block. Gain 1 Dexterity.", 90, new List<ActionCommand> { new BlockCommand(7), new ApplyEffectCommand(EffectType.DexterityUp, 1) }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Study Break", "Gain 8 block. Draw 1 card.", 90, new List<ActionCommand> { new BlockCommand(8), new DrawCommand(1) }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Last Minute Cram", "Gain 12 block. Gain 1 Frail.", 77, new List<ActionCommand> { new BlockCommand(12), new ApplyEffectCommand(EffectType.Frail, 1) }, CardLocation.DrawPile, 2, AffinityType.None, false),
             
             // Power Cards
-            new Card("Study Group", "Gain 1 Strength. Draw 1 card.", 71, new List<Action> { addStrength, drawCards }, CardLocation.DrawPile, 1, AffinityType.None, true),
-            new Card("Coffee Break", "Gain 1 Energy. Draw 1 card.", 100, new List<Action> { gainEnergy, drawCards }, CardLocation.DrawPile, 0, AffinityType.None, true),
-            new Card("All-Nighter", "Gain 2 Strength. Gain 2 Dexterity.", 82, new List<Action> { addStrength, addStrength, addDexterity, addDexterity }, CardLocation.DrawPile, 2, AffinityType.None, true),
-            new Card("New Lesson", "Gain 1 Strength.", 82, new List<Action> {addStrength}, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Study Group", "Gain 1 Strength. Draw 1 card.", 71, new List<ActionCommand> { new ApplyEffectCommand(EffectType.StrengthUp, 1), new DrawCommand(1) }, CardLocation.DrawPile, 1, AffinityType.None, true),
+            new Card("Coffee Break", "Gain 1 Energy. Draw 1 card.", 100, new List<ActionCommand> { new GainEnergyCommand(1), new DrawCommand(1) }, CardLocation.DrawPile, 0, AffinityType.None, true),
+            new Card("All-Nighter", "Gain 2 Strength. Gain 2 Dexterity.", 82, new List<ActionCommand> { new ApplyEffectCommand(EffectType.StrengthUp, 2), new ApplyEffectCommand(EffectType.StrengthUp, 2), new ApplyEffectCommand(EffectType.DexterityUp, 2), new ApplyEffectCommand(EffectType.DexterityUp, 2) }, CardLocation.DrawPile, 2, AffinityType.None, true),
+            new Card("New Lesson", "Gain 1 Strength.", 82, new List<ActionCommand> {new ApplyEffectCommand(EffectType.StrengthUp, 1)}, CardLocation.DrawPile, 1, AffinityType.None, false),
 
             // Utility Cards
-            new Card("Power Nap", "Heal 4 HP. Gain 1 Energy.", 104, new List<Action> { healAction, gainEnergy }, CardLocation.DrawPile, 1, AffinityType.None, false),
-            new Card("Study Guide", "Draw 2 cards. Gain 1 Energy.", 80, new List<Action> { drawCards, gainEnergy }, CardLocation.DrawPile, 1, AffinityType.None, false),
-            new Card("Defend Notes", "Gain 5 block. Gain 1 Thorn.", 91, new List<Action> { defendAction, addThorn }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Power Nap", "Heal 4 HP. Gain 1 Energy.", 104, new List<ActionCommand> { new HealCommand(4), new GainEnergyCommand(1) }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Study Guide", "Draw 2 cards. Gain 1 Energy.", 80, new List<ActionCommand> { new DrawCommand(2), new GainEnergyCommand(1) }, CardLocation.DrawPile, 1, AffinityType.None, false),
+            new Card("Defend Notes", "Gain 5 block. Gain 1 Thorn.", 91, new List<ActionCommand> { new BlockCommand(5), new ApplyEffectCommand(EffectType.Thorn, 1) }, CardLocation.DrawPile, 1, AffinityType.None, false),
         };
     }
 
@@ -140,7 +140,7 @@ public class Game
                     "Study Guide",
                     "Start each combat with 1 extra energy",
                     CharmType.StudyGuide,
-                    new List<Action> { new Action(ActionType.Energy, 1, null, true) },
+                    new List<ActionCommand> { new GainEnergyCommand(1) },
                     0,
                     100
                 );
@@ -149,7 +149,7 @@ public class Game
                     "Coffee Mug",
                     "Start each combat with 1 extra card draw",
                     CharmType.CoffeeMug,
-                    new List<Action> { new Action(ActionType.Draw, 1, null, true) },
+                    new List<ActionCommand> { new DrawCommand(1) },
                     0,
                     100
                 );
@@ -158,7 +158,7 @@ public class Game
                     "Lucky Pen",
                     "10% chance to draw an extra card when you draw cards",
                     CharmType.LuckyPen,
-                    new List<Action> { new Action(ActionType.Draw, 1, null, true) },
+                    new List<ActionCommand> { new DrawCommand(1) },
                     0,
                     100
                 );
@@ -167,7 +167,7 @@ public class Game
                     "Study Guide",
                     "Start each combat with 1 extra energy",
                     CharmType.StudyGuide,
-                    new List<Action> { new Action(ActionType.Energy, 1, null, true) },
+                    new List<ActionCommand> { new GainEnergyCommand(1) },
                     0,
                     100
                 );
@@ -183,7 +183,7 @@ public class Game
             "Bookmark",
             "Draw 1 extra card at the start of your turn",
             CharmType.Bookmark,
-            new List<Action> { new Action(ActionType.Draw, 1, null, true) },
+            new List<ActionCommand> { new DrawCommand(1) },
             0,
             100
         ));
@@ -192,7 +192,7 @@ public class Game
             "Highlighter",
             "Cards that cost 0 deal 2 more damage",
             CharmType.Highlighter,
-            new List<Action> { new Action(ActionType.Effect, 2, EffectType.StrengthUp, true) },
+            new List<ActionCommand> { new ApplyEffectCommand(EffectType.StrengthUp, 2) },
             0,
             100
         ));
@@ -201,7 +201,7 @@ public class Game
             "Sticky Notes",
             "When you play a card, gain 1 block",
             CharmType.StickyNotes,
-            new List<Action> { new Action(ActionType.Block, 1, null, true) },
+            new List<ActionCommand> { new BlockCommand(1) },
             0,
             100
         ));
@@ -211,7 +211,7 @@ public class Game
             "Study Timer",
             "Start each combat with enemy 2 weak 2 vulnerable",
             CharmType.StudyTimer,
-            new List<Action> { new Action(ActionType.Effect, 2, EffectType.Weak, true), new Action(ActionType.Effect, 2, EffectType.Vulnerable, true) },
+            new List<ActionCommand> { new ApplyEffectCommand(EffectType.Weak, 2), new ApplyEffectCommand(EffectType.Vulnerable, 2) },
             0,
             100
         ));
@@ -220,7 +220,7 @@ public class Game
             "Flash Cards",
             "When you shuffle your draw pile, draw 1 card",
             CharmType.FlashCards,
-            new List<Action> { new Action(ActionType.Draw, 1, null, true) },
+            new List<ActionCommand> { new DrawCommand(1) },
             0,
             100
         ));
@@ -229,7 +229,7 @@ public class Game
             "Text Book",
             "Start each combat with 2 Strength",
             CharmType.TextBook,
-            new List<Action> { new Action(ActionType.Effect, 2, EffectType.StrengthUp, true) },
+            new List<ActionCommand> { new ApplyEffectCommand(EffectType.StrengthUp, 2) },
             0,
             100
         ));
@@ -238,7 +238,7 @@ public class Game
             "Notebook",
             "Start each combat with 2 Dexterity",
             CharmType.Notebook,
-            new List<Action> { new Action(ActionType.Effect, 2, EffectType.DexterityUp, true) },
+            new List<ActionCommand> { new ApplyEffectCommand(EffectType.DexterityUp, 2) },
             0,
             100
         ));
@@ -248,9 +248,9 @@ public class Game
             "Smart Watch",
             "At the start of your turn, gain 1 energy and draw 1 card",
             CharmType.SmartWatch,
-            new List<Action> { 
-                new Action(ActionType.Energy, 1, null, true),
-                new Action(ActionType.Draw, 1, null, true)
+            new List<ActionCommand> { 
+                new GainEnergyCommand(1),
+                new DrawCommand(1)
             },
             0,
             100
@@ -260,7 +260,7 @@ public class Game
             "Study Group",
             "Start Combat with 1 buffer",
             CharmType.StudyGroup,
-            new List<Action> { new Action(ActionType.Effect, 1, EffectType.Buffer, true) },
+            new List<ActionCommand> { new ApplyEffectCommand(EffectType.Buffer, 1) },
             0,
             100
         ));
@@ -269,7 +269,7 @@ public class Game
             "All-Nighter",
             "Gain 1 energy each turn",
             CharmType.AllNighter,
-            new List<Action> { new Action(ActionType.Energy, 1, null, true) },
+            new List<ActionCommand> { new GainEnergyCommand(1) },
             0,
             100
         ));
@@ -278,7 +278,7 @@ public class Game
             "Genius Idea",
             "When you play a card, there's a 25% chance to play it again",
             CharmType.GeniusIdea,
-            new List<Action> { new Action(ActionType.Effect, 0, EffectType.Buffer, true) },
+            new List<ActionCommand> { new ApplyEffectCommand(EffectType.Buffer, 0) },
             0,
             100
         ));

@@ -73,6 +73,12 @@ public abstract class Unit
     }
     public virtual void TakeDamage(int damage)
     {
+        // Check Vulnerable
+        var vulnerable = _effects.FirstOrDefault(e => e.EffectType == EffectType.Vulnerable);
+        if (vulnerable != null && vulnerable.Stacks > 0)
+        {
+            damage += vulnerable.Stacks;
+        }
         // First reduce damage by block
         if (_block > 0)
         {
@@ -100,7 +106,7 @@ public abstract class Unit
         var effect = _effects.FirstOrDefault(e => e.EffectType == effectType);
         if (effect != null)
         {
-            effect.Stack += amount;
+            effect.Stacks += amount;
         }
     }
 

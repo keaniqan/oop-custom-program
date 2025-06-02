@@ -162,21 +162,21 @@ public class Enemy: Unit
     {
         // Reduce stacks of vulnerable, frail, and weak effects by one
         var vulnerableEffect = _effects.FirstOrDefault(e => e.EffectType == EffectType.Vulnerable);
-        if (vulnerableEffect != null && vulnerableEffect.Stack > 0)
+        if (vulnerableEffect != null && vulnerableEffect.Stacks > 0)
         {
-            vulnerableEffect.Stack--;
+            vulnerableEffect.Stacks--;
         }
 
         var frailEffect = _effects.FirstOrDefault(e => e.EffectType == EffectType.Frail);
-        if (frailEffect != null && frailEffect.Stack > 0)
+        if (frailEffect != null && frailEffect.Stacks > 0)
         {
-            frailEffect.Stack--;
+            frailEffect.Stacks--;
         }
 
         var weakEffect = _effects.FirstOrDefault(e => e.EffectType == EffectType.Weak);
-        if (weakEffect != null && weakEffect.Stack > 0)
+        if (weakEffect != null && weakEffect.Stacks > 0)
         {
-            weakEffect.Stack--;
+            weakEffect.Stacks--;
         }
     }
 }

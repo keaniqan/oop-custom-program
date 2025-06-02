@@ -7,7 +7,7 @@ public class Charm: Item
     private int _charges;
     private int _maxCharges;
 
-    public Charm(string name, string description, CharmType charmType, List<Action> actions, int maxCharges, int price) : base(name, description, price, actions)
+    public Charm(string name, string description, CharmType charmType, List<ActionCommand> commands, int maxCharges, int price) : base(name, description, price, commands)
     {
         _charmType = charmType;
         _maxCharges = maxCharges;
@@ -89,23 +89,9 @@ public class Charm: Item
 
     public void ExecuteActions(Player player)
     {
-        foreach (var action in Actions)
+        foreach (var command in Commands)
         {
-            if (action.ActionType == ActionType.Draw)
-            {
-                player.DrawCards(action.Value);
-            }
-            else if (action.ActionType == ActionType.Energy)
-            {
-                if (GameRenderer.game?.CurrentRoom is Combat combatRoom)
-                {
-                    combatRoom.AddEnergy(action.Value);
-                }
-            }
-            else if (action.ActionType == ActionType.Effect)
-            {
-                player.AddEffect(new Effect(action.EffectType.Value, action.EffectType.ToString(), action.Value, true));
-            }
+            command.Execute(player, GameRenderer.game.CurrentRoom is Combat combatRoom ? combatRoom.Enemy : null, GameRenderer.game);
         }
     }
 }
