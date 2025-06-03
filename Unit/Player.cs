@@ -111,9 +111,9 @@ public class Player: Unit
         if (GameRenderer.game?.Rooms?.Count > 0 && 
             GameRenderer.game.Rooms[0] is Combat combatRoom)
         {
-            if (combatRoom.CurrentEnergy >= card.CardCost)
+            if (combatRoom.CheckCurrentEnergy(card.CardCost))
             {
-                combatRoom.CurrentEnergy -= card.CardCost;
+                combatRoom.DeductEnergy(card.CardCost);
                 card.DealCard(card);
                 card.DiscardCard(card);
             }

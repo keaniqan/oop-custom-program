@@ -53,25 +53,9 @@ public abstract class Unit
     {
         _block += block;
     }
-    public void RemoveBlock(int block)
-    {
-        _block -= block;
-    }
     public void AddHealth(int health)
     {
         _health += health;
-    }
-    public void RemoveHealth(int health)
-    {
-        _health -= health;
-    }
-    public void IncreaseEffect(Effect effect)
-    {
-        effect.IncreaseEffect(this);
-    }
-    public void DecreaseEffect(Effect effect)
-    {
-        effect.DecreaseEffect(this);
     }
     public virtual void TakeDamage(int damage)
     {

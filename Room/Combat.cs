@@ -7,10 +7,7 @@ namespace MyApp;
 
 public class Combat: Room
 {
-    private const int ScreenWidth = 1920;
-    private const int ScreenHeight = 1080;
     private Enemy _enemy;
-    private EnemyType _enemyType;
     private TurnPhase _turnPhase;
     private int _currentEnergy;
     private Random _random;
@@ -21,7 +18,6 @@ public class Combat: Room
     public Combat(bool isCleared, bool isAvailable, bool isCurrent, Enemy enemy, EnemyType enemyType, TurnPhase turnPhase, int currentEnergy) : base(isCleared, isAvailable, isCurrent)
     {
         _enemy = enemy;
-        _enemyType = enemyType;
         _turnPhase = turnPhase;
         _currentEnergy = currentEnergy;
         _random = new Random();
@@ -95,6 +91,22 @@ public class Combat: Room
         }
     }
 
+    public bool CheckCurrentEnergy(int cardCost)
+    {
+        if (_currentEnergy >= cardCost)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public void DeductEnergy(int cardCost)
+    {
+        _currentEnergy -= cardCost;
+    }
     public override void Reward()
     {
         if (_enemy.EnemyType == EnemyType.Basic)

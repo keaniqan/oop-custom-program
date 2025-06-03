@@ -39,8 +39,8 @@ public class Charm: Item
 
 
     public void OnCardPlayed(Player player, Card card)
-{
-    if (_charmType == CharmType.GeniusIdea)
+    {
+        if (_charmType == CharmType.GeniusIdea)
         {
             if (Random.Shared.NextDouble() < 0.15)
             {

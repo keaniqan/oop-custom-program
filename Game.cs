@@ -114,7 +114,7 @@ public class Game
         };
     }
 
-    public static List<Card> GenerateRewardCards()
+    public List<Card> GenerateRewardCards()
     {
         var rewardPool = CreateRewardCardPool();
         var random = new Random();
@@ -131,7 +131,7 @@ public class Game
         return selectedCards;
     }
 
-    public static Charm CreateStarterCharm(int index)
+    public Charm CreateStarterCharm(int index)
     {
         switch (index)
         {
@@ -268,7 +268,7 @@ public class Game
         return charmPool;
     }
 
-    public static List<Charm> GenerateShopCharms()
+    public List<Charm> GenerateShopCharms()
     {
         var charmPool = CreateShopCharmPool();
         var random = new Random();
@@ -333,7 +333,7 @@ public class Game
                 "The library has a special collection of study materials.",
                 new List<EventChoice>
                 {
-                    new EventChoice("Study intensively", 0, -10, Game.CreateStarterDeck()[0], null),
+                    new EventChoice("Study intensively", 0, -10, CreateStarterDeck()[0], null),
                     new EventChoice("Take a quick look", 25, 0, null, null)
                 }
             ),
@@ -342,7 +342,7 @@ public class Game
                 "Your professor is holding office hours.",
                 new List<EventChoice>
                 {
-                    new EventChoice("Ask for help", 0, 0, null, Game.CreateStarterCharm(0)),
+                    new EventChoice("Ask for help", 0, 0, null, CreateStarterCharm(0)),
                     new EventChoice("Skip it", 25, 0, null, null)
                 }
             )

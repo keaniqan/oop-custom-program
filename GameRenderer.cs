@@ -2012,7 +2012,7 @@ public class GameRenderer
         // Generate reward cards if not already done
         if (!rewardCardsGenerated)
         {
-            rewardCards = Game.GenerateRewardCards();
+            rewardCards = game.GenerateRewardCards();
             rewardCardsGenerated = true;
         }
 
@@ -2298,8 +2298,8 @@ public class GameRenderer
         // Generate shop items if not already done
         if (!shopCardsGenerated)
         {
-            shopCards = Game.GenerateRewardCards();
-            shopCharms = Game.GenerateShopCharms();
+            shopCards = game.GenerateRewardCards();
+            shopCharms = game.GenerateShopCharms();
             shopCardsGenerated = true;
         }
 

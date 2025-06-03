@@ -61,7 +61,7 @@ internal class Program
                     if (selectedCharm != -1)
                     {
                         // Add the selected charm to the player
-                        var charm = Game.CreateStarterCharm(selectedCharm);
+                        var charm = game.CreateStarterCharm(selectedCharm);
                         player.AddCharm(charm);
                         currentScreen = GameScreen.MapSelection;
                     }

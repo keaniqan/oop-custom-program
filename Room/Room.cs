@@ -93,7 +93,7 @@ public abstract class Room
         _isCurrent = true;
     }
     
-    protected Game GetGame()
+    public Game GetGame()
     {
         return GameRenderer.game;
     }
