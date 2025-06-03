@@ -6,7 +6,6 @@ namespace MyApp;
 public class Enemy: Unit
 {
     private Intent _intent;
-    private AffinityType _affinityType;
     private EnemyType _enemyType;
     private int _textureIndex;
     private Random _random;
@@ -36,11 +35,6 @@ public class Enemy: Unit
     {
         get { return _intent; }
         set { _intent = value; }
-    }
-    public AffinityType AffinityType
-    {
-        get { return _affinityType; }
-        set { _affinityType = value; }
     }
     public EnemyType EnemyType
     {
@@ -90,7 +84,7 @@ public class Enemy: Unit
         }
         this.AddBlock(block);
     }
-        private int GetAttackValue()
+    public int GetAttackValue()
     {
         switch (_enemyType)
         {
@@ -105,7 +99,7 @@ public class Enemy: Unit
         }
     }
 
-    private int GetBlockValue()
+    public int GetBlockValue()
     {
         switch (_enemyType)
         {

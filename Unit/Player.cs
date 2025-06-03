@@ -12,7 +12,6 @@ public class Player: Unit
     private int _gold;
     private List<Charm> _charms;
     private List<Card> _cards;
-    private double _shopDiscount;
 
 
     public Player(string name, int health, int maxHealth, int block, int maxEnergy, List<Effect> effects, int gold, List<Charm> charms, List<Card> cards, double shopDiscount) : base(name, health, maxHealth, block, effects)
@@ -21,7 +20,6 @@ public class Player: Unit
         _gold = gold;
         _charms = charms;
         _cards = cards;
-        _shopDiscount = shopDiscount;
 
         // Initialize all possible effects with 0 stacks
         foreach (EffectType effectType in Enum.GetValues(typeof(EffectType)))
@@ -48,8 +46,6 @@ public class Player: Unit
         Console.WriteLine($"Block: {Block}");
         Console.WriteLine($"Max Energy: {_maxEnergy}");
         Console.WriteLine($"Gold: {_gold}");
-        Console.WriteLine($"Shop Discount: {_shopDiscount:P}");
-        
         Console.WriteLine("\nEffects:");
         Console.WriteLine("--------");
         foreach (var effect in Effects)
@@ -114,15 +110,15 @@ public class Player: Unit
             if (combatRoom.CheckCurrentEnergy(card.CardCost))
             {
                 combatRoom.DeductEnergy(card.CardCost);
-                card.DealCard(card);
-                card.DiscardCard(card);
+                card.DealCard();
+                card.DiscardCard();
             }
         }
     }
     public void DiscardHand(){
         foreach (var card in _cards){
             if (card.CardLocation == CardLocation.Hand){
-                card.DiscardCard(card);
+                card.DiscardCard();
             }
         }
     }
@@ -140,7 +136,7 @@ public class Player: Unit
             var card = _cards.FirstOrDefault(c => c.CardLocation == CardLocation.DrawPile);
             if (card != null)
             {
-                card.DrawCard(card);
+                card.DrawCard();
                 cardsDrawn++;
                 
                 // Trigger charm effects for each card drawn
@@ -190,59 +186,6 @@ public class Player: Unit
         }
     }
 
-    public void RemoveCharm(Charm charm)
-    {
-        _charms.Remove(charm);
-    }
-
-    // public void TriggerStartOfCombat()
-    // {
-    //     foreach (var charm in _charms)
-    //     {
-    //         charm.ExecuteActions(this);
-    //     }
-    // }
-
-    // public void TriggerEndOfTurn()
-    // {
-    //     foreach (var charm in _charms)
-    //     {
-    //         charm.ExecuteActions(this);
-    //     }
-    // }
-
-    // public void TriggerCardPlayed(Card card)
-    // {
-    //     foreach (var charm in _charms)
-    //     {
-    //         charm.ExecuteActions(this);
-    //     }
-    // }
-
-    // public void TriggerDamageTaken(int damage)
-    // {
-    //     foreach (var charm in _charms)
-    //     {
-    //         charm.ExecuteActions(this);
-    //     }
-    // }
-
-    // public void TriggerEnemyDamaged(Enemy enemy, int damage)
-    // {
-    //     foreach (var charm in _charms)
-    //     {
-    //         charm.ExecuteActions(this);
-    //     }
-    // }
-
-    // public void TriggerBlockGained(int block)
-    // {
-    //     foreach (var charm in _charms)
-    //     {
-    //         charm.ExecuteActions(this);
-    //     }
-    // }
-    
 
     public override void EndTurn(){  
         DiscardHand();
@@ -273,10 +216,6 @@ public class Player: Unit
         set { _maxEnergy = value; }
     }
 
-    public void AddEffect(Effect effect)
-    {
-        _effects.Add(effect);
-    }
     
     public override void TakeDamage(int damage)
     {

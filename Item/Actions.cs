@@ -1,10 +1,6 @@
 using MyApp;
 
-public enum EffectTarget
-{
-    Player,
-    Enemy
-}
+
 public abstract class ActionCommand
 {
     public abstract void Execute(Player player, Enemy enemy, Game game);

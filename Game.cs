@@ -48,15 +48,6 @@ public class Game
 
     public static List<Card> CreateStarterDeck()
     {
-        Action strikeAction = new(ActionType.Attack, 30, null, false);
-        Action bashAttack = new(ActionType.Attack, 8, null, false);
-        Action addVulnerable = new(ActionType.Effect, 1, EffectType.Vulnerable, false);
-        Action addWeak = new(ActionType.Effect, 1, EffectType.Weak, false);
-        Action drawCards = new(ActionType.Draw, 2, null, true);
-        Action gainEnergy = new(ActionType.Energy, 1, null, true);
-        Action defendAction = new(ActionType.Block, 5, null, true);
-        Action addStrength = new(ActionType.Effect, 1, EffectType.StrengthUp, true);
-
         return new List<Card>
         {
             new Card("Study", "Deal 6 damage.", 1, new List<ActionCommand> { new AttackCommand(6, EffectTarget.Enemy) }, CardLocation.DrawPile, 1),
@@ -406,87 +397,6 @@ public class Game
 
         // Set the rooms in the game's map
         _rooms = rooms;
-    }
-
-    private abstract class RoomTemplate
-    {
-        public abstract Room CreateRoom();
-    }
-
-    private class EnemyRoomTemplate : RoomTemplate
-    {
-        private EnemyTemplate _enemyTemplate;
-
-        public EnemyRoomTemplate(EnemyTemplate enemyTemplate)
-        {
-            _enemyTemplate = enemyTemplate;
-        }
-
-        public override Room CreateRoom()
-        {
-            return new Combat(false, true, true, _enemyTemplate.CreateEnemy(), _enemyTemplate.Type, TurnPhase.PlayerStart, 3);
-        }
-    }
-
-    private class EventRoomTemplate : RoomTemplate
-    {
-        private EventTemplate _eventTemplate;
-
-        public EventRoomTemplate(EventTemplate eventTemplate)
-        {
-            _eventTemplate = eventTemplate;
-        }
-
-        public override Room CreateRoom()
-        {
-            return new Event(false, true, true, _eventTemplate.Dialog, _eventTemplate.Choices);
-        }
-    }
-
-    // Rest rooms
-    
-    private class RestRoomTemplate : RoomTemplate
-    {
-        public override Room CreateRoom()
-        {
-            return new Rest(false, true, true);
-        }
-    }
-
-    private class EventTemplate
-    {
-        public string Title { get; set; }
-        public string Dialog { get; set; }
-        public List<EventChoice> Choices { get; set; }
-
-        public EventTemplate(string title, string dialog, List<EventChoice> choices)
-        {
-            Title = title;
-            Dialog = dialog;
-            Choices = choices;
-        }
-    }
-
-    private class EnemyTemplate
-    {
-        public string Name { get; set; }
-        public int Health { get; set; }
-        public int MaxHealth { get; set; }
-        public EnemyType Type { get; set; }
-        public int TextureIndex { get; set; }
-        public EnemyTemplate(string name, int health, int maxHealth, EnemyType type, int textureIndex)
-        {
-            Name = name;
-            Health = health;
-            MaxHealth = maxHealth;
-            Type = type;
-            TextureIndex = textureIndex;
-        }
-
-        public Enemy CreateEnemy()
-        {
-            return new Enemy(Name, Health, MaxHealth, 0, new List<Effect>(), Type, TextureIndex);
-        }
     }
 }
 

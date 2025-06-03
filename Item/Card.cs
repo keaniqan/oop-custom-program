@@ -36,7 +36,7 @@ public class Card : Item
         set { _justDrawn = value; }
     }
     
-    public void DealCard(Card card)
+    public void DealCard()
     {
         foreach (var charm in GameRenderer.game.Player.Charms)
         {
@@ -47,12 +47,12 @@ public class Card : Item
             command.Execute(GameRenderer.game.Player, GameRenderer.game.CurrentRoom is Combat combatRoom ? combatRoom.Enemy : null, GameRenderer.game);
         }
     }
-    public void DrawCard(Card card)
+    public void DrawCard()
     {
         _cardLocation = CardLocation.Hand;
         _justDrawn = true;
     }
-    public void DiscardCard(Card card)
+    public void DiscardCard()
     {
         _cardLocation = CardLocation.DiscardPile;
     }
