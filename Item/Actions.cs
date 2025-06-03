@@ -36,7 +36,7 @@ public class AttackCommand : ActionCommand
                 {
                     damage = strengthEffect.ApplyStrength(damage);
                 }
-                var weakEffect = enemy.Effects.FirstOrDefault(e => e.EffectType == EffectType.Weak);
+                var weakEffect = player.Effects.FirstOrDefault(e => e.EffectType == EffectType.Weak);
                 if (weakEffect != null && weakEffect.Stacks > 0)
                 {
                     damage = weakEffect.ApplyWeak(damage);
@@ -63,7 +63,7 @@ public class AttackCommand : ActionCommand
         }
         else if (target == EffectTarget.Enemy)
         {
-            var bufferEffect = player.Effects.FirstOrDefault(e => e.EffectType == EffectType.Buffer);
+            var bufferEffect = enemy.Effects.FirstOrDefault(e => e.EffectType == EffectType.Buffer);
             if (bufferEffect != null && bufferEffect.Stacks > 0)
             {
                 bufferEffect.Stacks--;
@@ -75,7 +75,7 @@ public class AttackCommand : ActionCommand
                 {
                     damage = strengthEffect.ApplyStrength(damage);
                 }
-                var weakEffect = enemy.Effects.FirstOrDefault(e => e.EffectType == EffectType.Weak);
+                var weakEffect = player.Effects.FirstOrDefault(e => e.EffectType == EffectType.Weak);
                 if (weakEffect != null && weakEffect.Stacks > 0)
                 {
                     damage = weakEffect.ApplyWeak(damage);

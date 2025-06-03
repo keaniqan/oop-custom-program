@@ -53,7 +53,7 @@ public class Enemy: Unit
         set { _textureIndex = value; }
     }
 
-    public void Attack(Player player, int damage)
+    public void CalculateAttack(Player player, int damage)
     {
         var bufferEffect = player.Effects.FirstOrDefault(e => e.EffectType == EffectType.Buffer);
         if (bufferEffect != null && bufferEffect.Stacks > 0)
@@ -72,17 +72,23 @@ public class Enemy: Unit
             {
                 damage = vulnerableEffect.ApplyVulnerable(damage);
             }
-            var frailEffect = this.Effects.FirstOrDefault(e => e.EffectType == EffectType.Frail);
-            if (frailEffect != null && frailEffect.Stacks > 0)
+            var weakEffect = this.Effects.FirstOrDefault(e => e.EffectType == EffectType.Weak);
+            if (weakEffect != null && weakEffect.Stacks > 0)
             {
-                damage = frailEffect.ApplyWeak(damage);
+                damage = weakEffect.ApplyWeak(damage);
             }
             player.TakeDamage(damage);
         }
     }
-    public void AddEffect(Effect effect)
+
+    public void CalculateBlock(int block)
     {
-        this.Effects.Add(effect);
+        var dexterityEffect = this.Effects.FirstOrDefault(e => e.EffectType == EffectType.DexterityUp);
+        if (dexterityEffect != null && dexterityEffect.Stacks > 0)
+        {
+            block += dexterityEffect.Stacks;
+        }
+        this.AddBlock(block);
     }
         private int GetAttackValue()
     {
@@ -114,10 +120,27 @@ public class Enemy: Unit
         }
     }
 
-    private EffectType GetRandomEffectType()
+    public EffectType GetRandomBuffType()
     {
-        Array values = Enum.GetValues(typeof(EffectType));
-        return (EffectType)values.GetValue(_random.Next(values.Length));
+        var buffTypes = new EffectType[] 
+        {
+            EffectType.StrengthUp,
+            EffectType.DexterityUp, 
+            EffectType.Thorn,
+            EffectType.Buffer
+        };
+        return buffTypes[_random.Next(buffTypes.Length)];
+    }
+
+    public EffectType GetRandomDebuffType()
+    {
+        var debuffTypes = new EffectType[]
+        {
+            EffectType.Weak,
+            EffectType.Vulnerable,
+            EffectType.Frail
+        };
+        return debuffTypes[_random.Next(debuffTypes.Length)];
     }
 
     public void SetEnemyIntent()
@@ -157,7 +180,7 @@ public class Enemy: Unit
                     _debuff = false,
                     _attackValue = pattern == 0 ? GetAttackValue() : 0,
                     _blockValue = pattern == 1 ? GetBlockValue() : 0,
-                    _buffType = pattern == 2 ? GetRandomEffectType() : EffectType.StrengthUp,
+                    _buffType = pattern == 2 ? GetRandomBuffType() : EffectType.StrengthUp,
                     _buffValue = pattern == 2 ? 2 : 0
                 };
                 break;
@@ -174,9 +197,9 @@ public class Enemy: Unit
                     _debuff = pattern == 3,
                     _attackValue = pattern == 0 ? GetAttackValue() + (isIntenseTurn ? 5 : 0) : 0,
                     _blockValue = pattern == 1 ? GetBlockValue() + (isIntenseTurn ? 3 : 0) : 0,
-                    _buffType = pattern == 2 ? GetRandomEffectType() : EffectType.StrengthUp,
+                    _buffType = pattern == 2 ? GetRandomBuffType() : EffectType.StrengthUp,
                     _buffValue = pattern == 2 ? (isIntenseTurn ? 3 : 2) : 0,
-                    _debuffType = pattern == 3 ? GetRandomEffectType() : EffectType.Vulnerable,
+                    _debuffType = pattern == 3 ? GetRandomDebuffType() : EffectType.Vulnerable,
                     _debuffValue = pattern == 3 ? (isIntenseTurn ? 3 : 2) : 0
                 };
                 break;
@@ -211,19 +234,19 @@ public class Enemy: Unit
         
         if (Intent._attack)
         {
-            Attack(player, Intent._attackValue);
+            CalculateAttack(player, Intent._attackValue);
         }
         else if (Intent._block)
         {
-            AddBlock(Intent._blockValue);
+            CalculateBlock(Intent._blockValue);
         }
         else if (Intent._applyBuff)
         {
-            AddEffect(new Effect(Intent._buffType, "Buff", Intent._buffValue, true));
+            AddEffectStack(Intent._buffType, Intent._buffValue);
         }
         else if (Intent._debuff)
         {
-            player.AddEffect(new Effect(Intent._debuffType, "Debuff", Intent._debuffValue, false));
+            player.AddEffectStack(Intent._debuffType, Intent._debuffValue);
         }
     }
 

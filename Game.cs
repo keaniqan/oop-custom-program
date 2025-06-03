@@ -59,10 +59,10 @@ public class Game
 
         return new List<Card>
         {
-            new Card("Study", "Deal 6 damage.", 1, new List<ActionCommand> { new AttackCommand(36, EffectTarget.Enemy) }, CardLocation.DrawPile, 1),
-            new Card("Study", "Deal 6 damage.", 1, new List<ActionCommand> { new AttackCommand(36, EffectTarget.Enemy) }, CardLocation.DrawPile, 1),
-            new Card("Study", "Deal 6 damage.", 1, new List<ActionCommand> { new AttackCommand(36, EffectTarget.Enemy) }, CardLocation.DrawPile, 1),
-            new Card("Study", "Deal 6 damage.", 1, new List<ActionCommand> { new AttackCommand(36, EffectTarget.Enemy) }, CardLocation.DrawPile, 1),
+            new Card("Study", "Deal 6 damage.", 1, new List<ActionCommand> { new AttackCommand(6, EffectTarget.Enemy) }, CardLocation.DrawPile, 1),
+            new Card("Study", "Deal 6 damage.", 1, new List<ActionCommand> { new AttackCommand(6, EffectTarget.Enemy) }, CardLocation.DrawPile, 1),
+            new Card("Study", "Deal 6 damage.", 1, new List<ActionCommand> { new AttackCommand(6, EffectTarget.Enemy) }, CardLocation.DrawPile, 1),
+            new Card("Study", "Deal 6 damage.", 1, new List<ActionCommand> { new AttackCommand(6, EffectTarget.Enemy) }, CardLocation.DrawPile, 1),
             new Card("Memory", "Gain 5 block.", 1, new List<ActionCommand> { new BlockCommand(5) }, CardLocation.DrawPile, 1),
             new Card("Memory", "Gain 5 block.", 1, new List<ActionCommand> { new BlockCommand(5) }, CardLocation.DrawPile, 1),
             new Card("Memory", "Gain 5 block.", 1, new List<ActionCommand> { new BlockCommand(5) }, CardLocation.DrawPile, 1),
@@ -301,8 +301,9 @@ public class Game
             new EnemyTemplate("1000 Words Essay", 50, 50, EnemyType.Elite, 1),
             new EnemyTemplate("Plant Anatomy", 50, 50, EnemyType.Elite, 6),
             new EnemyTemplate("World History", 50, 50, EnemyType.Elite, 7),
+            new EnemyTemplate("Polymorphism", 50, 50, EnemyType.Elite, 7),
+            new EnemyTemplate("Quantum Mechanics", 50, 50, EnemyType.Elite, 8),
         };
-        var eliteEnemyTemplate = new EnemyTemplate("Elite Enemy", 50, 50, EnemyType.Elite, 5);
         var bossTemplate = new EnemyTemplate("Boss Enemy", 75, 75, EnemyType.Boss, 3);
         var firstRoomTemplate = new EnemyTemplate("Intro Math", 30, 30, EnemyType.Basic, 4);
 
@@ -366,7 +367,7 @@ public class Game
         }
         
         // Add elite enemies
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 6; i++)
         {       
             int templateIndex = rng.Next(eliteEnemyTemplates.Count);
             shufflePool.Add(new EnemyRoomTemplate(eliteEnemyTemplates[templateIndex]));
