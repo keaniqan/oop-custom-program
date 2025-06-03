@@ -59,10 +59,10 @@ public class Game
 
         return new List<Card>
         {
-            new Card("Study", "Deal 6 damage.", 1, new List<ActionCommand> { new AttackCommand(6, EffectTarget.Enemy) }, CardLocation.DrawPile, 1),
-            new Card("Study", "Deal 6 damage.", 1, new List<ActionCommand> { new AttackCommand(6, EffectTarget.Enemy) }, CardLocation.DrawPile, 1),
-            new Card("Study", "Deal 6 damage.", 1, new List<ActionCommand> { new AttackCommand(6, EffectTarget.Enemy) }, CardLocation.DrawPile, 1),
-            new Card("Study", "Deal 6 damage.", 1, new List<ActionCommand> { new AttackCommand(6, EffectTarget.Enemy) }, CardLocation.DrawPile, 1),
+            new Card("Study", "Deal 6 damage.", 1, new List<ActionCommand> { new AttackCommand(36, EffectTarget.Enemy) }, CardLocation.DrawPile, 1),
+            new Card("Study", "Deal 6 damage.", 1, new List<ActionCommand> { new AttackCommand(36, EffectTarget.Enemy) }, CardLocation.DrawPile, 1),
+            new Card("Study", "Deal 6 damage.", 1, new List<ActionCommand> { new AttackCommand(36, EffectTarget.Enemy) }, CardLocation.DrawPile, 1),
+            new Card("Study", "Deal 6 damage.", 1, new List<ActionCommand> { new AttackCommand(36, EffectTarget.Enemy) }, CardLocation.DrawPile, 1),
             new Card("Memory", "Gain 5 block.", 1, new List<ActionCommand> { new BlockCommand(5) }, CardLocation.DrawPile, 1),
             new Card("Memory", "Gain 5 block.", 1, new List<ActionCommand> { new BlockCommand(5) }, CardLocation.DrawPile, 1),
             new Card("Memory", "Gain 5 block.", 1, new List<ActionCommand> { new BlockCommand(5) }, CardLocation.DrawPile, 1),
@@ -98,7 +98,6 @@ public class Game
             new Card("Last Minute Cram", "Gain 9 block. Gain 1 Frail.", 77, new List<ActionCommand> { new BlockCommand(12), new ApplyEffectCommand(EffectType.Frail, 1, EffectTarget.Player) }, CardLocation.DrawPile, 1),
             new Card("Project Betrayal", "Gain 16 block. Gain 2 Thorns.", 81, new List<ActionCommand> { new BlockCommand(16), new ApplyEffectCommand(EffectType.Thorn, 2, EffectTarget.Player) }, CardLocation.DrawPile, 2),
             new Card("Study Group", "Gain 1 Strength. Draw 1 card.", 71, new List<ActionCommand> { new ApplyEffectCommand(EffectType.StrengthUp, 1, EffectTarget.Player), new DrawCommand(1) }, CardLocation.DrawPile, 1),
-            new Card("Coffee Break", "Gain 1 Energy. Draw 1 card.", 100, new List<ActionCommand> { new GainEnergyCommand(1), new DrawCommand(1) }, CardLocation.DrawPile, 0),
             new Card("All-Nighter", "Gain 2 Strength. Gain 2 Dexterity.", 82, new List<ActionCommand> { new ApplyEffectCommand(EffectType.StrengthUp, 2, EffectTarget.Player), new ApplyEffectCommand(EffectType.StrengthUp, 2, EffectTarget.Player), new ApplyEffectCommand(EffectType.DexterityUp, 2, EffectTarget.Player), new ApplyEffectCommand(EffectType.DexterityUp, 2, EffectTarget.Player) }, CardLocation.DrawPile, 2),
             new Card("New Lesson", "Gain 1 Strength.", 82, new List<ActionCommand> {new ApplyEffectCommand(EffectType.StrengthUp, 1, EffectTarget.Player)}, CardLocation.DrawPile, 1),
             new Card("Power Nap", "Heal 4 HP. Gain 1 Energy.", 104, new List<ActionCommand> { new HealCommand(4), new GainEnergyCommand(1) }, CardLocation.DrawPile, 1),
@@ -111,7 +110,7 @@ public class Game
             new Card("Class Cancelled!", "Lose 5 hp. Gain 10 vulnerable. Deal 15 Damage, Apply 20 Vulnerable", 90, new List<ActionCommand> { new SelfDamageCommand(5), new ApplyEffectCommand(EffectType.Vulnerable, 10, EffectTarget.Player), new AttackCommand(15, EffectTarget.Enemy), new ApplyEffectCommand(EffectType.Vulnerable, 20, EffectTarget.Enemy) }, CardLocation.DrawPile, 3),
             new Card("Coffee Break", "Deal 2 Damage. Gain 1 Thorn", 71, new List<ActionCommand> { new AttackCommand(2, EffectTarget.Enemy), new ApplyEffectCommand(EffectType.Thorn, 1, EffectTarget.Player) }, CardLocation.DrawPile, 0),
             new Card("Burntout Wave", "Gain 20 Block and 5 Thorn", 90, new List<ActionCommand> { new BlockCommand(20), new ApplyEffectCommand(EffectType.Thorn, 5, EffectTarget.Player) }, CardLocation.DrawPile, 3),
-            new Card("Submitted 11:59", "Deal 36 damage. Lose 3 Strength    ", 71, new List<ActionCommand> { new AttackCommand(36, EffectTarget.Enemy), new ApplyEffectCommand(EffectType.StrengthUp, -3, EffectTarget.Player) }, CardLocation.DrawPile, 1),
+            new Card("Submitted 11:59", "Deal 36 damage. Lose 3 Strength    ", 71, new List<ActionCommand> { new AttackCommand(36, EffectTarget.Enemy), new ApplyEffectCommand(EffectType.StrengthUp, -3, EffectTarget.Player) }, CardLocation.DrawPile, 3),
         };
     }
 
@@ -141,7 +140,6 @@ public class Game
                     "Study Guide",
                     "Start each combat with 1 extra energy",
                     CharmType.StudyGuide,
-                    new List<ActionCommand> { new GainEnergyCommand(1) },
                     0,
                     100
                 );
@@ -150,7 +148,6 @@ public class Game
                     "Coffee Mug",
                     "Start each combat with 1 extra card draw",
                     CharmType.CoffeeMug,
-                    new List<ActionCommand> { new DrawCommand(1) },
                     0,
                     100
                 );
@@ -159,7 +156,6 @@ public class Game
                     "Lucky Pen",
                     "3% chance to draw an extra card when you draw cards",
                     CharmType.LuckyPen,
-                    new List<ActionCommand> { new DrawCommand(1) },
                     0,
                     100
                 );
@@ -168,7 +164,6 @@ public class Game
                     "Study Guide",
                     "Start each combat with 1 extra energy",
                     CharmType.StudyGuide,
-                    new List<ActionCommand> { new GainEnergyCommand(1) },
                     0,
                     100
                 );
@@ -184,16 +179,14 @@ public class Game
             "Bookmark",
             "Draw 1 extra card at the start of your turn",
             CharmType.Bookmark,
-            new List<ActionCommand> { new DrawCommand(1) },
             0,
-            100
+            200
         ));
 
         charmPool.Add(new Charm(
             "Highlighter",
-            "Cards that cost 0 deal 2 more damage",
+            "2% chance to gain 1 energy each time you play a card",
             CharmType.Highlighter,
-            new List<ActionCommand> { new ApplyEffectCommand(EffectType.StrengthUp, 2, EffectTarget.Enemy) },
             0,
             100
         ));
@@ -202,7 +195,6 @@ public class Game
             "Sticky Notes",
             "When you play a card, gain 1 block",
             CharmType.StickyNotes,
-            new List<ActionCommand> { new BlockCommand(1) },
             0,
             100
         ));
@@ -212,16 +204,14 @@ public class Game
             "Study Timer",
             "Start each combat with enemy 2 weak 2 vulnerable",
             CharmType.StudyTimer,
-            new List<ActionCommand> { new ApplyEffectCommand(EffectType.Weak, 2, EffectTarget.Enemy), new ApplyEffectCommand(EffectType.Vulnerable, 2, EffectTarget.Enemy) },
             0,
             100
         ));
 
         charmPool.Add(new Charm(
             "Flash Cards",
-            "When you shuffle your draw pile, draw 1 card",
+            "Start Combat with enemy 15 less health",
             CharmType.FlashCards,
-            new List<ActionCommand> { new DrawCommand(1) },
             0,
             100
         ));
@@ -230,7 +220,6 @@ public class Game
             "Text Book",
             "Start each combat with 2 Strength",
             CharmType.TextBook,
-            new List<ActionCommand> { new ApplyEffectCommand(EffectType.StrengthUp, 2, EffectTarget.Player) },
             0,
             100
         ));
@@ -239,7 +228,6 @@ public class Game
             "Notebook",
             "Start each combat with 2 Dexterity",
             CharmType.Notebook,
-            new List<ActionCommand> { new ApplyEffectCommand(EffectType.DexterityUp, 2, EffectTarget.Player) },
             0,
             100
         ));
@@ -247,21 +235,16 @@ public class Game
         // Rare Charms
         charmPool.Add(new Charm(
             "Smart Watch",
-            "At the start of your turn, gain 1 energy and draw 1 card",
+            "At the start of combat, gain 1 energy and draw 1 card",
             CharmType.SmartWatch,
-            new List<ActionCommand> { 
-                new GainEnergyCommand(1),
-                new DrawCommand(1)
-            },
             0,
-            100
+            300
         ));
 
         charmPool.Add(new Charm(
             "Study Group",
             "Start Combat with 1 buffer",
             CharmType.StudyGroup,
-            new List<ActionCommand> { new ApplyEffectCommand(EffectType.Buffer, 1, EffectTarget.Player) },
             0,
             100
         ));
@@ -270,18 +253,16 @@ public class Game
             "All-Nighter",
             "Gain 1 energy each turn",
             CharmType.AllNighter,
-            new List<ActionCommand> { new GainEnergyCommand(1) },
             0,
-            100
+            300
         ));
 
         charmPool.Add(new Charm(
             "Genius Idea",
-            "When you play a card, there's a 25% chance to play it again",
+            "When you play a card, there's a 15% chance to play it again",
             CharmType.GeniusIdea,
-            new List<ActionCommand> { new ApplyEffectCommand(EffectType.Buffer, 0, EffectTarget.Player) },
             0,
-            100
+            300
         ));
 
         return charmPool;

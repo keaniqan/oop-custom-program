@@ -55,7 +55,30 @@ public class Enemy: Unit
 
     public void Attack(Player player, int damage)
     {
-        player.TakeDamage(damage);
+        var bufferEffect = player.Effects.FirstOrDefault(e => e.EffectType == EffectType.Buffer);
+        if (bufferEffect != null && bufferEffect.Stacks > 0)
+        {
+            bufferEffect.Stacks--;
+        }
+        else
+        {
+            var strengthEffect = this.Effects.FirstOrDefault(e => e.EffectType == EffectType.StrengthUp);
+            if (strengthEffect != null && strengthEffect.Stacks > 0)
+            {
+            damage = strengthEffect.ApplyStrength(damage);
+            }
+            var vulnerableEffect = player.Effects.FirstOrDefault(e => e.EffectType == EffectType.Vulnerable);
+            if (vulnerableEffect != null && vulnerableEffect.Stacks > 0)
+            {
+                damage = vulnerableEffect.ApplyVulnerable(damage);
+            }
+            var frailEffect = this.Effects.FirstOrDefault(e => e.EffectType == EffectType.Frail);
+            if (frailEffect != null && frailEffect.Stacks > 0)
+            {
+                damage = frailEffect.ApplyWeak(damage);
+            }
+            player.TakeDamage(damage);
+        }
     }
     public void AddEffect(Effect effect)
     {

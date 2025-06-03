@@ -6,7 +6,7 @@ public class Charm: Item
     private CharmType _charmType;
 
 
-    public Charm(string name, string description, CharmType charmType, List<ActionCommand> commands, int maxCharges, int price) : base(name, description, price, commands)
+    public Charm(string name, string description, CharmType charmType, int maxCharges, int price) : base(name, description, price)
     {
         _charmType = charmType;
     }
@@ -36,21 +36,14 @@ public class Charm: Item
         }
     }
 
-    public void OnDeckShuffle(Player player)
-    {
-        // Handle shuffle triggers based on charm type
-        if (_charmType == CharmType.FlashCards)
-        {
-            player.DrawCards(1);
-        }
-    }
+
 
     public void OnCardPlayed(Player player, Card card)
 {
     if (_charmType == CharmType.GeniusIdea)
-    {
-        if (Random.Shared.NextDouble() < 0.25)
         {
+            if (Random.Shared.NextDouble() < 0.15)
+            {
             // Play the card effect without triggering OnCardPlayed again
                 player.PlayCard(card);
             }
@@ -58,6 +51,16 @@ public class Charm: Item
         if (_charmType == CharmType.StickyNotes)
         {
             player.AddBlock(1); // Actually give the player block
+        }
+        if (_charmType == CharmType.Highlighter)
+        {
+            if (Random.Shared.NextDouble() < 0.02)
+            {
+                if (GameRenderer.game?.CurrentRoom is Combat combatRoom)
+                {
+                    combatRoom.AddEnergy(1);
+                }
+            }
         }
     }
 
@@ -70,15 +73,73 @@ public class Charm: Item
                 combatRoom.AddEnergy(1);
             }
         }
-    }
-
-    public void ExecuteActions(Player player)
-    {
-        foreach (var command in Commands)
+        if (_charmType == CharmType.Bookmark)
         {
-            command.Execute(player, GameRenderer.game.CurrentRoom is Combat combatRoom ? combatRoom.Enemy : null, GameRenderer.game);
+            player.DrawCards(1);
         }
     }
+
+    public void OnStartOfCombat(Player player)
+    {
+        if (_charmType == CharmType.StudyGuide)
+        {
+            if (GameRenderer.game?.CurrentRoom is Combat combatRoom)
+            {
+                combatRoom.AddEnergy(1);
+            }
+        }
+        if (_charmType == CharmType.CoffeeMug)
+        {
+            player.DrawCards(1);
+        }
+        if (_charmType == CharmType.StudyTimer)
+        {
+            if (GameRenderer.game?.CurrentRoom is Combat combatRoom)
+            {
+                if (combatRoom.TurnCount % 3 == 0)
+                {
+                    combatRoom.Enemy.AddEffectStack(EffectType.Vulnerable, 2);
+                    combatRoom.Enemy.AddEffectStack(EffectType.Weak, 2);
+                }
+            }
+        }
+        if (_charmType == CharmType.TextBook)
+        {
+            if (GameRenderer.game?.CurrentRoom is Combat combatRoom)
+            {
+                combatRoom.Enemy.AddEffectStack(EffectType.StrengthUp, 2);
+            }
+        }
+        if (_charmType == CharmType.Notebook)
+        {
+            if (GameRenderer.game?.CurrentRoom is Combat combatRoom)
+            {
+                combatRoom.Enemy.AddEffectStack(EffectType.DexterityUp, 2);
+            }
+        }
+        if (_charmType == CharmType.SmartWatch)
+        {
+            if (GameRenderer.game?.CurrentRoom is Combat combatRoom)
+            {
+                combatRoom.AddEnergy(1);
+            }
+            player.DrawCards(1);
+        }
+        if (_charmType == CharmType.StudyGroup)
+        {
+            if (GameRenderer.game?.CurrentRoom is Combat combatRoom)
+            {
+                player.AddEffectStack(EffectType.Buffer, 1);
+            }
+        }
+        if (_charmType == CharmType.FlashCards)
+        {
+            if (GameRenderer.game?.CurrentRoom is Combat combatRoom)
+            {
+                combatRoom.Enemy.Health -= 15;
+            }
+        }
+    }   
 }
 
 public enum CharmType

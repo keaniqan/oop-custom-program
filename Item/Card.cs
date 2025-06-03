@@ -11,11 +11,13 @@ public class Card : Item
     private CardLocation _cardLocation;
     private int _cardCost;
     private bool _justDrawn;
-    public Card(string name, string description, int price, List<ActionCommand> commands, CardLocation cardLocation, int cardCost) : base(name, description, price, commands)
+    private List<ActionCommand> _commands;
+    public Card(string name, string description, int price, List<ActionCommand> commands, CardLocation cardLocation, int cardCost) : base(name, description, price)
     {
         _cardLocation = cardLocation;
         _cardCost = cardCost;
         _justDrawn = false;
+        _commands = commands;
     }
 
     public CardLocation CardLocation
@@ -42,7 +44,7 @@ public class Card : Item
         {
             charm.OnCardPlayed(GameRenderer.game.Player, this);
         }
-        foreach (var command in card.Commands)
+        foreach (var command in _commands)
         {
             command.Execute(GameRenderer.game.Player, GameRenderer.game.CurrentRoom is Combat combatRoom ? combatRoom.Enemy : null, GameRenderer.game);
         }

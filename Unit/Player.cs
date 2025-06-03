@@ -181,11 +181,6 @@ public class Player: Unit
             }
         }
 
-        // Trigger charm effects for deck shuffle
-        foreach (var charm in _charms)
-        {
-            charm.OnDeckShuffle(this);
-        }
     }
     public void EmptyDiscardPiletoDrawPile(){
         foreach (var card in _cards){
@@ -200,53 +195,54 @@ public class Player: Unit
         _charms.Remove(charm);
     }
 
-    public void TriggerStartOfCombat()
-    {
-        foreach (var charm in _charms)
-        {
-            charm.ExecuteActions(this);
-        }
-    }
+    // public void TriggerStartOfCombat()
+    // {
+    //     foreach (var charm in _charms)
+    //     {
+    //         charm.ExecuteActions(this);
+    //     }
+    // }
 
-    public void TriggerEndOfTurn()
-    {
-        foreach (var charm in _charms)
-        {
-            charm.ExecuteActions(this);
-        }
-    }
+    // public void TriggerEndOfTurn()
+    // {
+    //     foreach (var charm in _charms)
+    //     {
+    //         charm.ExecuteActions(this);
+    //     }
+    // }
 
-    public void TriggerCardPlayed(Card card)
-    {
-        foreach (var charm in _charms)
-        {
-            charm.ExecuteActions(this);
-        }
-    }
+    // public void TriggerCardPlayed(Card card)
+    // {
+    //     foreach (var charm in _charms)
+    //     {
+    //         charm.ExecuteActions(this);
+    //     }
+    // }
 
-    public void TriggerDamageTaken(int damage)
-    {
-        foreach (var charm in _charms)
-        {
-            charm.ExecuteActions(this);
-        }
-    }
+    // public void TriggerDamageTaken(int damage)
+    // {
+    //     foreach (var charm in _charms)
+    //     {
+    //         charm.ExecuteActions(this);
+    //     }
+    // }
 
-    public void TriggerEnemyDamaged(Enemy enemy, int damage)
-    {
-        foreach (var charm in _charms)
-        {
-            charm.ExecuteActions(this);
-        }
-    }
+    // public void TriggerEnemyDamaged(Enemy enemy, int damage)
+    // {
+    //     foreach (var charm in _charms)
+    //     {
+    //         charm.ExecuteActions(this);
+    //     }
+    // }
 
-    public void TriggerBlockGained(int block)
-    {
-        foreach (var charm in _charms)
-        {
-            charm.ExecuteActions(this);
-        }
-    }
+    // public void TriggerBlockGained(int block)
+    // {
+    //     foreach (var charm in _charms)
+    //     {
+    //         charm.ExecuteActions(this);
+    //     }
+    // }
+    
 
     public override void EndTurn(){  
         DiscardHand();
@@ -269,9 +265,6 @@ public class Player: Unit
         {
             weakEffect.Stacks--;
         }
-
-        // Trigger end of turn effects for charms
-        TriggerEndOfTurn();
     }
 
     public int MaxEnergy
@@ -287,8 +280,8 @@ public class Player: Unit
     
     public override void TakeDamage(int damage)
     {
+
         base.TakeDamage(damage);
-        TriggerDamageTaken(damage);
         GameRenderer.CreateDamageNumber(damage, new Vector2(ScreenWidth / 2 - 350, ScreenHeight - 650));
     }
 }

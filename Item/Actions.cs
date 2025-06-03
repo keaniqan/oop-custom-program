@@ -32,7 +32,7 @@ public class AttackCommand : ActionCommand
             else
             {
                 var strengthEffect = player.Effects.FirstOrDefault(e => e.EffectType == EffectType.StrengthUp);
-            if (strengthEffect != null && strengthEffect.Stacks > 0)
+                if (strengthEffect != null && strengthEffect.Stacks > 0)
                 {
                     damage = strengthEffect.ApplyStrength(damage);
                 }
@@ -70,22 +70,22 @@ public class AttackCommand : ActionCommand
             }
             else
             {
-                var strengthEffect = enemy.Effects.FirstOrDefault(e => e.EffectType == EffectType.StrengthUp);
+                var strengthEffect = player.Effects.FirstOrDefault(e => e.EffectType == EffectType.StrengthUp);
                 if (strengthEffect != null && strengthEffect.Stacks > 0)
                 {
                     damage = strengthEffect.ApplyStrength(damage);
                 }
-                var weakEffect = player.Effects.FirstOrDefault(e => e.EffectType == EffectType.Weak);
+                var weakEffect = enemy.Effects.FirstOrDefault(e => e.EffectType == EffectType.Weak);
                 if (weakEffect != null && weakEffect.Stacks > 0)
                 {
                     damage = weakEffect.ApplyWeak(damage);
                 }
-                var vulnerableEffect = player.Effects.FirstOrDefault(e => e.EffectType == EffectType.Vulnerable);
+                var vulnerableEffect = enemy.Effects.FirstOrDefault(e => e.EffectType == EffectType.Vulnerable);
                 if (vulnerableEffect != null && vulnerableEffect.Stacks > 0)
                 {
                     damage = vulnerableEffect.ApplyVulnerable(damage);
                 }
-                var thornEffect = player.Effects.FirstOrDefault(e => e.EffectType == EffectType.Thorn);
+                var thornEffect = enemy.Effects.FirstOrDefault(e => e.EffectType == EffectType.Thorn);
                 if (thornEffect != null && thornEffect.Stacks > 0)
                 {
                     player.TakeDamage(thornEffect.Stacks);

@@ -168,12 +168,15 @@ public class Combat: Room
             _game.Player.ShuffleDeck();
             // Draw initial hand
             _game.Player.DrawCards(5);
-
-            // Trigger start of combat effects for charms
-            _game.Player.TriggerStartOfCombat();
         }
         
         // Set initial enemy intent
         _enemy.SetEnemyIntent();
+
+        // Trigger start of combat effects for charms
+        foreach (var charm in _game.Player.Charms)
+        {
+            charm.OnStartOfCombat(_game.Player);
+        }
     }
 }

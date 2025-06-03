@@ -112,6 +112,9 @@ public class GameRenderer
 
     private static bool shopVisitedThisReward = false;
 
+    private static float lastRoomEntryTime = 0;
+    private const float INPUT_BUFFER_TIME = 0.5f; // 0.5 seconds buffer
+
     public static void InitializeGame(Game gameInstance)
     {
         game = gameInstance;
@@ -593,6 +596,12 @@ public class GameRenderer
     {
         if (!(game.CurrentRoom is Event eventRoom)) return;
 
+        // Set input buffer when entering a new event room
+        if (lastRoomEntryTime == 0)
+        {
+            lastRoomEntryTime = (float)Raylib.GetTime();
+        }
+
         // If showing reward screen, only draw that
         if (showEventRewardScreen)
         {
@@ -716,11 +725,21 @@ public class GameRenderer
             // Handle choice click
             if (isHovering && Raylib.IsMouseButtonPressed(MouseButton.Left))
             {
-                lastEventChoice = choice;
-                eventRoom.MakeChoice(choice);
-                showEventRewardScreen = true;
-                return; // Exit immediately after making choice
+                // Only allow click if input buffer has passed
+                if ((float)Raylib.GetTime() - lastRoomEntryTime > INPUT_BUFFER_TIME)
+                {
+                    lastEventChoice = choice;
+                    eventRoom.MakeChoice(choice);
+                    showEventRewardScreen = true;
+                    lastRoomEntryTime = 0; // Reset for next room
+                    return; // Exit immediately after making choice
+                }
             }
+        }
+        // Reset input buffer if we leave the event screen
+        if (Program.currentScreen != Program.GameScreen.Event)
+        {
+            lastRoomEntryTime = 0;
         }
     }
 
@@ -2896,7 +2915,7 @@ public class GameRenderer
         {
             new { Name = "Study Guide", Description = "Start each combat with 1 extra energy", Type = CharmType.StudyGuide, Texture = studyGuideTexture },
             new { Name = "Coffee Mug", Description = "Start each combat with 1 extra card draw", Type = CharmType.CoffeeMug, Texture = coffeeMugTexture },
-            new { Name = "Lucky Pen", Description = "10% chance to draw an extra card when you draw cards", Type = CharmType.LuckyPen, Texture = luckyPenTexture }
+            new { Name = "Lucky Pen", Description = "3% chance to draw an extra card when you draw cards", Type = CharmType.LuckyPen, Texture = luckyPenTexture }
         };
 
         // Draw each charm
