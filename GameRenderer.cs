@@ -115,6 +115,8 @@ public class GameRenderer
     private static float lastRoomEntryTime = 0;
     private const float INPUT_BUFFER_TIME = 0.5f; // 0.5 seconds buffer
 
+    private static bool showTooltips = true; // Toggle for tooltips
+
     public static void InitializeGame(Game gameInstance)
     {
         game = gameInstance;
@@ -591,6 +593,26 @@ public class GameRenderer
         else if (showDiscardPileOverlay)
         {
             DrawPileOverlay(game.Player.Cards.Where(c => c.CardLocation == CardLocation.DiscardPile).ToList(), "Discard Pile");
+        }
+
+        // Toggle tooltips with 'T'
+        if (Raylib.IsKeyPressed(KeyboardKey.T))
+        {
+            showTooltips = !showTooltips;
+        }
+
+        if (showTooltips)
+        {
+            // Draw energy tooltip icon
+            DrawQuestionMarkTooltip(new Vector2(370 - 30, ScreenHeight - 410 + 25), "Energy: Used to play cards each turn. You regain energy at the start of your turn. Each card costs energy to play.");
+            // Draw cards tooltip icon
+            DrawQuestionMarkTooltip(new Vector2(ScreenWidth/2, ScreenHeight - 320), "Cards: Play cards from your hand to attack, defend, or use special abilities. Draw new cards each turn.");
+            // Draw charms tooltip icon
+            DrawQuestionMarkTooltip(new Vector2(170, 120), "Charms: Passive items that grant unique bonuses and effects throughout your run.");
+            // Draw effects tooltip icon (player)
+            DrawQuestionMarkTooltip(new Vector2(playerPosition.X + 100, playerPosition.Y - 320), "Effects: Temporary buffs or debuffs that affect you or enemies. Hover icons for details.");
+            // Draw intent tooltip icon (enemy intent area)
+            DrawQuestionMarkTooltip(new Vector2(ScreenWidth - 600, ScreenHeight / 2 - 340), "Intent: Shows what the enemy plans to do next turn (attack, block, buff, or debuff). Plan your moves accordingly!");
         }
     }
 
@@ -3225,5 +3247,71 @@ public class GameRenderer
         string exitText = "Press ESC to exit";
         int exitTextWidth = Raylib.MeasureText(exitText, 30);
         Raylib.DrawText(exitText, (ScreenWidth - exitTextWidth) / 2, ScreenHeight / 2 + fontSize, 30, Color.White);
+    }
+
+    // Helper to draw a question mark icon and show tooltip on hover
+    private static void DrawQuestionMarkTooltip(Vector2 position, string tooltipText)
+    {
+        const int iconRadius = 18;
+        const int fontSize = 24;
+        Vector2 mousePos = Raylib.GetMousePosition() + new Vector2(0, 30);
+        // Draw circle
+        Raylib.DrawCircle((int)position.X, (int)position.Y, iconRadius, new Color(220, 220, 220, 120));
+        Raylib.DrawCircleLines((int)position.X, (int)position.Y, iconRadius, Color.Gray);
+        // Draw question mark
+        int qWidth = Raylib.MeasureText("?", fontSize);
+        Raylib.DrawText("?", (int)(position.X - qWidth/2), (int)(position.Y - fontSize/2), fontSize, Color.DarkBlue);
+        // Check hover
+        float dx = mousePos.X - position.X;
+        float dy = mousePos.Y - position.Y;
+        if (dx * dx + dy * dy <= iconRadius * iconRadius)
+        {
+            // Draw tooltip box
+            int boxWidth = 380;
+            int boxHeight = 80;
+            int boxX = (int)position.X + iconRadius + 10;
+            int boxY = (int)position.Y - boxHeight/2;
+            Raylib.DrawRectangle(boxX, boxY, boxWidth, boxHeight, new Color(30, 30, 30, 230));
+            Raylib.DrawRectangleLines(boxX, boxY, boxWidth, boxHeight, Color.Gold);
+            // Draw tooltip text (wrap if needed)
+            string[] words = tooltipText.Split(' ');
+            string currentLine = "";
+            int lineY = boxY + 16;
+            int maxWidth = boxWidth - 24;
+            foreach (string word in words)
+            {
+                string testLine = currentLine + word + " ";
+                int textWidth = (int)Raylib.MeasureTextEx(descriptionFont, testLine, 18, 1).X;
+                if (textWidth > maxWidth)
+                {
+                    Raylib.DrawTextPro(
+                        descriptionFont,
+                        currentLine,
+                        new Vector2(boxX + 12, lineY),
+                        new Vector2(0, 0),
+                        0,
+                        18,
+                        1,
+                        Color.White
+                    );
+                    currentLine = word + " ";
+                    lineY += 22;
+                }
+                else
+                {
+                    currentLine = testLine;
+                }
+            }
+            Raylib.DrawTextPro(
+                descriptionFont,
+                currentLine,
+                new Vector2(boxX + 12, lineY),
+                new Vector2(0, 0),
+                0,
+                18,
+                1,
+                Color.White
+            );
+        }
     }
 }
