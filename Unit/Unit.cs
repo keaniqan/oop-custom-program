@@ -89,6 +89,9 @@ public abstract class Unit
             effect.Stacks += amount;
         }
     }
+    public bool isDead(){
+        return Health <= 0;
+    }
 
     public abstract void EndTurn();
 }

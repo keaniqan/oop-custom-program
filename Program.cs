@@ -21,7 +21,9 @@ internal class Program
         Reward,
         Shop,
         Event,
-        Rest
+        Rest,
+        Win,
+        Lose
     }
     
     private static Game game;
@@ -97,6 +99,23 @@ internal class Program
                         {
                             currentScreen = GameScreen.Rest;
                         }
+                    }
+                    break;
+
+                case GameScreen.Win:
+                    GameRenderer.DrawWinScreen();
+                    if (Raylib.IsKeyPressed(KeyboardKey.Escape) || Raylib.IsMouseButtonPressed(MouseButton.Left))
+                    {
+                        Raylib.EndDrawing();
+                        return;
+                    }
+                    break;
+                case GameScreen.Lose:
+                    GameRenderer.DrawLoseScreen();
+                    if (Raylib.IsKeyPressed(KeyboardKey.Escape) || Raylib.IsMouseButtonPressed(MouseButton.Left))
+                    {
+                        Raylib.EndDrawing();
+                        return;
                     }
                     break;
             }

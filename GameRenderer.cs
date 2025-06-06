@@ -576,6 +576,8 @@ public class GameRenderer
         {
             showMapOverlay = !showMapOverlay;
         }
+        // Debug: Make boss room available when 'P' is pressed
+        
         if (showMapOverlay)
         {
             DrawMapOverlay();
@@ -1315,15 +1317,11 @@ public class GameRenderer
         // Draw enemy intent
         if (combatRoom.TurnPhase == TurnPhase.PlayerStart || combatRoom.TurnPhase == TurnPhase.EnemyStart || combatRoom.TurnPhase == TurnPhase.EnemyEnd)
         {
-            string intentText = "";
-            if (combatRoom.Enemy.Intent._attack)
-                intentText = $"Attack {combatRoom.Enemy.Intent._attackValue}";
-            else if (combatRoom.Enemy.Intent._block)
-                intentText = $"Block {combatRoom.Enemy.Intent._blockValue}";
-            else if (combatRoom.Enemy.Intent._applyBuff)
-                intentText = $"Buff {combatRoom.Enemy.Intent._buffType} {combatRoom.Enemy.Intent._buffValue}";
-            else if (combatRoom.Enemy.Intent._debuff)
-                intentText = $"Debuff {combatRoom.Enemy.Intent._debuffType} {combatRoom.Enemy.Intent._debuffValue}";
+            var intent = combatRoom.Enemy.Intent;
+            string attackText = $"Attack {intent._attackValue}";
+            string blockText = $"Block {intent._blockValue}";
+            string buffText = $"Buff {intent._buffType} {intent._buffValue}";
+            string debuffText = $"Debuff {intent._debuffType} {intent._debuffValue}";
 
             // Draw turn count
             string turnText = $"Turn {combatRoom.TurnCount}";
@@ -1336,24 +1334,67 @@ public class GameRenderer
                 Color.White
             );
 
-            // Draw intent background
-            int textWidth = Raylib.MeasureText(intentText, 20);
-            Raylib.DrawRectangle(
-                (int)enemyPos.X - textWidth/2 - 10,
-                (int)enemyPos.Y - bookHeight/2 - 40,
-                textWidth + 20,
-                30,
-                new Color(0, 0, 0, 150)
-            );
+            int yOffset = (int)enemyPos.Y - bookHeight/2 - 40;
+            int intentHeight = 30;
+            int spacing = 10;
 
-            // Draw intent text
-            Raylib.DrawText(
-                intentText,
-                (int)enemyPos.X - textWidth/2,
-                (int)enemyPos.Y - bookHeight/2 - 35,
-                20,
-                Color.White
-            );
+            if (intent._attack && intent._block)
+            {
+                // Hybrid: Draw both attack and block side by side
+                int attackWidth = Raylib.MeasureText(attackText, 20);
+                int blockWidth = Raylib.MeasureText(blockText, 20);
+                int totalWidth = attackWidth + blockWidth + spacing;
+                int startX = (int)enemyPos.X - totalWidth/2;
+
+                // Attack intent background
+                Raylib.DrawRectangle(startX - 10, yOffset, attackWidth + 20, intentHeight, new Color(80, 0, 0, 180));
+                Raylib.DrawText(attackText, startX, yOffset + 5, 20, Color.Red);
+
+                // Block intent background
+                Raylib.DrawRectangle(startX + attackWidth + spacing - 10, yOffset, blockWidth + 20, intentHeight, new Color(0, 0, 80, 180));
+                Raylib.DrawText(blockText, startX + attackWidth + spacing, yOffset + 5, 20, new Color(0, 255, 255, 255));
+            }
+            // --- Add hybrid buff+debuff intent display ---
+            else if (intent._applyBuff && intent._debuff)
+            {
+                int buffWidth = Raylib.MeasureText(buffText, 20);
+                int debuffWidth = Raylib.MeasureText(debuffText, 20);
+                int totalWidth = buffWidth + debuffWidth + spacing;
+                int startX = (int)enemyPos.X - totalWidth/2;
+
+                // Buff intent background
+                Raylib.DrawRectangle(startX - 10, yOffset, buffWidth + 20, intentHeight, new Color(80, 80, 0, 180));
+                Raylib.DrawText(buffText, startX, yOffset + 5, 20, Color.Yellow);
+
+                // Debuff intent background
+                Raylib.DrawRectangle(startX + buffWidth + spacing - 10, yOffset, debuffWidth + 20, intentHeight, new Color(80, 0, 80, 180));
+                Raylib.DrawText(debuffText, startX + buffWidth + spacing, yOffset + 5, 20, Color.Magenta);
+            }
+            // --- End hybrid buff+debuff intent display ---
+            else if (intent._attack)
+            {
+                int attackWidth = Raylib.MeasureText(attackText, 20);
+                Raylib.DrawRectangle((int)enemyPos.X - attackWidth/2 - 10, yOffset, attackWidth + 20, intentHeight, new Color(80, 0, 0, 180));
+                Raylib.DrawText(attackText, (int)enemyPos.X - attackWidth/2, yOffset + 5, 20, Color.Red);
+            }
+            else if (intent._block)
+            {
+                int blockWidth = Raylib.MeasureText(blockText, 20);
+                Raylib.DrawRectangle((int)enemyPos.X - blockWidth/2 - 10, yOffset, blockWidth + 20, intentHeight, new Color(0, 0, 80, 180));
+                Raylib.DrawText(blockText, (int)enemyPos.X - blockWidth/2, yOffset + 5, 20, new Color(0, 255, 255, 255));
+            }
+            else if (intent._applyBuff)
+            {
+                int buffWidth = Raylib.MeasureText(buffText, 20);
+                Raylib.DrawRectangle((int)enemyPos.X - buffWidth/2 - 10, yOffset, buffWidth + 20, intentHeight, new Color(80, 80, 0, 180));
+                Raylib.DrawText(buffText, (int)enemyPos.X - buffWidth/2, yOffset + 5, 20, Color.Yellow);
+            }
+            else if (intent._debuff)
+            {
+                int debuffWidth = Raylib.MeasureText(debuffText, 20);
+                Raylib.DrawRectangle((int)enemyPos.X - debuffWidth/2 - 10, yOffset, debuffWidth + 20, intentHeight, new Color(80, 0, 80, 180));
+                Raylib.DrawText(debuffText, (int)enemyPos.X - debuffWidth/2, yOffset + 5, 20, Color.Magenta);
+            }
         }
     }
 
@@ -1450,7 +1491,13 @@ public class GameRenderer
         // Draw each effect that has stacks
         foreach (var effect in unit.Effects)
         {
-            if (effect.Stacks > 0)
+            // Show for both positive and negative stacks for StrengthUp and DexterityUp
+            bool showEffect = effect.Stacks > 0;
+            bool isStrengthOrDex = effect.EffectType == EffectType.StrengthUp || effect.EffectType == EffectType.DexterityUp;
+            if (isStrengthOrDex && effect.Stacks != 0)
+                showEffect = true;
+
+            if (showEffect)
             {
                 Texture2D effectTexture;
                 bool shouldDraw = true;
@@ -1489,7 +1536,7 @@ public class GameRenderer
                 // Check for hover
                 if (shouldDraw && Raylib.CheckCollisionPointRec(mousePos, iconRect))
                 {
-                    hoveredDescription = effect.EffectDescription; // <-- Make sure EffectDescription is public
+                    hoveredDescription = effect.EffectDescription;
                     hoveredX = currentX;
                     hoveredY = (int)startPosition.Y - effectSize / 2;
                 }
@@ -1508,6 +1555,7 @@ public class GameRenderer
                     // Draw stack count
                     string stackText = effect.Stacks.ToString();
                     Vector2 textSize = Raylib.MeasureTextEx(descriptionFont, stackText, 16, 1);
+                    Color stackColor = (effect.Stacks < 0 && isStrengthOrDex) ? Color.Red : Color.White;
                     Raylib.DrawTextPro(
                         descriptionFont,
                         stackText,
@@ -1516,7 +1564,7 @@ public class GameRenderer
                         0,
                         16,
                         1,
-                        Color.White
+                        stackColor
                     );
                 }
                 currentX += effectSpacing;
@@ -1984,6 +2032,18 @@ public class GameRenderer
                             Color.Red
                         );
                     }
+                }
+            }
+        }
+        if (Raylib.IsKeyPressed(KeyboardKey.P))
+        {
+            if (game?.Layers != null && game.Layers.Count > 0)
+            {
+                var bossLayer = game.Layers[game.Layers.Count - 1];
+                if (bossLayer.Count > 0)
+                {
+                    bossLayer[0].IsAvailable = true;
+                    Console.WriteLine("[DEBUG] Boss room is now available.");
                 }
             }
         }
@@ -3142,5 +3202,28 @@ public class GameRenderer
         {
             Program.currentScreen = Program.GameScreen.CharmSelection;
         }
+    }
+
+    public static void DrawWinScreen()
+    {
+        Raylib.ClearBackground(Color.Black);
+        string winText = "You Win!";
+        int fontSize = 80;
+        int textWidth = Raylib.MeasureText(winText, fontSize);
+        Raylib.DrawText(winText, (ScreenWidth - textWidth) / 2, ScreenHeight / 2 - fontSize, fontSize, Color.Gold);
+        string exitText = "Press ESC to exit";
+        int exitTextWidth = Raylib.MeasureText(exitText, 30);
+        Raylib.DrawText(exitText, (ScreenWidth - exitTextWidth) / 2, ScreenHeight / 2 + fontSize, 30, Color.White);
+    }
+    public static void DrawLoseScreen()
+    {
+        Raylib.ClearBackground(Color.Black);
+        string loseText = "You Lose!";
+        int fontSize = 80;
+        int textWidth = Raylib.MeasureText(loseText, fontSize);
+        Raylib.DrawText(loseText, (ScreenWidth - textWidth) / 2, ScreenHeight / 2 - fontSize, fontSize, Color.Red);
+        string exitText = "Press ESC to exit";
+        int exitTextWidth = Raylib.MeasureText(exitText, 30);
+        Raylib.DrawText(exitText, (ScreenWidth - exitTextWidth) / 2, ScreenHeight / 2 + fontSize, 30, Color.White);
     }
 }

@@ -142,7 +142,6 @@ namespace MyApp.Tests
             //execute
             var command = new SelfDamageCommand(1);
             command.Execute(player, enemy, game);
-
             //assert
             Assert.AreEqual(49, player.Health, "Player should take 1 damage from SelfDamageCommand");
         }

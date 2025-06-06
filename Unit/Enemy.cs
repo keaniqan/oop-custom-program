@@ -57,9 +57,9 @@ public class Enemy: Unit
         else
         {
             var strengthEffect = this.Effects.FirstOrDefault(e => e.EffectType == EffectType.StrengthUp);
-            if (strengthEffect != null && strengthEffect.Stacks > 0)
+            if (strengthEffect != null && strengthEffect.Stacks != 0)
             {
-            damage = strengthEffect.ApplyStrength(damage);
+                damage = strengthEffect.ApplyStrength(damage);
             }
             var vulnerableEffect = player.Effects.FirstOrDefault(e => e.EffectType == EffectType.Vulnerable);
             if (vulnerableEffect != null && vulnerableEffect.Stacks > 0)
@@ -78,7 +78,7 @@ public class Enemy: Unit
     public void CalculateBlock(int block)
     {
         var dexterityEffect = this.Effects.FirstOrDefault(e => e.EffectType == EffectType.DexterityUp);
-        if (dexterityEffect != null && dexterityEffect.Stacks > 0)
+        if (dexterityEffect != null && dexterityEffect.Stacks != 0)
         {
             block += dexterityEffect.Stacks;
         }
@@ -182,20 +182,65 @@ public class Enemy: Unit
             case EnemyType.Boss:
                 // Bosses follow a 4-turn pattern with increasing intensity
                 pattern = turnCount % 4;
-                bool isIntenseTurn = turnCount % 8 >= 4; // Every 4 turns, increase intensity
-                Intent = new Intent
+                bool isIntenseTurn = turnCount % 8 >= 4;
+                Intent bossIntent = new Intent();
+                if (pattern == 0)
                 {
-                    _attack = pattern == 0,
-                    _block = pattern == 1,
-                    _applyBuff = pattern == 2,
-                    _debuff = pattern == 3,
-                    _attackValue = pattern == 0 ? GetAttackValue() + (isIntenseTurn ? 5 : 0) : 0,
-                    _blockValue = pattern == 1 ? GetBlockValue() + (isIntenseTurn ? 3 : 0) : 0,
-                    _buffType = pattern == 2 ? GetRandomBuffType() : EffectType.StrengthUp,
-                    _buffValue = pattern == 2 ? (isIntenseTurn ? 3 : 2) : 0,
-                    _debuffType = pattern == 3 ? GetRandomDebuffType() : EffectType.Vulnerable,
-                    _debuffValue = pattern == 3 ? (isIntenseTurn ? 3 : 2) : 0
-                };
+                    // Hybrid: Attack + Block
+                    bossIntent._attack = true;
+                    bossIntent._block = true;
+                    bossIntent._applyBuff = false;
+                    bossIntent._debuff = false;
+                    bossIntent._attackValue = GetAttackValue() + (isIntenseTurn ? 5 : 0);
+                    bossIntent._blockValue = GetBlockValue() + (isIntenseTurn ? 3 : 0);
+                    bossIntent._buffType = EffectType.StrengthUp;
+                    bossIntent._buffValue = 0;
+                    bossIntent._debuffType = EffectType.Vulnerable;
+                    bossIntent._debuffValue = 0;
+                }
+                else if (pattern == 1)
+                {
+                    // Buff turn
+                    bossIntent._attack = false;
+                    bossIntent._block = false;
+                    bossIntent._applyBuff = true;
+                    bossIntent._debuff = false;
+                    bossIntent._attackValue = 0;
+                    bossIntent._blockValue = 0;
+                    bossIntent._buffType = GetRandomBuffType();
+                    bossIntent._buffValue = isIntenseTurn ? 3 : 2;
+                    bossIntent._debuffType = EffectType.Vulnerable;
+                    bossIntent._debuffValue = 0;
+                }
+                else if (pattern == 2)
+                {
+                    // Heavy Attack only
+                    bossIntent._attack = true;
+                    bossIntent._block = false;
+                    bossIntent._applyBuff = false;
+                    bossIntent._debuff = false;
+                    bossIntent._attackValue = (int)(GetAttackValue()*1.3) + (isIntenseTurn ? 5 : 0);
+                    bossIntent._blockValue = 0;
+                    bossIntent._buffType = EffectType.StrengthUp;
+                    bossIntent._buffValue = 0;
+                    bossIntent._debuffType = EffectType.Vulnerable;
+                    bossIntent._debuffValue = 0;
+                }
+                else if (pattern == 3)
+                {
+                    // Debuff turn
+                    bossIntent._attack = false;
+                    bossIntent._block = false;
+                    bossIntent._applyBuff = isIntenseTurn ? true : false;
+                    bossIntent._debuff = true;
+                    bossIntent._attackValue = 0;
+                    bossIntent._blockValue = 0;
+                    bossIntent._buffType = GetRandomBuffType();
+                    bossIntent._buffValue = isIntenseTurn ? 2 : 1;
+                    bossIntent._debuffType = GetRandomDebuffType();
+                    bossIntent._debuffValue = isIntenseTurn ? 3 : 2;
+                }
+                Intent = bossIntent;
                 break;
         }
     }
@@ -230,15 +275,15 @@ public class Enemy: Unit
         {
             CalculateAttack(player, Intent._attackValue);
         }
-        else if (Intent._block)
+        if (Intent._block)
         {
             CalculateBlock(Intent._blockValue);
         }
-        else if (Intent._applyBuff)
+        if (Intent._applyBuff)
         {
             AddEffectStack(Intent._buffType, Intent._buffValue);
         }
-        else if (Intent._debuff)
+        if (Intent._debuff)
         {
             player.AddEffectStack(Intent._debuffType, Intent._debuffValue);
         }

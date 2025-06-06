@@ -48,16 +48,18 @@ public class Game
 
     public static List<Card> CreateStarterDeck()
     {
+        var StrikeCommand = new List<ActionCommand> {new AttackCommand(6, EffectTarget.Enemy)};
+        var BlockCommand = new List<ActionCommand> {new BlockCommand(5)};
         return new List<Card>
         {
-            new Card("Study", "Deal 6 damage.", 1, new List<ActionCommand> { new AttackCommand(6, EffectTarget.Enemy) }, CardLocation.DrawPile, 1),
-            new Card("Study", "Deal 6 damage.", 1, new List<ActionCommand> { new AttackCommand(6, EffectTarget.Enemy) }, CardLocation.DrawPile, 1),
-            new Card("Study", "Deal 6 damage.", 1, new List<ActionCommand> { new AttackCommand(6, EffectTarget.Enemy) }, CardLocation.DrawPile, 1),
-            new Card("Study", "Deal 6 damage.", 1, new List<ActionCommand> { new AttackCommand(6, EffectTarget.Enemy) }, CardLocation.DrawPile, 1),
-            new Card("Memory", "Gain 5 block.", 1, new List<ActionCommand> { new BlockCommand(5) }, CardLocation.DrawPile, 1),
-            new Card("Memory", "Gain 5 block.", 1, new List<ActionCommand> { new BlockCommand(5) }, CardLocation.DrawPile, 1),
-            new Card("Memory", "Gain 5 block.", 1, new List<ActionCommand> { new BlockCommand(5) }, CardLocation.DrawPile, 1),
-            new Card("Memory", "Gain 5 block.", 1, new List<ActionCommand> { new BlockCommand(5) }, CardLocation.DrawPile, 1),
+            new Card("Study", "Deal 6 damage.", 1, StrikeCommand, CardLocation.DrawPile, 1),
+            new Card("Study", "Deal 6 damage.", 1, StrikeCommand, CardLocation.DrawPile, 1),
+            new Card("Study", "Deal 6 damage.", 1, StrikeCommand, CardLocation.DrawPile, 1),
+            new Card("Study", "Deal 6 damage.", 1, StrikeCommand, CardLocation.DrawPile, 1),
+            new Card("Memory", "Gain 5 block.", 1, BlockCommand, CardLocation.DrawPile, 1),
+            new Card("Memory", "Gain 5 block.", 1, BlockCommand, CardLocation.DrawPile, 1),
+            new Card("Memory", "Gain 5 block.", 1, BlockCommand, CardLocation.DrawPile, 1),
+            new Card("Memory", "Gain 5 block.", 1, BlockCommand, CardLocation.DrawPile, 1),
             new Card("Unthinking", "Apply 2 Weak.", 80, new List<ActionCommand> { new ApplyEffectCommand(EffectType.Weak, 2, EffectTarget.Enemy) }, CardLocation.DrawPile, 1),
             new Card("New Lesson", "Gain 1 Strength.", 82, new List<ActionCommand> {new ApplyEffectCommand(EffectType.StrengthUp, 1, EffectTarget.Player)}, CardLocation.DrawPile, 1),
             new Card("Crit Thinking", "Deal 8 damage. Apply 2 Vulnerable.", 2, new List<ActionCommand> {new AttackCommand(8, EffectTarget.Enemy), new ApplyEffectCommand(EffectType.Vulnerable, 2, EffectTarget.Enemy)}, CardLocation.DrawPile, 2),     
@@ -66,6 +68,8 @@ public class Game
 
     public static List<Card> CreateRewardCardPool()
     {
+        var StrikeCommand = new List<ActionCommand> {new AttackCommand(6, EffectTarget.Enemy)};
+        var BlockCommand = new List<ActionCommand> {new BlockCommand(5)};
 
         return new List<Card>
         {
@@ -288,14 +292,14 @@ public class Game
         };
         var eliteEnemyTemplates = new List<EnemyTemplate>
         {
-            new EnemyTemplate("Intro Calculus", 50, 50, EnemyType.Elite, 1),
-            new EnemyTemplate("1000 Words Essay", 50, 50, EnemyType.Elite, 1),
-            new EnemyTemplate("Plant Anatomy", 50, 50, EnemyType.Elite, 6),
-            new EnemyTemplate("World History", 50, 50, EnemyType.Elite, 7),
-            new EnemyTemplate("Polymorphism", 50, 50, EnemyType.Elite, 7),
-            new EnemyTemplate("Quantum Mechanics", 50, 50, EnemyType.Elite, 8),
+            new EnemyTemplate("Intro Calculus", 85, 85, EnemyType.Elite, 1),
+            new EnemyTemplate("1000 Words Essay", 95, 95, EnemyType.Elite, 1),
+            new EnemyTemplate("Plant Anatomy", 80, 80, EnemyType.Elite, 6),
+            new EnemyTemplate("World History", 85, 85, EnemyType.Elite, 7),
+            new EnemyTemplate("Polymorphism", 90, 90, EnemyType.Elite, 7),
+            new EnemyTemplate("Quantum Mechanics", 95, 95, EnemyType.Elite, 8),
         };
-        var bossTemplate = new EnemyTemplate("Boss Enemy", 75, 75, EnemyType.Boss, 3);
+        var bossTemplate = new EnemyTemplate("Final Exam", 150, 150, EnemyType.Boss, 3);
         var firstRoomTemplate = new EnemyTemplate("Intro Math", 30, 30, EnemyType.Basic, 4);
 
         // Create event templates
