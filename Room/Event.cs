@@ -73,7 +73,7 @@ public class Event : Room
             
             if (choice.HealthChange != 0)
             {
-                game.Player.AddHealth(choice.HealthChange);
+                game.Player.Heal(choice.HealthChange);
             }
 
             if (choice.CardReward != null)

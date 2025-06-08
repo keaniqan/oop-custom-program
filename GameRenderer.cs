@@ -2069,6 +2069,19 @@ public class GameRenderer
                 }
             }
         }
+        if (Raylib.IsKeyPressed(KeyboardKey.L))
+        {
+           if (game?.Layers != null && game.Layers.Count > 0)
+            {
+                foreach (var layer in game.Layers)
+                {
+                    foreach (var room in layer)
+                    {
+                        room.IsAvailable = true;
+                    }
+                }
+            }
+        }
         // Draw close instruction
         string closeText = "Click a room to start";
         int textWidth = Raylib.MeasureText(closeText, 24);

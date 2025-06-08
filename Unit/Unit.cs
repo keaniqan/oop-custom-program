@@ -56,6 +56,10 @@ public abstract class Unit
     public void AddHealth(int health)
     {
         _health += health;
+        if (_health > _maxHealth)
+        {
+            _health = _maxHealth;
+        }
     }
     public virtual void TakeDamage(int damage)
     {

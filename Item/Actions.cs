@@ -180,7 +180,7 @@ public class HealCommand : ActionCommand
 
     public override void Execute(Player player, Enemy enemy, Game game)
     {
-        player.AddHealth(amount);
+        player.Heal(amount);
     }
 }
 

@@ -86,7 +86,7 @@ public class Rest : Room
             {
                 // Calculate heal amount based on max health
                 int healAmount = (game.Player.MaxHealth * choice.HealthChange) / 100;
-                game.Player.AddHealth(healAmount);
+                game.Player.Heal(healAmount);
             }
 
             // Mark the room as cleared

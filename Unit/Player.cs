@@ -226,6 +226,13 @@ public class Player: Unit
             Program.currentScreen = Program.GameScreen.Lose;
         }
     }
+
+    public void Heal(int amount){
+        Health += amount;
+        if (Health > MaxHealth){
+            Health = MaxHealth;
+        }
+    }
 }
 
 
