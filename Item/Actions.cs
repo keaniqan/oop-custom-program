@@ -1,3 +1,4 @@
+using System.Linq;
 using MyApp;
 
 
@@ -38,21 +39,10 @@ public class AttackCommand : ActionCommand
 
         defender.TakeDamage(calculatedDamage);
 
-        if (defender.isDead() && game.CurrentRoom is Combat combatRoom)
-        {
-            combatRoom.EndCombat();
-            if (defender is Enemy enemyUnit && enemyUnit.EnemyType == EnemyType.Boss)
-            {
-                Program.currentScreen = Program.GameScreen.Win;
-            }
-            if (defender is Player)
-            {
-                Program.currentScreen = Program.GameScreen.Lose;
-            }
-        }
+        IsGameOver(defender, game);
     }
 
-    private bool HasAndConsumeBuffer(Unit target)
+    public bool HasAndConsumeBuffer(Unit target)
     {
         var buffer = target.Effects.FirstOrDefault(e => e.EffectType == EffectType.Buffer);
         if (buffer != null && buffer.Stacks > 0)
@@ -62,8 +52,22 @@ public class AttackCommand : ActionCommand
         }
         return false;
     }
+    public void IsGameOver(Unit unit, Game game){
+        if (unit.isDead() && game.CurrentRoom is Combat combatRoom)
+        {
+            combatRoom.EndCombat();
+            if (unit is Enemy enemyUnit && enemyUnit.EnemyType == EnemyType.Boss)
+            {
+                Program.currentScreen = Program.GameScreen.Win;
+            }
+            if (unit is Player)
+            {
+                Program.currentScreen = Program.GameScreen.Lose;
+            }
+        }
+    }
 
-    private int CalculateDamage(Unit attacker, Unit defender, int baseDamage)
+    public int CalculateDamage(Unit attacker, Unit defender, int baseDamage)
     {
         int dmg = baseDamage;
         var strength = attacker.Effects.FirstOrDefault(e => e.EffectType == EffectType.StrengthUp);
@@ -81,7 +85,9 @@ public class AttackCommand : ActionCommand
         return dmg;
     }
 
-    private void ApplyThornEffect(Unit defender, Unit attacker)
+    
+
+    public void ApplyThornEffect(Unit defender, Unit attacker)
     {
         var thorn = defender.Effects.FirstOrDefault(e => e.EffectType == EffectType.Thorn);
         if (thorn != null && thorn.Stacks > 0)
@@ -89,7 +95,7 @@ public class AttackCommand : ActionCommand
     }
 }
 
-public class BlockCommand : ActionCommand
+public class BlockCommand : ActionCommand   
 {
     private int amount;
 
@@ -100,19 +106,29 @@ public class BlockCommand : ActionCommand
 
     public override void Execute(Player player, Enemy enemy, Game game)
     {
-        Unit unit = player;
+        int calculatedBlock = CalculateBlockAction(player, amount);
+        player.AddBlock(calculatedBlock);
+    }
+
+    public static int CalculateBlockAction(Unit unit, int baseBlock)
+    {
+        int blockAmount = baseBlock;
+        
+        // Apply Dexterity effect (increases block)
         var dexterityEffect = unit.Effects.FirstOrDefault(e => e.EffectType == EffectType.DexterityUp);
-        int blockAmount = amount;
         if (dexterityEffect != null && dexterityEffect.Stacks != 0)
         {
             blockAmount += dexterityEffect.Stacks;
         }
+        
+        // Apply Frail effect (reduces block by 25%)
         var frailEffect = unit.Effects.FirstOrDefault(e => e.EffectType == EffectType.Frail);
         if (frailEffect != null && frailEffect.Stacks > 0)
         {
             blockAmount = (int)(blockAmount * 0.75);
         }
-        player.AddBlock(blockAmount);
+        
+        return blockAmount;
     }
 }
 

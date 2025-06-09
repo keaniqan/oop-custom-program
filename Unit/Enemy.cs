@@ -82,6 +82,11 @@ public class Enemy: Unit
         {
             block += dexterityEffect.Stacks;
         }
+        var frailEffect = this.Effects.FirstOrDefault(e => e.EffectType == EffectType.Frail);
+        if (frailEffect != null && frailEffect.Stacks > 0)
+        {
+            block = (int)(block * 0.75);
+        }
         this.AddBlock(block);
     }
     public int GetAttackValue()
